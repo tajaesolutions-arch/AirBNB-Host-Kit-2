@@ -642,3 +642,141 @@ tbody tr:last-child td { border-bottom: none; }
   z-index: 99;
 }
 .sidebar-overlay.open { display: block; }
+.loading-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--navy);
+  background: var(--bg);
+}
+
+.account-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 28px 0;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.account-card {
+  padding: 20px;
+}
+
+.account-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.account-card-header svg {
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+.account-card-header h2 {
+  font-family: "Fraunces", serif;
+  font-size: 18px;
+  margin-bottom: 3px;
+}
+
+.account-card-header p {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.account-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.account-detail-row span {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.account-detail-row strong {
+  font-size: 13.5px;
+  text-align: right;
+}
+
+.account-id-row {
+  align-items: center;
+}
+
+.account-muted {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.account-password-form {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.account-alert {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.account-alert.success {
+  background: var(--green-soft);
+  color: var(--green);
+  border: 1px solid #bce0c5;
+}
+
+.account-alert.error {
+  background: var(--red-soft);
+  color: var(--red);
+  border: 1px solid #efb8ae;
+}
+
+.app-error-bar {
+  margin: 12px 28px 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--red-soft);
+  color: var(--red);
+  border: 1px solid #efb8ae;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.app-saving-bar {
+  margin: 12px 28px 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--amber-soft);
+  color: var(--amber);
+  border: 1px solid #ebd491;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .account-toolbar {
+    padding: 10px 14px 0;
+  }
+
+  .account-grid {
+    grid-template-columns: 1fr;
+  }
+}
