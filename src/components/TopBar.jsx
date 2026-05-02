@@ -11,6 +11,7 @@ export default function TopBar({
   setMonthFilter,
   propFilter,
   setPropFilter,
+  onAccountClick,
 }) {
   const { properties, settings, setSettings } = useApp();
 
@@ -84,8 +85,21 @@ export default function TopBar({
           </div>
         </div>
 
-        <div className="topbar-currency-pill" title={getCurrencyHelperText(selectedCurrency)}>
-          {CURRENCY_DISPLAY_NAMES[selectedCurrency] || selectedCurrency}
+        <div className="topbar-actions">
+          <div
+            className="topbar-currency-pill"
+            title={getCurrencyHelperText(selectedCurrency)}
+          >
+            {CURRENCY_DISPLAY_NAMES[selectedCurrency] || selectedCurrency}
+          </div>
+
+          <button
+            className="btn-secondary topbar-account-btn"
+            type="button"
+            onClick={onAccountClick}
+          >
+            My Account
+          </button>
         </div>
       </div>
     </header>
