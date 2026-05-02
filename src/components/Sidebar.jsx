@@ -1,81 +1,138 @@
+import React from "react";
 import {
-  Home, Calendar, Users, Sparkles, Wrench, Package,
-  DollarSign, MessageSquare, FileText, Calculator,
-  ClipboardCheck, MessageCircle, Settings, X,
+  Home,
+  CalendarDays,
+  UsersRound,
+  Sparkles,
+  Wrench,
+  Package,
+  DollarSign,
+  MessageSquare,
+  FileText,
+  Calculator,
+  ClipboardCheck,
+  Settings,
+  UserCircle,
+  PanelLeftClose,
+  PanelLeftOpen,
+  X,
 } from "lucide-react";
 
 const NAV_GROUPS = [
   {
     label: "Operations",
     items: [
-      { id: "dashboard",    label: "Host Dashboard",     icon: Home },
-      { id: "bookings",     label: "Booking Calendar",   icon: Calendar },
-      { id: "guests",       label: "Guest CRM",          icon: Users },
-      { id: "cleaning",     label: "Cleaning Schedule",  icon: Sparkles },
-      { id: "maintenance",  label: "Maintenance",        icon: Wrench },
-      { id: "supplies",     label: "Supplies",           icon: Package },
+      { key: "dashboard", label: "Host Dashboard", icon: Home },
+      { key: "bookings", label: "Booking Calendar", icon: CalendarDays },
+      { key: "guests", label: "Guest CRM", icon: UsersRound },
+      { key: "cleaning", label: "Cleaning Schedule", icon: Sparkles },
+      { key: "maintenance", label: "Maintenance", icon: Wrench },
+      { key: "supplies", label: "Supplies", icon: Package },
     ],
   },
   {
     label: "Finance",
     items: [
-      { id: "revenue",      label: "Revenue & Profit",   icon: DollarSign },
-      { id: "leads",        label: "Direct Leads",       icon: MessageSquare },
-      { id: "owner",        label: "Owner Report",       icon: FileText },
-      { id: "tax",          label: "Tax Reserve",        icon: Calculator },
+      { key: "revenue", label: "Revenue & Profit", icon: DollarSign },
+      { key: "leads", label: "Direct Leads", icon: MessageSquare },
+      { key: "owner", label: "Owner Report", icon: FileText },
+      { key: "tax", label: "Tax Reserve", icon: Calculator },
     ],
   },
   {
     label: "Resources",
     items: [
-      { id: "sops",         label: "SOP Checklists",     icon: ClipboardCheck },
-      { id: "messages",     label: "Msg Templates",      icon: MessageCircle },
-      { id: "settings",     label: "Settings",           icon: Settings },
+      { key: "sops", label: "SOP Checklists", icon: ClipboardCheck },
+      { key: "messages", label: "Msg Templates", icon: MessageSquare },
+      { key: "settings", label: "Settings", icon: Settings },
+      { key: "account", label: "My Account", icon: UserCircle },
     ],
   },
 ];
 
-export default function Sidebar({ page, setPage, mobile, onClose }) {
+export default function Sidebar({
+  page,
+  activePage,
+  setPage,
+  setActivePage,
+  collapsed = false,
+  onToggleCollapse,
+  mobile = false,
+  onClose,
+}) {
+  const currentPage = page || activePage || "dashboard";
+
+  const handleNavigate = (nextPage) => {
+    if (setPage) setPage(nextPage);
+    if (setActivePage) setActivePage(nextPage);
+    if (mobile && onClose) onClose();
+  };
+
   return (
-    <aside className={`sidebar ${mobile ? "open" : ""}`}>
-      <div className="sidebar-logo">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div className="sidebar-logo-title">🇯🇲 Host Operations</div>
-            <div className="sidebar-logo-sub">Jamaica Airbnb Kit</div>
+    <aside
+      className={[
+        "sidebar",
+        collapsed ? "collapsed" : "",
+        mobile ? "mobile" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <div className="sidebar-top">
+        <div className="sidebar-brand">
+          <div className="sidebar-logo-icon">🇯🇲</div>
+
+          <div className="sidebar-brand-text">
+            <div className="sidebar-title">Host Operations</div>
+            <div className="sidebar-subtitle">Jamaica Airbnb Kit</div>
           </div>
-          {mobile && onClose && (
-            <button onClick={onClose} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", padding: 4 }}>
-              <X size={18} />
-            </button>
-          )}
         </div>
+
+        {mobile ? (
+          <button className="sidebar-icon-btn" onClick={onClose} title="Close menu">
+            <X size={20} />
+          </button>
+        ) : (
+          <button
+            className="sidebar-icon-btn"
+            onClick={onToggleCollapse}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+          </button>
+        )}
       </div>
 
       <nav className="sidebar-nav">
-        {NAV_GROUPS.map(group => (
-          <div key={group.label}>
-            <div className="sidebar-group-label">{group.label}</div>
-            {group.items.map(item => {
-              const Icon = item.icon;
-              const active = page === item.id;
-              return (
-                <div
-                  key={item.id}
-                  className={`sidebar-item ${active ? "active" : ""}`}
-                  onClick={() => { setPage(item.id); if (onClose) onClose(); }}
-                >
-                  <Icon size={16} strokeWidth={2} />
-                  <span>{item.label}</span>
-                </div>
-              );
-            })}
+        {NAV_GROUPS.map((group) => (
+          <div className="sidebar-group" key={group.label}>
+            <div className="sidebar-section-label">{group.label}</div>
+
+            <div className="sidebar-items">
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentPage === item.key;
+
+                return (
+                  <button
+                    key={item.key}
+                    className={`sidebar-nav-item ${isActive ? "active" : ""}`}
+                    onClick={() => handleNavigate(item.key)}
+                    title={collapsed ? item.label : ""}
+                  >
+                    <Icon size={22} className="sidebar-nav-icon" />
+                    <span className="sidebar-nav-label">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         ))}
       </nav>
 
-      <div className="sidebar-tip">
-        💡 Add bookings first — the dashboard fills in automatically.
+      <div className="sidebar-footer-note">
+        <span>💡</span>
+        <p>Add bookings first — the dashboard fills in automatically.</p>
       </div>
     </aside>
   );
