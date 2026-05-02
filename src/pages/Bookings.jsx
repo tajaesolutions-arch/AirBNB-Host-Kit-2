@@ -28,6 +28,8 @@ import {
   Home,
   ArrowRight,
   AlertCircle,
+  Users,
+  Sparkles,
 } from "lucide-react";
 
 const STATUSES = ["Confirmed", "Checked In", "Checked Out", "Cancelled"];
@@ -45,6 +47,10 @@ function toNumber(value) {
 function dateIsAfter(startDate, endDate) {
   if (!startDate || !endDate) return false;
   return new Date(endDate) > new Date(startDate);
+}
+
+function normalizeName(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
 function NoPropertyState({ setPage }) {
@@ -194,6 +200,92 @@ function ValidationMessage({ errors }) {
   );
 }
 
+function AutomationOptions({ isNewRecord, options, setOptions }) {
+  if (!isNewRecord) return null;
+
+  return (
+    <div
+      style={{
+        marginTop: 14,
+        padding: 14,
+        background: "var(--teal-soft)",
+        borderRadius: 10,
+        border: "1px solid #9FD8CF",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 800,
+          color: "var(--teal)",
+          textTransform: "uppercase",
+          marginBottom: 8,
+        }}
+      >
+        Smart record creation
+      </div>
+
+      <p
+        style={{
+          color: "var(--muted)",
+          fontSize: 12.5,
+          lineHeight: 1.55,
+          marginBottom: 12,
+        }}
+      >
+        Create connected operational records from this booking so the guest CRM
+        and cleaning schedule are updated automatically.
+      </p>
+
+      <div style={{ display: "grid", gap: 10 }}>
+        <label
+          className="toggle-row"
+          style={{
+            justifyContent: "flex-start",
+            gap: 10,
+            margin: 0,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={options.createGuest}
+            onChange={(event) =>
+              setOptions((previous) => ({
+                ...previous,
+                createGuest: event.target.checked,
+              }))
+            }
+          />
+          <Users size={14} />
+          Create or link Guest CRM record
+        </label>
+
+        <label
+          className="toggle-row"
+          style={{
+            justifyContent: "flex-start",
+            gap: 10,
+            margin: 0,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={options.createCleaningTask}
+            onChange={(event) =>
+              setOptions((previous) => ({
+                ...previous,
+                createCleaningTask: event.target.checked,
+              }))
+            }
+          />
+          <Sparkles size={14} />
+          Create cleaning task for checkout date
+        </label>
+      </div>
+    </div>
+  );
+}
+
 function BookingForm({
   record,
   onClose,
@@ -204,6 +296,13 @@ function BookingForm({
 }) {
   const [b, setB] = useState({ ...record });
   const [errors, setErrors] = useState([]);
+
+  const [automationOptions, setAutomationOptions] = useState({
+    createGuest: !record.booking_id,
+    createCleaningTask: !record.booking_id,
+  });
+
+  const isNewRecord = !record.booking_id;
 
   const set = (key, value) => {
     setB((previous) => ({ ...previous, [key]: value }));
@@ -232,7 +331,11 @@ function BookingForm({
       nextErrors.push("Check-out date is required.");
     }
 
-    if (b.checkin_date && b.checkout_date && !dateIsAfter(b.checkin_date, b.checkout_date)) {
+    if (
+      b.checkin_date &&
+      b.checkout_date &&
+      !dateIsAfter(b.checkin_date, b.checkout_date)
+    ) {
       nextErrors.push("Check-out date must be after check-in date.");
     }
 
@@ -259,14 +362,17 @@ function BookingForm({
   const handleSave = () => {
     if (!validate()) return;
 
-    onSave({
-      ...b,
-      guest_name: String(b.guest_name || "").trim(),
-      nightly_rate: toNumber(b.nightly_rate),
-      cleaning_fee: toNumber(b.cleaning_fee),
-      extra_fees: toNumber(b.extra_fees),
-      discounts: toNumber(b.discounts),
-    });
+    onSave(
+      {
+        ...b,
+        guest_name: String(b.guest_name || "").trim(),
+        nightly_rate: toNumber(b.nightly_rate),
+        cleaning_fee: toNumber(b.cleaning_fee),
+        extra_fees: toNumber(b.extra_fees),
+        discounts: toNumber(b.discounts),
+      },
+      automationOptions
+    );
   };
 
   return (
@@ -415,6 +521,12 @@ function BookingForm({
         />
       </Field>
 
+      <AutomationOptions
+        isNewRecord={isNewRecord}
+        options={automationOptions}
+        setOptions={setAutomationOptions}
+      />
+
       <div
         style={{
           marginTop: 14,
@@ -469,16 +581,27 @@ export default function Bookings({ monthFilter, propFilter, setPage }) {
   const {
     bookings: rawBookings,
     setBookings,
+
+    guests: rawGuests,
+    setGuests,
+
+    cleaning: rawCleaning,
+    setCleaning,
+
     properties: rawProperties,
     settings: rawSettings,
   } = useApp();
 
   const bookings = safeArray(rawBookings);
+  const guests = safeArray(rawGuests);
+  const cleaning = safeArray(rawCleaning);
   const properties = safeArray(rawProperties);
   const settings = rawSettings || {};
+  const cleaners = safeArray(settings.cleaners);
 
   const [editing, setEditing] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [saveNotice, setSaveNotice] = useState("");
 
   const cur = settings.default_currency || "JMD";
   const selectedPropFilter = propFilter || "ALL";
@@ -515,18 +638,116 @@ export default function Bookings({ monthFilter, propFilter, setPage }) {
 
   const startNewBooking = () => {
     if (!hasProperties) return;
+    setSaveNotice("");
     setEditing(emptyRecord);
   };
 
-  const save = (booking) => {
+  const getOrCreateGuestForBooking = (booking) => {
+    const cleanName = String(booking.guest_name || "").trim();
+    const existingGuest = guests.find(
+      (guest) => normalizeName(guest.guest_name) === normalizeName(cleanName)
+    );
+
+    if (existingGuest) {
+      return {
+        guestId: existingGuest.guest_id,
+        nextGuests: guests,
+        created: false,
+      };
+    }
+
+    const guestId = uid("GUEST");
+
+    const newGuest = {
+      guest_id: guestId,
+      guest_name: cleanName,
+      country: "",
+      email: "",
+      phone: "",
+      review_left: false,
+      direct_followup_sent: false,
+      preferences: "",
+      notes: `Created automatically from booking ${booking.booking_id}.`,
+      last_contacted_date: todayISO(),
+      next_followup_date: "",
+    };
+
+    return {
+      guestId,
+      nextGuests: [...guests, newGuest],
+      created: true,
+    };
+  };
+
+  const buildCleaningTaskForBooking = (booking) => {
+    return {
+      cleaning_id: uid("CLEAN"),
+      property_id: booking.property_id,
+      booking_id: booking.booking_id,
+      checkout_date: booking.checkout_date,
+      next_checkin_date: "",
+      cleaner_name: cleaners[0]?.name || "",
+      cleaning_status: "Scheduled",
+      linen_status: "Not Checked",
+      damage_check: "Not Checked",
+      supplies_restocked: false,
+      photos_uploaded: false,
+      time_completed: "",
+      cleaning_cost: toNumber(booking.cleaning_fee),
+      notes: `Created automatically from booking ${booking.booking_id} for ${booking.guest_name}.`,
+    };
+  };
+
+  const save = (booking, automationOptions = {}) => {
     if (!booking.booking_id) {
-      setBookings([
-        ...bookings,
-        {
-          ...booking,
-          booking_id: uid("BK"),
-        },
-      ]);
+      const bookingId = uid("BK");
+      let nextBooking = {
+        ...booking,
+        booking_id: bookingId,
+      };
+
+      let guestCreated = false;
+      let cleaningCreated = false;
+
+      if (automationOptions.createGuest) {
+        const guestResult = getOrCreateGuestForBooking(nextBooking);
+        nextBooking = {
+          ...nextBooking,
+          guest_id: guestResult.guestId,
+        };
+        guestCreated = guestResult.created;
+
+        if (guestResult.nextGuests !== guests) {
+          setGuests(guestResult.nextGuests);
+        }
+      }
+
+      if (automationOptions.createCleaningTask) {
+        const alreadyHasCleaningForBooking = cleaning.some(
+          (task) => task.booking_id === bookingId
+        );
+
+        if (!alreadyHasCleaningForBooking) {
+          setCleaning([...cleaning, buildCleaningTaskForBooking(nextBooking)]);
+          cleaningCreated = true;
+        }
+      }
+
+      setBookings([...bookings, nextBooking]);
+
+      const noticeParts = ["Booking saved"];
+
+      if (automationOptions.createGuest) {
+        noticeParts.push(
+          guestCreated ? "guest record created" : "existing guest linked"
+        );
+      }
+
+      if (automationOptions.createCleaningTask && cleaningCreated) {
+        noticeParts.push("cleaning task created");
+      }
+
+      setSaveNotice(`${noticeParts.join(", ")}.`);
     } else {
       setBookings(
         bookings.map((existingBooking) =>
@@ -535,6 +756,8 @@ export default function Bookings({ monthFilter, propFilter, setPage }) {
             : existingBooking
         )
       );
+
+      setSaveNotice("Booking updated.");
     }
 
     setEditing(null);
@@ -542,13 +765,14 @@ export default function Bookings({ monthFilter, propFilter, setPage }) {
 
   const del = (id) => {
     const confirmed = window.confirm(
-      "Delete this booking? This cannot be undone."
+      "Delete this booking? This will not automatically delete the connected guest or cleaning task. Continue?"
     );
 
     if (!confirmed) return;
 
     setBookings(bookings.filter((booking) => booking.booking_id !== id));
     setEditing(null);
+    setSaveNotice("Booking deleted.");
   };
 
   const getProp = (id) =>
@@ -604,6 +828,12 @@ export default function Bookings({ monthFilter, propFilter, setPage }) {
         }
       />
 
+      {saveNotice && (
+        <div className="account-alert success" style={{ marginBottom: 18 }}>
+          <span>{saveNotice}</span>
+        </div>
+      )}
+
       {!hasProperties ? (
         <NoPropertyState setPage={setPage} />
       ) : (
@@ -625,17 +855,13 @@ export default function Bookings({ monthFilter, propFilter, setPage }) {
               <div className="metric-card sand">
                 <div className="metric-label">Filtered Nights</div>
                 <div className="metric-value">{totalFilteredNights}</div>
-                <div className="metric-sub">
-                  Nights from current filters
-                </div>
+                <div className="metric-sub">Nights from current filters</div>
               </div>
 
               <div className="metric-card sand">
                 <div className="metric-label">All Bookings</div>
                 <div className="metric-value">{bookings.length}</div>
-                <div className="metric-sub">
-                  Total booking records
-                </div>
+                <div className="metric-sub">Total booking records</div>
               </div>
 
               <div className="metric-card amber">
@@ -720,6 +946,7 @@ export default function Bookings({ monthFilter, propFilter, setPage }) {
                             </div>
                             <div className="td-muted">
                               {booking.booking_id}
+                              {booking.guest_id ? ` · ${booking.guest_id}` : ""}
                             </div>
                           </td>
 
