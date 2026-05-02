@@ -27,78 +27,82 @@ export default function TopBar({
     }));
   };
 
+  const handleAccountClick = () => {
+    if (typeof onAccountClick === "function") {
+      onAccountClick();
+    }
+  };
+
   return (
     <header className="topbar">
-      <div className="topbar-inner">
-        <div className="topbar-filters">
-          <div className="topbar-filter-group">
-            <label className="topbar-label" htmlFor="property-filter">
-              Property
-            </label>
+      <div className="topbar-filters">
+        <div className="topbar-filter-group">
+          <label className="topbar-label" htmlFor="property-filter">
+            Property
+          </label>
 
-            <select
-              id="property-filter"
-              className="topbar-control"
-              value={propFilter}
-              onChange={(event) => setPropFilter(event.target.value)}
-            >
-              <option value="all">All Properties</option>
-
-              {properties?.map((property) => (
-                <option key={property.id} value={property.id}>
-                  {property.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="topbar-filter-group">
-            <label className="topbar-label" htmlFor="month-filter">
-              Month
-            </label>
-
-            <input
-              id="month-filter"
-              className="topbar-control"
-              type="month"
-              value={monthFilter}
-              onChange={(event) => setMonthFilter(event.target.value)}
-            />
-          </div>
-
-          <div className="topbar-filter-group topbar-currency-group">
-            <label className="topbar-label" htmlFor="currency-filter">
-              Currency
-            </label>
-
-            <select
-              id="currency-filter"
-              className="topbar-control currency-select"
-              value={selectedCurrency}
-              onChange={(event) => updateCurrency(event.target.value)}
-              title={getCurrencyHelperText(selectedCurrency)}
-            >
-              {SUPPORTED_CURRENCIES.map((currency) => (
-                <option key={currency} value={currency}>
-                  {currency}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="topbar-currency-pill">
-            {CURRENCY_DISPLAY_NAMES[selectedCurrency] || selectedCurrency}
-          </div>
-
-          <button
-            className="topbar-account-btn"
-            type="button"
-            onClick={onAccountClick}
+          <select
+            id="property-filter"
+            className="topbar-control topbar-property-select"
+            value={propFilter}
+            onChange={(event) => setPropFilter(event.target.value)}
           >
-            <UserCircle size={18} />
-            <span>My Account</span>
-          </button>
+            <option value="all">All Properties</option>
+
+            {properties?.map((property) => (
+              <option key={property.id} value={property.id}>
+                {property.name}
+              </option>
+            ))}
+          </select>
         </div>
+
+        <div className="topbar-filter-group">
+          <label className="topbar-label" htmlFor="month-filter">
+            Month
+          </label>
+
+          <input
+            id="month-filter"
+            className="topbar-control topbar-month-input"
+            type="month"
+            value={monthFilter}
+            onChange={(event) => setMonthFilter(event.target.value)}
+          />
+        </div>
+
+        <div className="topbar-filter-group topbar-currency-group">
+          <label className="topbar-label" htmlFor="currency-filter">
+            Currency
+          </label>
+
+          <select
+            id="currency-filter"
+            className="topbar-control topbar-currency-select"
+            value={selectedCurrency}
+            onChange={(event) => updateCurrency(event.target.value)}
+            title={getCurrencyHelperText(selectedCurrency)}
+          >
+            {SUPPORTED_CURRENCIES.map((currency) => (
+              <option key={currency} value={currency}>
+                {currency}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="topbar-currency-pill">
+          {CURRENCY_DISPLAY_NAMES[selectedCurrency] || selectedCurrency}
+        </div>
+
+        <button
+          className="topbar-account-btn"
+          type="button"
+          onClick={handleAccountClick}
+        >
+          <UserCircle size={18} />
+          <span>My Account</span>
+        </button>
       </div>
     </header>
   );
