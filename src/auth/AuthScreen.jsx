@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "./AuthContext.jsx";
 
 export default function AuthScreen() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, sendPasswordReset } = useAuth();
 
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
@@ -15,12 +15,15 @@ export default function AuthScreen() {
 
   const isSignup = mode === "signup";
 
+  const clearMessages = () => {
+    setMessage("");
+    setError("");
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     setSubmitting(true);
-    setError("");
-    setMessage("");
+    clearMessages();
 
     try {
       if (!email || !password) {
@@ -61,139 +64,212 @@ export default function AuthScreen() {
     }
   };
 
+  const handlePasswordReset = async () => {
+    setSubmitting(true);
+    clearMessages();
+
+    try {
+      if (!email) {
+        throw new Error("Enter your email first, then click forgot password.");
+      }
+
+      await sendPasswordReset(email);
+      setMessage("Password reset email sent. Check your inbox.");
+    } catch (err) {
+      setError(err?.message || "Could not send password reset email.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const switchMode = (nextMode) => {
+    setMode(nextMode);
+    clearMessages();
+  };
+
   return (
-    <div className="auth-page">
-      <div className="auth-hero">
-        <div className="auth-badge">🇯🇲 Jamaica STR SaaS</div>
-
-        <h1>Run every Airbnb property from one private dashboard.</h1>
-
-        <p>
-          Each host gets their own login, private properties, bookings, guests,
-          expenses, cleaning tasks, supplies, owner reports, and Tax/GCT planning
-          records.
-        </p>
-
-        <div className="auth-feature-grid">
-          <div className="auth-feature-card">
-            <strong>Private data</strong>
-            <span>Each user only sees their own rentals.</span>
+    <div className="auth-shell">
+      <div className="auth-shell-inner">
+        <section className="auth-brand-panel">
+          <div className="auth-logo-block">
+            <div className="auth-logo-mark">🇯🇲</div>
+            <div>
+              <div className="auth-logo-title">Host Operations</div>
+              <div className="auth-logo-subtitle">Jamaica Airbnb Kit</div>
+            </div>
           </div>
 
-          <div className="auth-feature-card">
-            <strong>Cloud storage</strong>
-            <span>Data is stored in Supabase, not just one browser.</span>
+          <div className="auth-hero-copy">
+            <div className="auth-kicker">Private SaaS Dashboard</div>
+
+            <h1>Run every Airbnb property from one organized dashboard.</h1>
+
+            <p>
+              Track bookings, guests, cleaning, supplies, expenses, owner
+              reports, and Tax/GCT planning records from a secure cloud-based
+              workspace built for Jamaican hosts and property managers.
+            </p>
           </div>
 
-          <div className="auth-feature-card">
-            <strong>Host-ready</strong>
-            <span>Built for Jamaican villas, apartments, and co-hosts.</span>
+          <div className="auth-benefit-grid">
+            <div className="auth-benefit-card">
+              <span>01</span>
+              <strong>Private account</strong>
+              <p>Each host sees only their own rentals and records.</p>
+            </div>
+
+            <div className="auth-benefit-card">
+              <span>02</span>
+              <strong>Cloud storage</strong>
+              <p>Your data saves to Supabase, not just one browser.</p>
+            </div>
+
+            <div className="auth-benefit-card">
+              <span>03</span>
+              <strong>Host-ready</strong>
+              <p>Built for villas, apartments, co-hosts, and managers.</p>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div className="auth-card">
-        <div className="auth-icon">→</div>
-
-        <h2>{isSignup ? "Create your account" : "Log in to your dashboard"}</h2>
-
-        <p className="auth-subtitle">
-          {isSignup
-            ? "Create a private workspace for your short-term rental operations."
-            : "Access your private Jamaica Airbnb Host Operations Kit."}
-        </p>
-
-        {error && (
-          <div className="auth-alert error">
-            <span>{error}</span>
+          <div className="auth-note-card">
+            <strong>Built for Jamaican short-term rentals.</strong>
+            <p>
+              Use it for Airbnb, Booking.com, direct bookings, WhatsApp leads,
+              owner reporting, cleaning tasks, and monthly profit tracking.
+            </p>
           </div>
-        )}
+        </section>
 
-        {message && (
-          <div className="auth-alert success">
-            <span>{message}</span>
-          </div>
-        )}
+        <section className="auth-form-panel">
+          <div className="auth-form-card">
+            <div className="auth-form-top">
+              <div className="auth-form-icon">→</div>
+              <div>
+                <h2>
+                  {isSignup
+                    ? "Create your host account"
+                    : "Log in to your dashboard"}
+                </h2>
+                <p>
+                  {isSignup
+                    ? "Start your private workspace for managing short-term rental operations."
+                    : "Access your private Jamaica Airbnb Host Operations Kit."}
+                </p>
+              </div>
+            </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          {isSignup && (
-            <>
+            <div className="auth-mode-toggle">
+              <button
+                type="button"
+                className={!isSignup ? "active" : ""}
+                onClick={() => switchMode("login")}
+              >
+                Log In
+              </button>
+              <button
+                type="button"
+                className={isSignup ? "active" : ""}
+                onClick={() => switchMode("signup")}
+              >
+                Create Account
+              </button>
+            </div>
+
+            {error && <div className="auth-message error">{error}</div>}
+            {message && <div className="auth-message success">{message}</div>}
+
+            <form onSubmit={handleSubmit} className="auth-clean-form">
+              {isSignup && (
+                <>
+                  <label>
+                    <span>Business Name</span>
+                    <input
+                      type="text"
+                      value={businessName}
+                      onChange={(event) => setBusinessName(event.target.value)}
+                      placeholder="Your Hospitality Co."
+                    />
+                  </label>
+
+                  <label>
+                    <span>Host Name</span>
+                    <input
+                      type="text"
+                      value={hostName}
+                      onChange={(event) => setHostName(event.target.value)}
+                      placeholder="Your name"
+                    />
+                  </label>
+                </>
+              )}
+
               <label>
-                <span>Business Name</span>
-                <div className="auth-input-wrap">
-                  <input
-                    type="text"
-                    value={businessName}
-                    onChange={(event) => setBusinessName(event.target.value)}
-                    placeholder="Your Hospitality Co."
-                  />
-                </div>
+                <span>Email</span>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="host@email.com"
+                  autoComplete="email"
+                  required
+                />
               </label>
 
               <label>
-                <span>Host Name</span>
-                <div className="auth-input-wrap">
-                  <input
-                    type="text"
-                    value={hostName}
-                    onChange={(event) => setHostName(event.target.value)}
-                    placeholder="Your name"
-                  />
-                </div>
+                <span>Password</span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Minimum 6 characters"
+                  autoComplete={isSignup ? "new-password" : "current-password"}
+                  required
+                />
               </label>
-            </>
-          )}
 
-          <label>
-            <span>Email</span>
-            <div className="auth-input-wrap">
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="host@email.com"
-                autoComplete="email"
-                required
-              />
+              <button
+                type="submit"
+                className="auth-primary-button"
+                disabled={submitting}
+              >
+                {submitting
+                  ? isSignup
+                    ? "Creating account..."
+                    : "Logging in..."
+                  : isSignup
+                  ? "Create Account"
+                  : "Log In"}
+              </button>
+            </form>
+
+            <div className="auth-footer-actions">
+              {!isSignup && (
+                <button
+                  type="button"
+                  onClick={handlePasswordReset}
+                  disabled={submitting}
+                >
+                  Forgot password?
+                </button>
+              )}
+
+              {isSignup ? (
+                <button type="button" onClick={() => switchMode("login")}>
+                  Already have an account? Log in
+                </button>
+              ) : (
+                <button type="button" onClick={() => switchMode("signup")}>
+                  New host? Create an account
+                </button>
+              )}
             </div>
-          </label>
 
-          <label>
-            <span>Password</span>
-            <div className="auth-input-wrap">
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Minimum 6 characters"
-                autoComplete={isSignup ? "new-password" : "current-password"}
-                required
-              />
+            <div className="auth-security-note">
+              Secure login powered by Supabase Auth. Your password is never
+              displayed or stored inside the dashboard.
             </div>
-          </label>
-
-          <button type="submit" className="auth-submit" disabled={submitting}>
-            {submitting
-              ? isSignup
-                ? "Creating account..."
-                : "Logging in..."
-              : isSignup
-              ? "Create Account"
-              : "Log In"}
-          </button>
-        </form>
-
-        <div className="auth-switch-row">
-          {isSignup ? (
-            <button type="button" onClick={() => setMode("login")}>
-              Already have an account? Log in
-            </button>
-          ) : (
-            <button type="button" onClick={() => setMode("signup")}>
-              Create account
-            </button>
-          )}
-        </div>
+          </div>
+        </section>
       </div>
     </div>
   );
