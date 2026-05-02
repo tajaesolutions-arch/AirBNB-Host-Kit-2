@@ -125,20 +125,22 @@ export default function Sidebar({
   return (
     <aside
       className={`sidebar ${collapsed ? "is-collapsed" : ""} ${
-        mobile ? "sidebar-mobile" : ""
+        mobile ? "sidebar-mobile is-mobile mobile" : ""
       }`}
     >
       <div className="sidebar-brand">
-        <div className="sidebar-brand-mark" aria-hidden="true">
-          🇯🇲
-        </div>
-
-        {!collapsed && (
-          <div className="sidebar-brand-copy">
-            <div className="sidebar-brand-title">Host Operations</div>
-            <div className="sidebar-brand-subtitle">Jamaica Airbnb Kit</div>
+        <div className="sidebar-brand-main">
+          <div className="sidebar-brand-mark" aria-hidden="true">
+            🇯🇲
           </div>
-        )}
+
+          {!collapsed && (
+            <div className="sidebar-brand-copy">
+              <div className="sidebar-brand-title">Host Operations</div>
+              <div className="sidebar-brand-subtitle">Jamaica Airbnb Kit</div>
+            </div>
+          )}
+        </div>
 
         {mobile ? (
           <button
@@ -177,7 +179,9 @@ export default function Sidebar({
               title={collapsed ? item.label : undefined}
             >
               <Icon size={18} />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && (
+                <span className="sidebar-item-label">{item.label}</span>
+              )}
             </button>
           );
         })}
