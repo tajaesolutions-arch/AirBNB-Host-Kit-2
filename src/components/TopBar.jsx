@@ -32,74 +32,71 @@ export default function TopBar({
       <button
         className="btn-ghost topbar-mobile-btn"
         onClick={onMenuClick}
-        style={{ padding: 8 }}
         type="button"
+        aria-label="Open sidebar menu"
       >
         <Menu size={20} />
       </button>
 
       <div className="topbar-filters">
-        <span className="topbar-label">Property</span>
+        <div className="topbar-filter-group">
+          <label className="topbar-label" htmlFor="property-filter">
+            Property
+          </label>
 
-        <select
-          value={propFilter}
-          onChange={(event) => setPropFilter(event.target.value)}
-          style={{
-            width: "auto",
-            minWidth: 170,
-            padding: "6px 10px",
-            fontSize: 13,
-          }}
-        >
-          <option value="ALL">All Properties</option>
-          {properties.map((property) => (
-            <option key={property.property_id} value={property.property_id}>
-              {property.property_name}
-            </option>
-          ))}
-        </select>
+          <select
+            id="property-filter"
+            className="topbar-control topbar-property-select"
+            value={propFilter}
+            onChange={(event) => setPropFilter(event.target.value)}
+          >
+            <option value="ALL">All Properties</option>
+            {properties.map((property) => (
+              <option key={property.property_id} value={property.property_id}>
+                {property.property_name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <span className="topbar-label" style={{ marginLeft: 6 }}>
-          Month
-        </span>
+        <div className="topbar-filter-group">
+          <label className="topbar-label" htmlFor="month-filter">
+            Month
+          </label>
 
-        <input
-          type="month"
-          value={monthFilter}
-          onChange={(event) => setMonthFilter(event.target.value)}
-          style={{
-            width: "auto",
-            padding: "6px 10px",
-            fontSize: 13,
-          }}
-        />
+          <input
+            id="month-filter"
+            className="topbar-control topbar-month-input"
+            type="month"
+            value={monthFilter}
+            onChange={(event) => setMonthFilter(event.target.value)}
+          />
+        </div>
 
-        <span className="topbar-label" style={{ marginLeft: 6 }}>
-          Currency
-        </span>
+        <div className="topbar-filter-group">
+          <label className="topbar-label" htmlFor="currency-filter">
+            Currency
+          </label>
 
-        <select
-          value={selectedCurrency}
-          onChange={(event) => updateCurrency(event.target.value)}
-          title={getCurrencyHelperText(selectedCurrency)}
-          style={{
-            width: "auto",
-            minWidth: 96,
-            padding: "6px 10px",
-            fontSize: 13,
-          }}
-        >
-          {SUPPORTED_CURRENCIES.map((currency) => (
-            <option key={currency} value={currency}>
-              {currency}
-            </option>
-          ))}
-        </select>
+          <select
+            id="currency-filter"
+            className="topbar-control topbar-currency-select"
+            value={selectedCurrency}
+            onChange={(event) => updateCurrency(event.target.value)}
+            title={getCurrencyHelperText(selectedCurrency)}
+          >
+            {SUPPORTED_CURRENCIES.map((currency) => (
+              <option key={currency} value={currency}>
+                {currency}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="topbar-right">
         <span
-          className="chip chip-gray"
+          className="chip chip-gray topbar-currency-chip"
           title={getCurrencyHelperText(selectedCurrency)}
         >
           {CURRENCY_DISPLAY_NAMES[selectedCurrency] || selectedCurrency}
