@@ -1457,3 +1457,240 @@ function ResetDashboardDataCard() {
     </div>
   );
 }
+// ============================================================
+//  SOPS PAGE
+// ============================================================
+
+export function SOPs() {
+  const sopSections = [
+    {
+      title: "Guest Check-in SOP",
+      items: [
+        "Confirm guest arrival date, check-in time, and number of guests.",
+        "Send check-in instructions with address, access details, Wi-Fi, and house rules.",
+        "Verify that the property is cleaned, staged, and stocked before arrival.",
+        "Confirm key box, smart lock, or access method is working.",
+        "Send welcome message on the morning of check-in.",
+      ],
+    },
+    {
+      title: "Guest Checkout SOP",
+      items: [
+        "Send checkout reminder the evening before departure.",
+        "Confirm checkout time and any special departure instructions.",
+        "Ask guest to report damages, missing items, or issues before leaving.",
+        "Notify cleaner once the guest has checked out.",
+        "Review property condition after turnover is completed.",
+      ],
+    },
+    {
+      title: "Cleaning Turnover SOP",
+      items: [
+        "Strip beds and replace all linen and towels.",
+        "Clean bathrooms, kitchen, bedrooms, living areas, and outdoor spaces.",
+        "Restock toilet paper, soap, garbage bags, coffee, tea, and guest amenities.",
+        "Check for damages, missing items, stains, leaks, or maintenance issues.",
+        "Send completion photos or confirmation before next guest arrival.",
+      ],
+    },
+    {
+      title: "Maintenance SOP",
+      items: [
+        "Log the issue with property, priority, date, and estimated cost.",
+        "Assign the issue to a vendor or internal team member.",
+        "Update the issue status after inspection or repair.",
+        "Save receipts, photos, and notes for owner reporting.",
+        "Mark as completed only after verifying the fix.",
+      ],
+    },
+  ];
+
+  const initialState = sopSections.map((section) =>
+    section.items.map(() => false)
+  );
+
+  const [checked, setChecked] = useState(initialState);
+
+  const toggleItem = (sectionIndex, itemIndex) => {
+    setChecked((current) =>
+      current.map((sectionChecks, currentSectionIndex) =>
+        currentSectionIndex === sectionIndex
+          ? sectionChecks.map((itemChecked, currentItemIndex) =>
+              currentItemIndex === itemIndex ? !itemChecked : itemChecked
+            )
+          : sectionChecks
+      )
+    );
+  };
+
+  return (
+    <div className="page">
+      <PageHeader
+        title="SOPs"
+        subtitle="Standard operating procedures for check-ins, checkouts, cleaning, and maintenance."
+        helper="Use these checklists to keep turnovers consistent and reduce missed steps."
+      />
+
+      {sopSections.map((section, sectionIndex) => (
+        <div className="sop-section" key={section.title}>
+          <div className="sop-section-title">
+            <ClipboardList size={16} />
+            <span>{section.title}</span>
+          </div>
+
+          <div className="sop-items">
+            {section.items.map((item, itemIndex) => {
+              const itemChecked = checked[sectionIndex]?.[itemIndex] || false;
+
+              return (
+                <div
+                  key={item}
+                  className={`sop-item ${itemChecked ? "checked" : ""}`}
+                  onClick={() => toggleItem(sectionIndex, itemIndex)}
+                >
+                  <div
+                    className={`sop-checkbox ${
+                      itemChecked ? "checked" : ""
+                    }`}
+                  >
+                    {itemChecked && <CheckCircle2 size={13} color="#fff" />}
+                  </div>
+
+                  <span className="sop-text">{item}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+//  MESSAGES PAGE
+// ============================================================
+
+export function Messages() {
+  const messageTemplates = [
+    {
+      title: "Booking Confirmation",
+      category: "Pre-arrival",
+      body: `Hi {{guest_name}}, thanks for booking {{property_name}}.
+
+Your stay is confirmed for {{checkin_date}} to {{checkout_date}}.
+
+We’re looking forward to hosting you. I’ll send your check-in details closer to your arrival date.`,
+    },
+    {
+      title: "Check-in Instructions",
+      category: "Check-in",
+      body: `Hi {{guest_name}}, here are your check-in details for {{property_name}}.
+
+Address: {{property_address}}
+Check-in time: {{checkin_time}}
+Wi-Fi: {{wifi_name}}
+Password: {{wifi_password}}
+
+Please let me know once you arrive safely.`,
+    },
+    {
+      title: "Checkout Reminder",
+      category: "Checkout",
+      body: `Hi {{guest_name}}, just a quick reminder that checkout is tomorrow at {{checkout_time}}.
+
+Before leaving, please check for personal items, turn off AC/lights, and secure the property.
+
+Thanks again for staying with us.`,
+    },
+    {
+      title: "Review Request",
+      category: "Post-stay",
+      body: `Hi {{guest_name}}, thank you again for staying at {{property_name}}.
+
+If you enjoyed your stay, we’d appreciate a quick review. It helps future guests book with confidence.
+
+Safe travels.`,
+    },
+    {
+      title: "Maintenance Follow-up",
+      category: "Issue handling",
+      body: `Hi {{guest_name}}, thanks for letting us know about the issue.
+
+We’ve logged it and are working on getting it resolved as quickly as possible. I’ll keep you updated once I have confirmation from the team.`,
+    },
+  ];
+
+  const [openIndex, setOpenIndex] = useState(0);
+  const [copiedIndex, setCopiedIndex] = useState(null);
+
+  const handleCopy = (text, index) => {
+    navigator.clipboard?.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 1800);
+  };
+
+  return (
+    <div className="page">
+      <PageHeader
+        title="Messages"
+        subtitle="Reusable guest message templates for bookings, check-ins, checkouts, reviews, and issue handling."
+        helper="Copy these templates into WhatsApp, Airbnb, Instagram, or your booking platform."
+      />
+
+      {messageTemplates.map((template, index) => {
+        const isOpen = openIndex === index;
+        const isCopied = copiedIndex === index;
+
+        return (
+          <div className="msg-card" key={template.title}>
+            <div
+              className="msg-card-header"
+              onClick={() => setOpenIndex(isOpen ? null : index)}
+            >
+              <div className="msg-card-meta">
+                <div className="msg-num">{index + 1}</div>
+
+                <div>
+                  <div className="msg-title">{template.title}</div>
+                  <div className="msg-cat">{template.category}</div>
+                </div>
+              </div>
+
+              <div className="msg-actions">
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleCopy(template.body, index);
+                  }}
+                >
+                  {isCopied ? (
+                    <>
+                      <CheckCircle2 size={13} /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={13} /> Copy
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {isOpen && (
+              <div className="msg-body-wrap">
+                <textarea
+                  className="msg-textarea"
+                  value={template.body}
+                  readOnly
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
