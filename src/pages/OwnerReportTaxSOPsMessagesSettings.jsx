@@ -1,11 +1,11 @@
 // ============================================================
 //  OWNER REPORT PAGE
 // ============================================================
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
 import { PageHeader, Disclaimer, Modal, ConfirmBar } from "../components/index.jsx";
 import { bookingTotal, calcNights, fmtCurrency, fmtPct, fmtDateShort, inSelectedMonth, daysInMonth, uid as uidHelper, todayISO } from "../utils/helpers.js";
-import { Copy, CheckCircle2, Plus, Trash2 } from "lucide-react";
+import { Copy, CheckCircle2, Plus, Trash2, Download, Upload } from "lucide-react";
 
 export function OwnerReport({ monthFilter }) {
   const { properties, bookings, expenses, maintenance, cleaning, settings } = useApp();
@@ -503,6 +503,9 @@ export function Settings() {
         </div>
       </div>
 
+      {/* Backup, import, and export tools */}
+      <BackupDataCard />
+
       {/* Reset dashboard data */}
       <ResetDashboardDataCard />
 
@@ -535,6 +538,162 @@ export function Settings() {
     </div>
   );
 }
+
+function BackupDataCard() {
+  const { getBackupData, importBackupData } = useApp();
+  const importInputRef = useRef(null);
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [backupMessage, setBackupMessage] = useState("");
+  const [backupError, setBackupError] = useState("");
+
+  const handleExportBackup = () => {
+    setBackupMessage("");
+    setBackupError("");
+
+    try {
+      const backupData = getBackupData();
+      const prettyJson = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([prettyJson], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const dateStamp = new Date().toISOString().slice(0, 10);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `airbnb-host-kit-backup-${dateStamp}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      setBackupMessage("Backup exported successfully. Keep the file somewhere safe.");
+    } catch (err) {
+      setBackupError(err?.message || "Could not export backup file.");
+    }
+  };
+
+  const handleImportClick = () => {
+    setBackupMessage("");
+    setBackupError("");
+    importInputRef.current?.click();
+  };
+
+  const handleImportBackup = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    const confirmed = window.confirm(
+      "Importing this backup will replace your current dashboard records. Continue?"
+    );
+
+    if (!confirmed) {
+      event.target.value = "";
+      return;
+    }
+
+    setBackupLoading(true);
+    setBackupMessage("");
+    setBackupError("");
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const imported = importBackupData(parsed);
+
+      setBackupMessage(
+        `Backup imported successfully. Restored ${imported.properties.length} properties, ${imported.bookings.length} bookings, ${imported.guests.length} guests, ${imported.expenses.length} expenses, ${imported.supplies.length} supplies, ${imported.maintenance.length} maintenance records, and ${imported.leads.length} leads.`
+      );
+    } catch (err) {
+      setBackupError(
+        err?.message ||
+          "Could not import backup. Make sure you selected a valid JSON backup file."
+      );
+    } finally {
+      setBackupLoading(false);
+      event.target.value = "";
+    }
+  };
+
+  return (
+    <div className="card settings-reset-card">
+      <div className="settings-reset-header">
+        <div>
+          <h2>Backup, Export & Import</h2>
+          <p>
+            Download a full JSON backup of this dashboard or restore a previous
+            backup file. This protects users from losing browser-stored data.
+          </p>
+        </div>
+      </div>
+
+      {backupMessage && (
+        <div className="account-alert success">
+          <span>{backupMessage}</span>
+        </div>
+      )}
+
+      {backupError && (
+        <div className="account-alert error">
+          <span>{backupError}</span>
+        </div>
+      )}
+
+      <div className="settings-reset-grid">
+        <div className="settings-reset-option">
+          <h3>Export Backup</h3>
+          <p>
+            Downloads all properties, bookings, guests, cleaning tasks,
+            maintenance records, supplies, expenses, leads, and settings into
+            one JSON backup file.
+          </p>
+
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={handleExportBackup}
+            disabled={backupLoading}
+          >
+            <Download size={14} />
+            Export Backup
+          </button>
+        </div>
+
+        <div className="settings-reset-option">
+          <h3>Import Backup</h3>
+          <p>
+            Restores a previously exported JSON backup. This replaces the
+            current dashboard records with the data inside the file.
+          </p>
+
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={handleImportBackup}
+            style={{ display: "none" }}
+          />
+
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={handleImportClick}
+            disabled={backupLoading}
+          >
+            <Upload size={14} />
+            {backupLoading ? "Importing..." : "Import Backup"}
+          </button>
+        </div>
+      </div>
+
+      <div className="settings-reset-warning">
+        Export a backup before resetting, importing, or testing new changes.
+        Browser storage is convenient, but a downloaded backup file is safer for
+        real customer data.
+      </div>
+    </div>
+  );
+}
+
 function ResetDashboardDataCard() {
   const { resetToBlankData, restoreSampleData } = useApp();
   const [resetLoading, setResetLoading] = useState(false);
