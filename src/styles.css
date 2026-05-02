@@ -2121,3 +2121,396 @@ button {
     white-space: normal;
   }
 }
+/* ============================================================
+   FINAL FIX: DASHBOARD RESPONSIVE LAYOUT + SIDEBAR SCALING
+   Purpose:
+   - Sidebar stays in its own column
+   - Dashboard content does not hide off-screen
+   - Cards wrap automatically
+   - Tables scroll inside their own containers
+   - Browser resizing stays clean
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+/* Main desktop layout */
+.app-layout {
+  display: grid !important;
+  grid-template-columns: 300px minmax(0, 1fr) !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  min-height: 100vh !important;
+  background: var(--bg);
+  overflow-x: hidden !important;
+}
+
+/* Collapsed desktop layout */
+.app-layout.sidebar-is-collapsed {
+  grid-template-columns: 88px minmax(0, 1fr) !important;
+}
+
+/* Sidebar must stay in column 1 */
+.app-layout > .sidebar:not(.mobile) {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  position: sticky !important;
+  top: 0 !important;
+  width: 300px !important;
+  min-width: 300px !important;
+  max-width: 300px !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+/* Collapsed sidebar width */
+.app-layout.sidebar-is-collapsed > .sidebar:not(.mobile),
+.sidebar.collapsed:not(.mobile) {
+  width: 88px !important;
+  min-width: 88px !important;
+  max-width: 88px !important;
+}
+
+/* Main dashboard column */
+.app-layout > .main-content {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  background: var(--bg);
+}
+
+/* Top bar should fit within dashboard area */
+.main-content > .topbar,
+.main-content > .top-bar,
+.main-content > header,
+.topbar,
+.top-bar {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: hidden !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+/* Page container */
+.page {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: clamp(20px, 2.3vw, 36px) !important;
+  overflow-x: hidden !important;
+}
+
+/* Remove unwanted centering/offsets from any dashboard inner wrappers */
+.page > div,
+.page section,
+.page main {
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Any grid directly inside a page should be allowed to shrink */
+.page [style*="display: grid"],
+.page [style*="display:grid"] {
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Any hard-coded grid column layout inside dashboard should become responsive */
+.page [style*="grid-template-columns"],
+.grid-2,
+.grid-3,
+.grid-4,
+.dashboard-grid,
+.content-grid,
+.metrics-grid,
+.metric-grid,
+.stats-grid,
+.stat-grid,
+.kpi-grid,
+.dashboard-stats,
+.dashboard-metrics,
+.action-required-grid,
+.health-grid,
+.dashboard-lower-grid,
+.form-grid,
+.form-grid-2,
+.account-grid,
+.settings-reset-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)) !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Wider two-column sections should wrap gracefully */
+.grid-2,
+.dashboard-lower-grid,
+.action-required-grid,
+.health-grid,
+.content-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)) !important;
+}
+
+/* Cards should never push outside the page */
+.card,
+.metric-card,
+.stat-card,
+.kpi-card,
+.panel,
+.report-preview,
+.msg-card,
+.sop-section,
+.settings-reset-card,
+.account-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Card text and numbers should wrap safely */
+.card *,
+.metric-card *,
+.stat-card *,
+.kpi-card *,
+.panel *,
+.report-preview *,
+.msg-card *,
+.sop-section * {
+  max-width: 100%;
+}
+
+/* Big numbers should resize better */
+.card .num,
+.metric-card .num,
+.stat-card .num,
+.kpi-card .num,
+.profit-value,
+.profit-label {
+  overflow-wrap: anywhere;
+}
+
+/* Tables should scroll inside their own box instead of breaking the page */
+.table-wrap,
+.table-wrapper,
+.table-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  width: 100% !important;
+  max-width: 100% !important;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  white-space: nowrap;
+}
+
+/* Forms and controls should not overflow */
+input,
+select,
+textarea,
+button {
+  max-width: 100% !important;
+}
+
+/* Prevent top action buttons from pushing page sideways */
+.page-header,
+.page-header-row,
+.action-row,
+.button-row {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Sidebar collapsed polish */
+.sidebar.collapsed:not(.mobile) .sidebar-brand-text,
+.sidebar.collapsed:not(.mobile) .sidebar-section-label,
+.sidebar.collapsed:not(.mobile) .sidebar-nav-label,
+.sidebar.collapsed:not(.mobile) .sidebar-footer-note {
+  display: none !important;
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-top {
+  height: 104px !important;
+  padding: 18px 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-nav {
+  padding: 18px 0 !important;
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-items {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-nav-item {
+  width: 88px !important;
+  height: 58px !important;
+  min-height: 58px !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  justify-content: center !important;
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-nav-item.active {
+  background: rgba(27, 153, 139, 0.3) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(27, 153, 139, 0.45),
+    inset 3px 0 0 var(--teal) !important;
+}
+
+/* Medium desktop / smaller laptop */
+@media (max-width: 1280px) {
+  .app-layout {
+    grid-template-columns: 280px minmax(0, 1fr) !important;
+  }
+
+  .app-layout > .sidebar:not(.mobile) {
+    width: 280px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
+  }
+
+  .app-layout.sidebar-is-collapsed {
+    grid-template-columns: 82px minmax(0, 1fr) !important;
+  }
+
+  .app-layout.sidebar-is-collapsed > .sidebar:not(.mobile),
+  .sidebar.collapsed:not(.mobile) {
+    width: 82px !important;
+    min-width: 82px !important;
+    max-width: 82px !important;
+  }
+
+  .sidebar.collapsed:not(.mobile) .sidebar-nav-item {
+    width: 82px !important;
+  }
+
+  .page {
+    padding: 24px !important;
+  }
+
+  .page [style*="grid-template-columns"],
+  .grid-2,
+  .grid-3,
+  .grid-4,
+  .dashboard-grid,
+  .content-grid,
+  .metrics-grid,
+  .metric-grid,
+  .stats-grid,
+  .stat-grid,
+  .kpi-grid,
+  .dashboard-stats,
+  .dashboard-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)) !important;
+  }
+}
+
+/* Tablet and mobile */
+@media (max-width: 980px) {
+  .app-layout,
+  .app-layout.sidebar-is-collapsed {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .sidebar:not(.mobile) {
+    display: none !important;
+  }
+
+  .sidebar.mobile {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+    width: 300px !important;
+    max-width: 86vw !important;
+    min-width: 0 !important;
+    height: 100vh !important;
+    z-index: 1000 !important;
+    box-shadow: 24px 0 60px rgba(11, 37, 69, 0.28) !important;
+  }
+
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .page {
+    padding: 18px !important;
+  }
+
+  .page [style*="grid-template-columns"],
+  .grid-2,
+  .grid-3,
+  .grid-4,
+  .dashboard-grid,
+  .content-grid,
+  .metrics-grid,
+  .metric-grid,
+  .stats-grid,
+  .stat-grid,
+  .kpi-grid,
+  .dashboard-stats,
+  .dashboard-metrics,
+  .action-required-grid,
+  .health-grid,
+  .dashboard-lower-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 640px) {
+  .page {
+    padding: 14px !important;
+  }
+
+  th,
+  td {
+    white-space: normal;
+  }
+}
