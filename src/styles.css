@@ -1667,3 +1667,173 @@ tbody tr:last-child td { border-bottom: none; }
     gap: 14px;
   }
 }
+/* ============================================================
+   FIX: SIDEBAR SHOULD NOT COVER FULL PAGE
+   Forces dashboard into a clean 2-column app layout.
+   ============================================================ */
+
+.app-layout {
+  display: grid !important;
+  grid-template-columns: 300px minmax(0, 1fr) !important;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--bg);
+  overflow-x: hidden;
+  transition: grid-template-columns 0.24s ease;
+}
+
+.app-layout.sidebar-is-collapsed {
+  grid-template-columns: 88px minmax(0, 1fr) !important;
+}
+
+.app-layout > .sidebar {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.app-layout > .main-content {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  background: var(--bg);
+}
+
+/* Keep desktop sidebar locked to its column */
+.sidebar:not(.mobile) {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  width: 300px !important;
+  max-width: 300px !important;
+  min-width: 300px !important;
+  height: 100vh;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.app-layout.sidebar-is-collapsed .sidebar:not(.mobile) {
+  width: 88px !important;
+  max-width: 88px !important;
+  min-width: 88px !important;
+}
+
+/* Expanded sidebar spacing */
+.sidebar:not(.mobile):not(.collapsed) .sidebar-top {
+  height: 96px;
+  padding: 22px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Collapsed sidebar spacing */
+.sidebar.collapsed:not(.mobile) .sidebar-top {
+  height: 104px;
+  padding: 18px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-logo-icon {
+  width: 42px;
+  height: 42px;
+  font-size: 20px;
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-icon-btn {
+  width: 34px;
+  height: 34px;
+}
+
+/* Hide expanded text properly when collapsed */
+.sidebar.collapsed:not(.mobile) .sidebar-brand-text,
+.sidebar.collapsed:not(.mobile) .sidebar-section-label,
+.sidebar.collapsed:not(.mobile) .sidebar-nav-label,
+.sidebar.collapsed:not(.mobile) .sidebar-footer-note {
+  display: none !important;
+}
+
+/* Make collapsed icon rail look clean */
+.sidebar.collapsed:not(.mobile) .sidebar-nav {
+  padding: 18px 0;
+  max-height: calc(100vh - 104px);
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-group {
+  margin-bottom: 8px;
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Desktop icon buttons when collapsed */
+.sidebar.collapsed:not(.mobile) .sidebar-nav-item {
+  width: 88px !important;
+  height: 58px;
+  min-height: 58px;
+  border-radius: 0;
+  padding: 0 !important;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-nav-item.active {
+  background: rgba(27, 153, 139, 0.30);
+  box-shadow:
+    inset 0 0 0 1px rgba(27, 153, 139, 0.45),
+    inset 3px 0 0 var(--teal);
+}
+
+.sidebar.collapsed:not(.mobile) .sidebar-nav-icon {
+  width: 25px;
+  height: 25px;
+}
+
+/* Keep expanded nav normal */
+.sidebar:not(.collapsed):not(.mobile) .sidebar-nav-item {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 13px;
+  padding: 0 14px;
+  justify-content: flex-start;
+}
+
+/* Mobile remains drawer behavior */
+@media (max-width: 980px) {
+  .app-layout,
+  .app-layout.sidebar-is-collapsed {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar:not(.mobile) {
+    display: none !important;
+  }
+
+  .sidebar.mobile {
+    position: fixed !important;
+    inset: 0 auto 0 0;
+    width: 300px !important;
+    max-width: 86vw !important;
+    min-width: 0 !important;
+    height: 100vh;
+    z-index: 1000;
+    box-shadow: 24px 0 60px rgba(11, 37, 69, 0.28);
+  }
+
+  .app-layout > .main-content {
+    width: 100%;
+  }
+}
