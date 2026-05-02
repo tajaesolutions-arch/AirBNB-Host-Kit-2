@@ -145,6 +145,17 @@ function DashboardShell() {
   const [monthFilter, setMonthFilter] = useState(currentMonth());
   const [propFilter, setPropFilter] = useState("ALL");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+  return localStorage.getItem("hostSidebarCollapsed") === "true";
+});
+
+const toggleSidebarCollapsed = () => {
+  setSidebarCollapsed((previousValue) => {
+    const nextValue = !previousValue;
+    localStorage.setItem("hostSidebarCollapsed", String(nextValue));
+    return nextValue;
+  });
+};
 
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -223,8 +234,14 @@ function DashboardShell() {
 
   return (
     <AppProvider>
-      <div className="app-layout">
-        <Sidebar page={page} setPage={goToPage} activePage={page} />
+   <div className={`app-layout ${sidebarCollapsed ? "sidebar-is-collapsed" : ""}`}>
+       <Sidebar
+  page={page}
+  setPage={goToPage}
+  activePage={page}
+  collapsed={sidebarCollapsed}
+  onToggleCollapse={toggleSidebarCollapsed}
+/>
 
         {sidebarOpen && (
           <>
