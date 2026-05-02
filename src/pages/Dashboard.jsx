@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
 import { MetricCard, Chip, PageHeader } from "../components/index.jsx";
 import {
@@ -25,21 +26,297 @@ import {
   Wrench,
   Sparkles,
   Home,
-  ClipboardList,
-  Settings,
   Database,
   ArrowRight,
   CheckCircle2,
   PlusCircle,
   Users,
   ReceiptText,
+  ClipboardList,
+  Circle,
+  Settings,
+  Download,
 } from "lucide-react";
+
+const SETUP_PROGRESS_STORAGE_KEY = "jak_dashboard_setup_progress";
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
-function EmptyDashboardSetup({ setPage, restoreSampleData }) {
+function loadSetupProgress() {
+  try {
+    const raw = localStorage.getItem(SETUP_PROGRESS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSetupProgress(nextProgress) {
+  try {
+    localStorage.setItem(
+      SETUP_PROGRESS_STORAGE_KEY,
+      JSON.stringify(nextProgress)
+    );
+  } catch {
+    // Keep dashboard usable if browser storage is blocked.
+  }
+}
+
+function getSetupChecklist({
+  properties,
+  bookings,
+  expenses,
+  supplies,
+  cleaning,
+  maintenance,
+  settings,
+  savedProgress,
+}) {
+  const cleaners = safeArray(settings.cleaners);
+  const vendors = safeArray(settings.vendors);
+
+  const hasBusinessInfo = Boolean(
+    String(settings.business_name || "").trim() ||
+      String(settings.host_name || "").trim() ||
+      String(settings.host_phone || "").trim() ||
+      String(settings.host_email || "").trim()
+  );
+
+  const hasRatesReviewed =
+    Number(settings.platform_fee_percentage || 0) > 0 ||
+    Number(settings.management_fee_percentage || 0) > 0 ||
+    Number(settings.tax_reserve_percentage || 0) > 0 ||
+    savedProgress.reviewedFees === true;
+
+  return [
+    {
+      id: "businessInfo",
+      title: "Add business / host information",
+      body: "Add your business name, host phone, email, and default currency.",
+      completed: hasBusinessInfo || savedProgress.businessInfo === true,
+      page: "settings",
+      action: "Open Settings",
+    },
+    {
+      id: "property",
+      title: "Add your first property",
+      body: "Create at least one property so bookings, cleaning, and reports have somewhere to connect.",
+      completed: properties.length > 0,
+      page: "settings",
+      action: "Add Property",
+    },
+    {
+      id: "team",
+      title: "Add cleaner or vendor details",
+      body: "Add at least one cleaner or vendor so operations can be assigned properly.",
+      completed:
+        cleaners.length > 0 || vendors.length > 0 || savedProgress.team === true,
+      page: "settings",
+      action: "Manage Team",
+    },
+    {
+      id: "booking",
+      title: "Add your first booking",
+      body: "Bookings activate revenue, occupancy, check-in, checkout, and owner report calculations.",
+      completed: bookings.length > 0,
+      page: "bookings",
+      action: "Add Booking",
+    },
+    {
+      id: "expense",
+      title: "Add your first expense",
+      body: "Expenses allow the app to calculate actual profit instead of only gross revenue.",
+      completed: expenses.length > 0,
+      page: "revenue",
+      action: "Add Expense",
+    },
+    {
+      id: "supply",
+      title: "Add your first supply item",
+      body: "Supply tracking helps catch low-stock items before guests arrive.",
+      completed: supplies.length > 0,
+      page: "supplies",
+      action: "Add Supply",
+    },
+    {
+      id: "operations",
+      title: "Add one operations record",
+      body: "Add a cleaning task or maintenance issue to start tracking day-to-day work.",
+      completed:
+        cleaning.length > 0 ||
+        maintenance.length > 0 ||
+        savedProgress.operations === true,
+      page: "cleaning",
+      action: "Open Operations",
+    },
+    {
+      id: "fees",
+      title: "Review fees and tax reserve",
+      body: "Confirm platform fee, management fee, and tax reserve percentages.",
+      completed: hasRatesReviewed,
+      page: "settings",
+      action: "Review Fees",
+      canManuallyComplete: true,
+    },
+    {
+      id: "backup",
+      title: "Export your first backup",
+      body: "Download a backup file so customer data is protected before testing resets or imports.",
+      completed:
+        savedProgress.backupExported === true ||
+        Boolean(localStorage.getItem("jak_backup_exported_at")),
+      page: "settings",
+      action: "Open Backup Tools",
+      canManuallyComplete: true,
+    },
+  ];
+}
+
+function SetupProgressCard({
+  checklist,
+  onGoToPage,
+  onMarkComplete,
+  compact = false,
+}) {
+  const completedCount = checklist.filter((item) => item.completed).length;
+  const totalCount = checklist.length;
+  const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+  return (
+    <div className="card" style={{ padding: compact ? 18 : 22, marginBottom: 22 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: 14,
+          flexWrap: "wrap",
+          marginBottom: 14,
+        }}
+      >
+        <div>
+          <h3 className="section-title" style={{ marginBottom: 6 }}>
+            Setup Checklist
+          </h3>
+          <p
+            style={{
+              color: "var(--muted)",
+              fontSize: 13,
+              lineHeight: 1.6,
+              maxWidth: 720,
+            }}
+          >
+            Complete these setup items to turn the dashboard into a live
+            operating system for your property or hosting business.
+          </p>
+        </div>
+
+        <Chip tone={percent === 100 ? "green" : "teal"}>
+          {completedCount}/{totalCount} Complete
+        </Chip>
+      </div>
+
+      <div
+        style={{
+          width: "100%",
+          height: 10,
+          borderRadius: 999,
+          background: "var(--sand-soft)",
+          border: "1px solid var(--line)",
+          overflow: "hidden",
+          marginBottom: 16,
+        }}
+      >
+        <div
+          style={{
+            width: `${percent}%`,
+            height: "100%",
+            background: "var(--teal)",
+            transition: "width 180ms ease",
+          }}
+        />
+      </div>
+
+      <div style={{ display: "grid", gap: 10 }}>
+        {checklist.map((item) => (
+          <div
+            key={item.id}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "auto 1fr auto",
+              gap: 12,
+              alignItems: "center",
+              padding: "12px 14px",
+              border: "1px solid var(--line)",
+              borderRadius: "var(--radius-sm)",
+              background: item.completed ? "var(--teal-soft)" : "var(--sand-soft)",
+            }}
+          >
+            {item.completed ? (
+              <CheckCircle2 size={18} color="var(--teal)" />
+            ) : (
+              <Circle size={18} color="var(--muted)" />
+            )}
+
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontWeight: 700,
+                  fontSize: 13.5,
+                  color: "var(--navy)",
+                  marginBottom: 2,
+                }}
+              >
+                {item.title}
+              </div>
+              {!compact && (
+                <div
+                  style={{
+                    color: "var(--muted)",
+                    fontSize: 12.5,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {item.body}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {!item.completed && item.canManuallyComplete && (
+                <button
+                  className="btn-ghost"
+                  style={{ fontSize: 12 }}
+                  onClick={() => onMarkComplete(item.id)}
+                >
+                  Mark Done
+                </button>
+              )}
+
+              <button
+                className={item.completed ? "btn-ghost" : "btn-secondary"}
+                style={{ fontSize: 12 }}
+                onClick={() => onGoToPage(item.page)}
+              >
+                {item.action}
+                <ArrowRight size={13} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EmptyDashboardSetup({
+  setPage,
+  restoreSampleData,
+  checklist,
+  onMarkComplete,
+}) {
   const handleRestoreDemo = () => {
     const confirmed = window.confirm(
       "This will restore the sample demo data. Continue?"
@@ -192,49 +469,11 @@ function EmptyDashboardSetup({ setPage, restoreSampleData }) {
         })}
       </div>
 
-      <div className="card" style={{ padding: 22 }}>
-        <h3 className="section-title">Setup Checklist</h3>
-        <p
-          style={{
-            color: "var(--muted)",
-            fontSize: 13,
-            lineHeight: 1.6,
-            marginBottom: 14,
-          }}
-        >
-          Complete these steps in order to activate the full dashboard.
-        </p>
-
-        <div style={{ display: "grid", gap: 10 }}>
-          {[
-            "Add business / host information",
-            "Add your first property",
-            "Add cleaner and vendor details",
-            "Add your first booking",
-            "Add your first expense",
-            "Add your first supply item",
-            "Review tax reserve percentage",
-            "Generate your first owner report",
-          ].map((item) => (
-            <div
-              key={item}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "10px 12px",
-                border: "1px solid var(--line)",
-                borderRadius: "var(--radius-sm)",
-                background: "var(--sand-soft)",
-                fontSize: 13,
-              }}
-            >
-              <CheckCircle2 size={15} color="var(--teal)" />
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <SetupProgressCard
+        checklist={checklist}
+        onGoToPage={setPage}
+        onMarkComplete={onMarkComplete}
+      />
     </div>
   );
 }
@@ -285,6 +524,10 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
   const properties = safeArray(rawProperties);
   const settings = rawSettings || {};
 
+  const [savedSetupProgress, setSavedSetupProgress] = useState(() =>
+    loadSetupProgress()
+  );
+
   const cur = settings.default_currency || "JMD";
 
   const goToPage = (page) => {
@@ -293,6 +536,38 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
     }
   };
 
+  const markSetupComplete = (id) => {
+    setSavedSetupProgress((previous) => {
+      const next = { ...previous, [id]: true };
+      saveSetupProgress(next);
+      return next;
+    });
+  };
+
+  const setupChecklist = useMemo(
+    () =>
+      getSetupChecklist({
+        properties,
+        bookings,
+        expenses,
+        supplies,
+        cleaning,
+        maintenance,
+        settings,
+        savedProgress: savedSetupProgress,
+      }),
+    [
+      properties,
+      bookings,
+      expenses,
+      supplies,
+      cleaning,
+      maintenance,
+      settings,
+      savedSetupProgress,
+    ]
+  );
+
   const hasNoProperties = properties.length === 0;
 
   if (hasNoProperties) {
@@ -300,12 +575,13 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
       <EmptyDashboardSetup
         setPage={goToPage}
         restoreSampleData={restoreSampleData}
+        checklist={setupChecklist}
+        onMarkComplete={markSetupComplete}
       />
     );
   }
 
-  const selectedMonth =
-    monthFilter || new Date().toISOString().slice(0, 7);
+  const selectedMonth = monthFilter || new Date().toISOString().slice(0, 7);
 
   const selectedPropFilter = propFilter || "ALL";
 
@@ -325,10 +601,7 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
     inSelectedMonth(e.expense_date, selectedMonth)
   );
 
-  const grossRevenue = monthBookings.reduce(
-    (s, b) => s + bookingTotal(b),
-    0
-  );
+  const grossRevenue = monthBookings.reduce((s, b) => s + bookingTotal(b), 0);
 
   const airbnbRevenue = monthBookings
     .filter((b) => b.platform === "Airbnb")
@@ -401,17 +674,11 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
     )
     .reduce((s, e) => s + Number(e.amount || 0), 0);
 
-  const platformFeePercentage = Number(
-    settings.platform_fee_percentage || 0
-  );
+  const platformFeePercentage = Number(settings.platform_fee_percentage || 0);
 
-  const managementFeePercentage = Number(
-    settings.management_fee_percentage || 0
-  );
+  const managementFeePercentage = Number(settings.management_fee_percentage || 0);
 
-  const taxReservePercentage = Number(
-    settings.tax_reserve_percentage || 0
-  );
+  const taxReservePercentage = Number(settings.tax_reserve_percentage || 0);
 
   const platformFees = grossRevenue * platformFeePercentage;
   const managementFee = grossRevenue * managementFeePercentage;
@@ -484,7 +751,13 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
       : "Critical";
 
   const healthTone =
-    health >= 90 ? "green" : health >= 75 ? "amber" : health >= 50 ? "amber" : "red";
+    health >= 90
+      ? "green"
+      : health >= 75
+      ? "amber"
+      : health >= 50
+      ? "amber"
+      : "red";
 
   const profitBreakdown = [
     { label: "Gross Revenue", value: grossRevenue, bold: true },
@@ -528,6 +801,13 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
           <>
             <button
               className="btn-secondary"
+              onClick={() => goToPage("settings")}
+            >
+              <Settings size={14} />
+              Setup
+            </button>
+            <button
+              className="btn-secondary"
               onClick={() => goToPage("bookings")}
             >
               + Add Booking
@@ -540,6 +820,13 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
             </button>
           </>
         }
+      />
+
+      <SetupProgressCard
+        checklist={setupChecklist}
+        onGoToPage={goToPage}
+        onMarkComplete={markSetupComplete}
+        compact
       />
 
       {(hasNoBookings || hasNoExpenses || hasNoSupplies || hasNoMaintenance) && (
