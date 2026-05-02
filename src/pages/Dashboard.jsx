@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 
 const SETUP_PROGRESS_STORAGE_KEY = "jak_dashboard_setup_progress";
+const SETUP_CHECKLIST_OPEN_STORAGE_KEY = "jak_setup_checklist_open";
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -180,15 +181,43 @@ function SetupProgressCard({
   onMarkComplete,
   compact = false,
 }) {
-  const [isOpen, setIsOpen] = useState(() => !compact);
+  const [isOpen, setIsOpen] = useState(() => {
+    try {
+      const savedValue = localStorage.getItem(SETUP_CHECKLIST_OPEN_STORAGE_KEY);
+
+      if (savedValue === "true") return true;
+      if (savedValue === "false") return false;
+
+      return !compact;
+    } catch {
+      return !compact;
+    }
+  });
 
   const completedCount = checklist.filter((item) => item.completed).length;
   const totalCount = checklist.length;
   const percent =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
+  const toggleChecklist = () => {
+    setIsOpen((previousValue) => {
+      const nextValue = !previousValue;
+
+      try {
+        localStorage.setItem(
+          SETUP_CHECKLIST_OPEN_STORAGE_KEY,
+          String(nextValue)
+        );
+      } catch {
+        // Keep the UI working even if browser storage is blocked.
+      }
+
+      return nextValue;
+    });
+  };
+
   return (
-    <div className="card setup-progress-card">
+    <div className={`card setup-progress-card ${isOpen ? "open" : "closed"}`}>
       <div className="setup-progress-header">
         <div className="setup-progress-copy">
           <h3 className="section-title setup-progress-title">
@@ -209,10 +238,11 @@ function SetupProgressCard({
           <button
             type="button"
             className="btn-ghost setup-toggle-btn"
-            onClick={() => setIsOpen((previous) => !previous)}
+            onClick={toggleChecklist}
             aria-expanded={isOpen}
+            aria-controls="setup-checklist-content"
           >
-            {isOpen ? "Collapse" : "Open"}
+            {isOpen ? "Collapse" : "Expand"}
           </button>
         </div>
       </div>
@@ -225,7 +255,7 @@ function SetupProgressCard({
       </div>
 
       {isOpen && (
-        <div className="setup-checklist-grid">
+        <div id="setup-checklist-content" className="setup-checklist-grid">
           {checklist.map((item) => (
             <div
               key={item.id}
