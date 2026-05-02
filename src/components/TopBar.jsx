@@ -1,3 +1,4 @@
+import { UserCircle } from "lucide-react";
 import { useApp } from "../context/AppContext.jsx";
 import {
   SUPPORTED_CURRENCIES,
@@ -37,7 +38,7 @@ export default function TopBar({
 
             <select
               id="property-filter"
-              className="topbar-select topbar-select-property"
+              className="topbar-control"
               value={propFilter}
               onChange={(event) => setPropFilter(event.target.value)}
             >
@@ -58,23 +59,24 @@ export default function TopBar({
 
             <input
               id="month-filter"
-              className="topbar-input topbar-input-month"
+              className="topbar-control"
               type="month"
               value={monthFilter}
               onChange={(event) => setMonthFilter(event.target.value)}
             />
           </div>
 
-          <div className="topbar-filter-group">
+          <div className="topbar-filter-group topbar-currency-group">
             <label className="topbar-label" htmlFor="currency-filter">
               Currency
             </label>
 
             <select
               id="currency-filter"
-              className="topbar-select topbar-select-currency"
+              className="topbar-control currency-select"
               value={selectedCurrency}
               onChange={(event) => updateCurrency(event.target.value)}
+              title={getCurrencyHelperText(selectedCurrency)}
             >
               {SUPPORTED_CURRENCIES.map((currency) => (
                 <option key={currency} value={currency}>
@@ -83,22 +85,18 @@ export default function TopBar({
               ))}
             </select>
           </div>
-        </div>
 
-        <div className="topbar-actions">
-          <div
-            className="topbar-currency-pill"
-            title={getCurrencyHelperText(selectedCurrency)}
-          >
+          <div className="topbar-currency-pill">
             {CURRENCY_DISPLAY_NAMES[selectedCurrency] || selectedCurrency}
           </div>
 
           <button
-            className="btn-secondary topbar-account-btn"
+            className="topbar-account-btn"
             type="button"
             onClick={onAccountClick}
           >
-            My Account
+            <UserCircle size={18} />
+            <span>My Account</span>
           </button>
         </div>
       </div>
