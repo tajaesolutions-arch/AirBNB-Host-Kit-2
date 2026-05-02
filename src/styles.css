@@ -1837,3 +1837,287 @@ tbody tr:last-child td { border-bottom: none; }
     width: 100%;
   }
 }
+/* ============================================================
+   FIX: RESPONSIVE DASHBOARD SCALING / NO OVERLAP / NO HORIZONTAL SPILL
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+/* Main app layout */
+.app-layout {
+  display: grid !important;
+  grid-template-columns: 300px minmax(0, 1fr) !important;
+  width: 100vw;
+  max-width: 100vw;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.app-layout.sidebar-is-collapsed {
+  grid-template-columns: 88px minmax(0, 1fr) !important;
+}
+
+/* Sidebar stays fixed to its own column */
+.sidebar:not(.mobile) {
+  width: 300px !important;
+  min-width: 300px !important;
+  max-width: 300px !important;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.app-layout.sidebar-is-collapsed .sidebar:not(.mobile),
+.sidebar.collapsed:not(.mobile) {
+  width: 88px !important;
+  min-width: 88px !important;
+  max-width: 88px !important;
+}
+
+/* Main content must shrink inside remaining space */
+.main-content {
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  background: var(--bg);
+}
+
+/* Page wrapper */
+.page {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  padding: clamp(18px, 2.2vw, 36px) !important;
+  overflow-x: hidden !important;
+}
+
+/* Header / filter bar should wrap instead of overflowing */
+.topbar,
+.top-bar,
+.header-bar,
+.filters-bar {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  overflow-x: hidden;
+}
+
+.topbar select,
+.topbar input,
+.top-bar select,
+.top-bar input,
+.header-bar select,
+.header-bar input,
+.filters-bar select,
+.filters-bar input {
+  max-width: 100%;
+}
+
+/* Dashboard metric cards should auto-fit based on browser width */
+.metrics-grid,
+.metric-grid,
+.stats-grid,
+.stat-grid,
+.kpi-grid,
+.dashboard-stats,
+.dashboard-metrics {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 16px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Generic dashboard grid sections */
+.grid-2,
+.dashboard-grid,
+.content-grid,
+.analytics-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)) !important;
+  gap: 18px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Cards should never force the page wider */
+.card,
+.metric-card,
+.stat-card,
+.kpi-card,
+.panel,
+.report-preview,
+.action-card,
+.property-health-card {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-wrap: break-word;
+}
+
+/* Long text and numbers should wrap safely */
+.card *,
+.metric-card *,
+.stat-card *,
+.kpi-card *,
+.panel *,
+.report-preview * {
+  max-width: 100%;
+}
+
+/* Tables should scroll inside their own container, not break layout */
+.table-wrap,
+.table-wrapper,
+.table-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+}
+
+table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+}
+
+td,
+th {
+  white-space: nowrap;
+}
+
+/* Forms should shrink neatly */
+.form-grid-2,
+.form-grid,
+.settings-reset-grid,
+.account-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)) !important;
+  gap: 14px !important;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Inputs should never overflow */
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+/* Action Required / Property Health area */
+.action-required-grid,
+.health-grid,
+.dashboard-lower-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)) !important;
+  gap: 18px !important;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Smaller desktop / laptop screens */
+@media (max-width: 1280px) {
+  .metrics-grid,
+  .metric-grid,
+  .stats-grid,
+  .stat-grid,
+  .kpi-grid,
+  .dashboard-stats,
+  .dashboard-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+  }
+
+  .page {
+    padding: 24px !important;
+  }
+}
+
+/* Tablet behavior */
+@media (max-width: 980px) {
+  .app-layout,
+  .app-layout.sidebar-is-collapsed {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .sidebar:not(.mobile) {
+    display: none !important;
+  }
+
+  .main-content {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .page {
+    padding: 18px !important;
+  }
+
+  .metrics-grid,
+  .metric-grid,
+  .stats-grid,
+  .stat-grid,
+  .kpi-grid,
+  .dashboard-stats,
+  .dashboard-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
+  }
+}
+
+/* Mobile behavior */
+@media (max-width: 640px) {
+  .page {
+    padding: 14px !important;
+  }
+
+  .metrics-grid,
+  .metric-grid,
+  .stats-grid,
+  .stat-grid,
+  .kpi-grid,
+  .dashboard-stats,
+  .dashboard-metrics,
+  .grid-2,
+  .dashboard-grid,
+  .content-grid,
+  .analytics-grid,
+  .action-required-grid,
+  .health-grid,
+  .dashboard-lower-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .card,
+  .metric-card,
+  .stat-card,
+  .kpi-card,
+  .panel {
+    width: 100% !important;
+  }
+
+  td,
+  th {
+    white-space: normal;
+  }
+}
