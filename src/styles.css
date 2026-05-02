@@ -1316,3 +1316,79 @@ tbody tr:last-child td { border-bottom: none; }
     color: rgba(255, 255, 255, 0.62);
   }
 }
+/* ============================================================
+   SETTINGS RESET SECTION
+   ============================================================ */
+
+.settings-reset-card {
+  padding: 22px;
+  margin-top: 18px;
+}
+
+.settings-reset-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.settings-reset-header h2 {
+  font-family: "Fraunces", serif;
+  font-size: 20px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.settings-reset-header p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 680px;
+}
+
+.settings-reset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.settings-reset-option {
+  background: var(--sand-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.settings-reset-option h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.settings-reset-option p {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.settings-reset-warning {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--amber-soft);
+  border: 1px solid #ebd491;
+  color: var(--amber);
+  font-size: 12px;
+  line-height: 1.55;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .settings-reset-grid {
+    grid-template-columns: 1fr;
+  }
+}
