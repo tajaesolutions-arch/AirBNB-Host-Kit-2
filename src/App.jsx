@@ -37,8 +37,17 @@ function pickComponent(moduleObject, possibleNames, fallbackLabel) {
   };
 }
 
-const Dashboard = pickComponent(DashboardModule, ["Dashboard", "DashboardPage"], "Dashboard");
-const Bookings = pickComponent(BookingsModule, ["Bookings", "BookingsPage"], "Bookings");
+const Dashboard = pickComponent(
+  DashboardModule,
+  ["Dashboard", "DashboardPage"],
+  "Dashboard"
+);
+
+const Bookings = pickComponent(
+  BookingsModule,
+  ["Bookings", "BookingsPage"],
+  "Bookings"
+);
 
 const Guests = pickComponent(
   GuestCleaningMaintenanceModule,
@@ -106,14 +115,14 @@ const Settings = pickComponent(
   "Settings"
 );
 
-const Account = pickComponent(AccountModule, ["Account", "AccountPage"], "My Account");
+const Account = pickComponent(
+  AccountModule,
+  ["Account", "AccountPage"],
+  "My Account"
+);
 
 function LoadingScreen({ label = "Loading your host dashboard…" }) {
-  return (
-    <div className="loading-screen">
-      {label}
-    </div>
-  );
+  return <div className="loading-screen">{label}</div>;
 }
 
 function DashboardShell() {
@@ -124,18 +133,30 @@ function DashboardShell() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    return localStorage.getItem("hostSidebarCollapsed") === "true";
+    try {
+      return localStorage.getItem("hostSidebarCollapsed") === "true";
+    } catch {
+      return false;
+    }
   });
 
   const toggleSidebarCollapsed = () => {
     setSidebarCollapsed((previousValue) => {
       const nextValue = !previousValue;
-      localStorage.setItem("hostSidebarCollapsed", String(nextValue));
+
+      try {
+        localStorage.setItem("hostSidebarCollapsed", String(nextValue));
+      } catch {
+        // Keep the app usable if browser storage is blocked.
+      }
+
       return nextValue;
     });
   };
 
-  const closeMobileSidebar = () => setMobileSidebarOpen(false);
+  const closeMobileSidebar = () => {
+    setMobileSidebarOpen(false);
+  };
 
   const goToPage = (nextPage, action = null) => {
     setPage(nextPage);
@@ -192,15 +213,19 @@ function DashboardShell() {
       case "owner":
       case "owner-report":
       case "owner-reports":
+      case "ownerReport":
         return <OwnerReport {...shared} />;
 
       case "tax":
       case "tax-reserve":
+      case "taxReserve":
       case "gct":
         return <TaxReserve {...shared} />;
 
       case "sops":
       case "sop":
+      case "SOPs":
+      case "SOP":
       case "checklists":
         return <SOPs {...shared} />;
 
@@ -233,7 +258,11 @@ function DashboardShell() {
 
         {mobileSidebarOpen && (
           <>
-            <div className="mobile-sidebar-overlay" onClick={closeMobileSidebar} />
+            <div
+              className="sidebar-overlay mobile-sidebar-overlay open"
+              onClick={closeMobileSidebar}
+            />
+
             <Sidebar
               page={page}
               setPage={goToPage}
@@ -244,7 +273,7 @@ function DashboardShell() {
           </>
         )}
 
-        <main className="app-main">
+        <main className="app-main main-content">
           <TopBar
             monthFilter={monthFilter}
             setMonthFilter={setMonthFilter}
@@ -252,17 +281,10 @@ function DashboardShell() {
             setPropFilter={setPropFilter}
             onMenuClick={() => setMobileSidebarOpen(true)}
             setSidebarOpen={setMobileSidebarOpen}
+            onAccountClick={() => goToPage("account")}
           />
 
-          <div className="account-toolbar">
-            <button className="btn-secondary" onClick={() => goToPage("account")}>
-              My Account
-            </button>
-          </div>
-
-          <div className="page-scroll-frame">
-            {renderPage()}
-          </div>
+          <div className="page-scroll-frame">{renderPage()}</div>
         </main>
       </div>
     </AppProvider>
