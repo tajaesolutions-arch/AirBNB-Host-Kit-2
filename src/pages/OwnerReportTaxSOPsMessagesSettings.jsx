@@ -1,6 +1,10 @@
 // ============================================================
 //  OWNER REPORT PAGE
 // ============================================================
+import {
+  resetAccountToBlank,
+  resetAccountToSampleData,
+} from "../services/resetService.js";
 import { useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
 import { PageHeader, Disclaimer } from "../components/index.jsx";
@@ -536,6 +540,140 @@ export function Settings() {
           <div className="field"><label className="field-label">Notes</label><textarea value={propForm.notes || ""} onChange={e => setPropForm(p => ({ ...p, notes: e.target.value }))} rows={2} /></div>
         </Modal>
       )}
+    </div>
+  );
+}
+function ResetDashboardDataCard() {
+  const [resetLoading, setResetLoading] = React.useState(false);
+  const [resetMessage, setResetMessage] = React.useState("");
+  const [resetError, setResetError] = React.useState("");
+
+  const handleResetBlank = async () => {
+    const confirmed = window.confirm(
+      "This will permanently clear all dashboard records for this account. Your login account will not be deleted. Continue?"
+    );
+
+    if (!confirmed) return;
+
+    setResetLoading(true);
+    setResetMessage("");
+    setResetError("");
+
+    try {
+      await resetAccountToBlank();
+      setResetMessage(
+        "Your dashboard has been reset to a blank template. Refresh the page to see the clean version."
+      );
+    } catch (err) {
+      setResetError(err?.message || "Could not reset account data.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResetSample = async () => {
+    const confirmed = window.confirm(
+      "This will replace your current dashboard records with sample data. Your current records will be deleted. Continue?"
+    );
+
+    if (!confirmed) return;
+
+    setResetLoading(true);
+    setResetMessage("");
+    setResetError("");
+
+    try {
+      await resetAccountToSampleData();
+      setResetMessage(
+        "Sample data has been reloaded. Refresh the page to view the sample dashboard."
+      );
+    } catch (err) {
+      setResetError(err?.message || "Could not reload sample data.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  return (
+    <div className="card settings-reset-card">
+      <div className="settings-reset-header">
+        <div>
+          <h2>Reset Dashboard Data</h2>
+          <p>
+            Start over with a blank workspace or reload the sample data for demo
+            and testing purposes.
+          </p>
+        </div>
+      </div>
+
+      {resetMessage && (
+        <div className="account-alert success">
+          <span>{resetMessage}</span>
+        </div>
+      )}
+
+      {resetError && (
+        <div className="account-alert error">
+          <span>{resetError}</span>
+        </div>
+      )}
+
+      <div className="settings-reset-grid">
+        <div className="settings-reset-option">
+          <h3>Blank Template</h3>
+          <p>
+            Clears your properties, bookings, guests, expenses, supplies,
+            maintenance, leads, owner reports, and tax reserve records.
+          </p>
+
+          <button
+            type="button"
+            className="btn-danger"
+            onClick={handleResetBlank}
+            disabled={resetLoading}
+          >
+            {resetLoading ? "Resetting..." : "Reset to Blank Template"}
+          </button>
+        </div>
+
+        <div className="settings-reset-option">
+          <h3>Sample Data</h3>
+          <p>
+            Replaces your current records with sample Jamaica Airbnb host data so
+            you can test the dashboard again.
+          </p>
+
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={handleResetSample}
+            disabled={resetLoading}
+          >
+            {resetLoading ? "Loading..." : "Reset to Sample Data"}
+          </button>
+        </div>
+      </div>
+
+      <div className="settings-reset-warning">
+        This only resets dashboard records for the logged-in account. It does not
+        delete the user login, email, password, or Supabase authentication
+        account.
+      </div>
+    </div>
+  );
+export function Settings() {
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h1 className="page-title">Settings</h1>
+        <p className="page-subtitle">
+          Manage your default host settings and dashboard preferences.
+        </p>
+      </div>
+
+      {/* existing settings content here */}
+
+      <ResetDashboardDataCard />
     </div>
   );
 }
