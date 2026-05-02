@@ -1,115 +1,117 @@
-import React from "react";
 import {
-  Home,
   CalendarDays,
-  UsersRound,
-  Sparkles,
-  Wrench,
-  Package,
-  DollarSign,
-  MessageSquare,
-  FileText,
   Calculator,
   ClipboardCheck,
-  Settings,
-  UserCircle,
+  DollarSign,
+  FileText,
+  Home,
+  MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
+  Settings,
+  Sparkles,
+  Users,
+  Wrench,
   X,
+  Package,
 } from "lucide-react";
 
-const NAV_GROUPS = [
+const navGroups = [
   {
     label: "Operations",
     items: [
-      { key: "dashboard", label: "Host Dashboard", icon: Home },
-      { key: "bookings", label: "Booking Calendar", icon: CalendarDays },
-      { key: "guests", label: "Guest CRM", icon: UsersRound },
-      { key: "cleaning", label: "Cleaning Schedule", icon: Sparkles },
-      { key: "maintenance", label: "Maintenance", icon: Wrench },
-      { key: "supplies", label: "Supplies", icon: Package },
+      { id: "dashboard", label: "Host Dashboard", icon: Home },
+      { id: "bookings", label: "Booking Calendar", icon: CalendarDays },
+      { id: "guests", label: "Guest CRM", icon: Users },
+      { id: "cleaning", label: "Cleaning Schedule", icon: Sparkles },
+      { id: "maintenance", label: "Maintenance", icon: Wrench },
+      { id: "supplies", label: "Supplies", icon: Package },
     ],
   },
   {
     label: "Finance",
     items: [
-      { key: "revenue", label: "Revenue & Profit", icon: DollarSign },
-      { key: "leads", label: "Direct Leads", icon: MessageSquare },
-      { key: "owner", label: "Owner Report", icon: FileText },
-      { key: "tax", label: "Tax Reserve", icon: Calculator },
+      { id: "revenue", label: "Revenue & Profit", icon: DollarSign },
+      { id: "leads", label: "Direct Leads", icon: MessageSquare },
+      { id: "owner", label: "Owner Report", icon: FileText },
+      { id: "tax", label: "Tax Reserve", icon: Calculator },
     ],
   },
   {
     label: "Resources",
     items: [
-      { key: "sops", label: "SOP Checklists", icon: ClipboardCheck },
-      { key: "messages", label: "Msg Templates", icon: MessageSquare },
-      { key: "settings", label: "Settings", icon: Settings },
-      { key: "account", label: "My Account", icon: UserCircle },
+      { id: "sops", label: "SOP Checklists", icon: ClipboardCheck },
+      { id: "messages", label: "Msg Templates", icon: MessageSquare },
+      { id: "settings", label: "Settings", icon: Settings },
     ],
   },
 ];
 
 export default function Sidebar({
-  page = "dashboard",
+  page,
   setPage,
   collapsed = false,
   onToggleCollapse,
   mobile = false,
   onClose,
 }) {
-  const handleNavigate = (nextPage) => {
-    if (setPage) setPage(nextPage);
+  const handleSelect = (nextPage) => {
+    setPage(nextPage);
     if (mobile && onClose) onClose();
   };
 
   return (
-    <aside className={`app-sidebar ${collapsed ? "is-collapsed" : ""} ${mobile ? "is-mobile" : ""}`}>
-      <div className="app-sidebar-header">
-        <div className="app-sidebar-brand">
-          <div className="app-sidebar-logo">🇯🇲</div>
+    <aside className={`sidebar ${mobile ? "mobile" : ""}`} aria-label="Host Operations Sidebar">
+      <div className="sidebar-logo sidebar-brand">
+        <span className="sidebar-logo-mark" aria-hidden="true">🇯🇲</span>
 
-          <div className="app-sidebar-brand-text">
-            <div className="app-sidebar-title">Host Operations</div>
-            <div className="app-sidebar-subtitle">Jamaica Airbnb Kit</div>
-          </div>
+        <div className="sidebar-brand-main">
+          <div className="sidebar-logo-title">Host Operations</div>
+          <div className="sidebar-logo-sub">Jamaica Airbnb Kit</div>
         </div>
 
         {mobile ? (
-          <button className="app-sidebar-toggle" onClick={onClose} title="Close menu">
-            <X size={19} />
+          <button
+            type="button"
+            className="sidebar-collapse-btn"
+            onClick={onClose}
+            aria-label="Close sidebar"
+          >
+            <X aria-hidden="true" />
           </button>
         ) : (
           <button
-            className="app-sidebar-toggle"
+            type="button"
+            className="sidebar-collapse-btn"
             onClick={onToggleCollapse}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {collapsed ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}
+            {collapsed ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}
           </button>
         )}
       </div>
 
-      <nav className="app-sidebar-nav">
-        {NAV_GROUPS.map((group) => (
-          <div className="app-sidebar-group" key={group.label}>
-            <div className="app-sidebar-group-label">{group.label}</div>
-
-            <div className="app-sidebar-items">
+      <nav className="sidebar-nav" aria-label="Main navigation">
+        {navGroups.map((group) => (
+          <div className="sidebar-section" key={group.label}>
+            <div className="sidebar-group-label">{group.label}</div>
+            <div className="sidebar-section-items">
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = page === item.key;
+                const active = page === item.id;
 
                 return (
                   <button
-                    key={item.key}
+                    key={item.id}
                     type="button"
-                    className={`app-sidebar-item ${isActive ? "active" : ""}`}
-                    onClick={() => handleNavigate(item.key)}
-                    title={collapsed ? item.label : ""}
+                    className={`sidebar-item ${active ? "active" : ""}`}
+                    onClick={() => handleSelect(item.id)}
+                    aria-current={active ? "page" : undefined}
+                    title={collapsed ? item.label : undefined}
                   >
-                    <Icon size={22} className="app-sidebar-icon" />
-                    <span className="app-sidebar-label">{item.label}</span>
+                    <Icon className="sidebar-icon" aria-hidden="true" />
+                    <span className="sidebar-item-label">{item.label}</span>
                   </button>
                 );
               })}
@@ -118,9 +120,8 @@ export default function Sidebar({
         ))}
       </nav>
 
-      <div className="app-sidebar-note">
-        <span>💡</span>
-        <p>Add bookings first — the dashboard fills in automatically.</p>
+      <div className="sidebar-tip">
+        💡 Add bookings first — the dashboard fills in automatically.
       </div>
     </aside>
   );
