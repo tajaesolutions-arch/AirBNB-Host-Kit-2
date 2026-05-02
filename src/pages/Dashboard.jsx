@@ -83,12 +83,22 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
         title="Host Dashboard"
         subtitle={`Snapshot for ${propFilter === "ALL" ? "all properties" : (getProp(propFilter)?.property_name || "")} — ${monthFilter}`}
         actions={<>
-          <button className="btn-secondary" onClick={() => setPage("bookings")}>+ Add Booking</button>
-          <button className="btn-primary" onClick={() => setPage("revenue")}>+ Add Expense</button>
+          <button
+            className="btn-secondary"
+            onClick={() => setPage("bookings", "add-booking")}
+          >
+            + Add Booking
+          </button>
+
+          <button
+            className="btn-primary"
+            onClick={() => setPage("revenue", "add-expense")}
+          >
+            + Add Expense
+          </button>
         </>}
       />
 
-      {/* Primary metrics */}
       <div className="metric-grid">
         <MetricCard tone="navy" label="Booking Revenue" value={fmtCurrency(grossRevenue, cur)} sub={`${monthBookings.length} bookings this month`} icon={DollarSign} />
         <MetricCard tone={netProfit >= 0 ? "teal" : "red"} label="Net Profit (Est.)" value={fmtCurrency(netProfit, cur)} sub="After all fees & expenses" icon={TrendingUp} />
@@ -96,7 +106,6 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
         <MetricCard label="Avg Nightly Rate" value={fmtCurrency(avgNightly, cur)} sub="Excludes cleaning fee" icon={Star} />
       </div>
 
-      {/* Secondary metrics */}
       <div className="metric-grid" style={{ marginBottom: 22 }}>
         <MetricCard tone="sand" label="Airbnb Revenue" value={fmtCurrency(airbnbRevenue, cur)} sub="Platform bookings" />
         <MetricCard tone="sand" label="Direct Revenue" value={fmtCurrency(directRevenue, cur)} sub="WhatsApp, IG, Direct" />
@@ -104,7 +113,6 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
         <MetricCard tone="amber" label="Tax Reserve (Est.)" value={fmtCurrency(taxReserve, cur)} sub={`${fmtPct(settings.tax_reserve_percentage)} — planning only`} />
       </div>
 
-      {/* Alerts + Health */}
       <div className="grid-2" style={{ marginBottom: 22 }}>
         <div className="card" style={{ padding: 18 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
@@ -159,7 +167,6 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
         </div>
       </div>
 
-      {/* Profit breakdown */}
       <div className="card" style={{ padding: 18, marginBottom: 22 }}>
         <h3 className="section-title">Monthly Profit Breakdown</h3>
         <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 14 }}>Revenue alone is not profit. Here's what you actually keep after all costs.</p>
@@ -177,7 +184,6 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
         </div>
       </div>
 
-      {/* Upcoming activity */}
       <div className="grid-2">
         <div className="card" style={{ padding: 18 }}>
           <h3 className="section-title">Next Check-ins</h3>
