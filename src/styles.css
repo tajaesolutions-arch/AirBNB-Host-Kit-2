@@ -1,54 +1,63 @@
 /* ============================================================
    JAMAICA AIRBNB HOST OPERATIONS KIT
-   COMPLETE RESPONSIVE STYLESHEET
+   FULL PREMIUM SAAS STYLESHEET
+   Replace the entire src/styles.css file with this.
    ============================================================ */
 
 @import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap");
 
 /* ============================================================
-   ROOT TOKENS
+   DESIGN TOKENS
    ============================================================ */
 
 :root {
   --navy: #0b2545;
   --navy-soft: #12345c;
-  --navy-deep: #081d36;
+  --navy-deep: #071a31;
 
   --teal: #1b998b;
-  --teal-dark: #137a70;
-  --teal-soft: #e2f3ef;
+  --teal-dark: #12776e;
+  --teal-soft: #e3f4f0;
+  --teal-line: #8ed7cc;
 
   --sand: #f4e9d6;
   --sand-soft: #fbf6ec;
+  --cream: #faf8f4;
 
   --paper: #ffffff;
-  --bg: #faf8f4;
-
   --ink: #071827;
-  --muted: #738293;
-  --muted-2: #98a4b3;
+  --muted: #718093;
+  --muted-2: #9aa7b6;
 
-  --line: #e7dac7;
-  --line-strong: #d9c7aa;
+  --line: #eadcc8;
+  --line-strong: #d8c5a6;
 
   --amber: #c58a18;
   --amber-soft: #fff4d8;
+  --amber-line: #efcc6b;
 
   --red: #c94a36;
   --red-soft: #fde8e2;
+  --red-line: #efb8ae;
 
-  --green: #1f8c5f;
+  --green: #218c61;
   --green-soft: #e5f5ec;
+  --green-line: #a6ddba;
 
-  --blue: #276fbf;
+  --blue: #286fbf;
   --blue-soft: #e5f0fb;
+  --blue-line: #b4d2f3;
 
   --radius-xs: 8px;
   --radius-sm: 12px;
   --radius: 16px;
   --radius-lg: 22px;
+  --radius-xl: 28px;
+
+  --shadow-xs: 0 4px 12px rgba(11, 37, 69, 0.04);
+  --shadow-sm: 0 8px 24px rgba(11, 37, 69, 0.06);
   --shadow: 0 14px 38px rgba(11, 37, 69, 0.08);
-  --shadow-soft: 0 8px 24px rgba(11, 37, 69, 0.06);
+  --shadow-lg: 0 24px 70px rgba(11, 37, 69, 0.14);
 
   --sidebar-width: 300px;
   --sidebar-collapsed-width: 88px;
@@ -80,7 +89,7 @@ html {
 body {
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  background: var(--bg);
+  background: var(--cream);
   color: var(--ink);
   overflow-x: hidden;
 }
@@ -111,30 +120,19 @@ a {
 }
 
 /* ============================================================
-   APP LAYOUT: SIDEBAR + DASHBOARD
+   APP LAYOUT
    ============================================================ */
 
-.app-shell {
-  width: 100%;
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
-  background: var(--bg);
-}
-
-.app-shell.sidebar-collapsed {
-  grid-template-columns: var(--sidebar-collapsed-width) minmax(0, 1fr);
-}
-
-/* Legacy compatibility */
+.app-shell,
 .app-layout {
   width: 100%;
   min-height: 100vh;
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
-  background: var(--bg);
+  background: var(--cream);
 }
 
+.app-shell.sidebar-collapsed,
 .app-layout.sidebar-is-collapsed {
   grid-template-columns: var(--sidebar-collapsed-width) minmax(0, 1fr);
 }
@@ -144,15 +142,14 @@ a {
   grid-column: 2;
   grid-row: 1;
   width: 100%;
-  max-width: 100%;
   min-width: 0;
-  background: var(--bg);
+  max-width: 100%;
+  background: var(--cream);
   overflow-x: hidden;
 }
 
 /* ============================================================
    SIDEBAR
-   Supports both new .app-sidebar and old .sidebar class names
    ============================================================ */
 
 .app-sidebar,
@@ -175,8 +172,8 @@ a {
 
 .app-sidebar.is-collapsed,
 .sidebar.collapsed,
-.app-layout.sidebar-is-collapsed .sidebar,
-.app-shell.sidebar-collapsed .app-sidebar {
+.app-shell.sidebar-collapsed .app-sidebar,
+.app-layout.sidebar-is-collapsed .sidebar {
   width: var(--sidebar-collapsed-width);
   min-width: var(--sidebar-collapsed-width);
   max-width: var(--sidebar-collapsed-width);
@@ -214,17 +211,13 @@ a {
   font-size: 19px;
 }
 
-.app-sidebar-brand-text,
-.sidebar-brand-text {
-  min-width: 0;
-}
-
 .app-sidebar-title,
 .sidebar-title {
   font-family: "Fraunces", serif;
   font-size: 18px;
   font-weight: 700;
   line-height: 1.05;
+  color: #ffffff;
   white-space: nowrap;
 }
 
@@ -234,7 +227,7 @@ a {
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.52);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -362,11 +355,6 @@ a {
   justify-content: center;
 }
 
-.app-sidebar.is-collapsed .app-sidebar-brand,
-.sidebar.collapsed .sidebar-brand {
-  justify-content: center;
-}
-
 .app-sidebar.is-collapsed .app-sidebar-brand-text,
 .app-sidebar.is-collapsed .app-sidebar-group-label,
 .app-sidebar.is-collapsed .app-sidebar-label,
@@ -420,7 +408,7 @@ a {
   height: 25px;
 }
 
-/* Mobile sidebar drawer */
+/* Mobile sidebar */
 
 .mobile-sidebar-overlay,
 .sidebar-overlay.open {
@@ -443,7 +431,7 @@ a {
 }
 
 /* ============================================================
-   TOP BAR / PAGE FRAME
+   TOP BAR
    ============================================================ */
 
 .topbar,
@@ -498,6 +486,10 @@ a {
   overflow-x: hidden;
 }
 
+/* ============================================================
+   PAGE STRUCTURE
+   ============================================================ */
+
 .page {
   width: 100%;
   max-width: 100%;
@@ -525,36 +517,36 @@ a {
 
 .page-title {
   font-family: "Fraunces", serif;
-  font-size: clamp(32px, 3vw, 44px);
+  font-size: clamp(34px, 3.2vw, 48px);
   line-height: 1.05;
   color: var(--ink);
   margin: 0 0 8px;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
 }
 
 .page-subtitle {
   color: var(--muted);
-  font-size: 15px;
+  font-size: 15.5px;
   margin: 0;
   line-height: 1.6;
 }
 
 .page-helper {
   margin-top: 12px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   border-radius: var(--radius-sm);
-  background: var(--sand-soft);
-  border: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 13px;
+  background: var(--teal-soft);
+  border: 1px solid var(--teal-line);
+  color: var(--ink);
+  font-size: 14px;
   line-height: 1.55;
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: flex-start;
 }
 
 /* ============================================================
-   GRID SYSTEM / RESPONSIVE CONTAINERS
+   GRIDS
    ============================================================ */
 
 .grid-2,
@@ -578,7 +570,7 @@ a {
   max-width: 100%;
   min-width: 0;
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)) !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)) !important;
   gap: 16px !important;
 }
 
@@ -593,11 +585,11 @@ a {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)) !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)) !important;
 }
 
 /* ============================================================
-   CARDS / PANELS / KPI BLOCKS
+   PREMIUM CARDS
    ============================================================ */
 
 .card,
@@ -616,7 +608,7 @@ a {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-sm);
   overflow-wrap: break-word;
 }
 
@@ -631,15 +623,13 @@ a {
   max-width: 100%;
 }
 
-.num,
-.profit-value,
-.profit-label {
-  overflow-wrap: anywhere;
+.card {
+  overflow: hidden;
 }
 
 .section-title {
   font-family: "Fraunces", serif;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--ink);
   margin: 0 0 14px;
@@ -653,6 +643,23 @@ a {
   color: var(--teal) !important;
 }
 
+.num,
+.profit-value,
+.profit-label {
+  overflow-wrap: anywhere;
+}
+
+/* KPI-style cards, including common inline dashboard cards */
+.page .card h3,
+.page .card h2 {
+  margin-top: 0;
+}
+
+.page .card [class*="label"],
+.page .card [class*="Label"] {
+  color: var(--muted);
+}
+
 /* ============================================================
    BUTTONS
    ============================================================ */
@@ -661,23 +668,25 @@ a {
 .btn-secondary,
 .btn-ghost,
 .btn-danger {
-  min-height: 40px;
+  min-height: 42px;
   border-radius: 12px;
-  padding: 0 14px;
+  padding: 0 16px;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   border: 1px solid transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 8px;
   white-space: nowrap;
+  text-decoration: none;
 }
 
 .btn-primary {
   background: var(--navy);
   color: #ffffff;
   border-color: var(--navy);
+  box-shadow: var(--shadow-xs);
 }
 
 .btn-primary:hover {
@@ -706,9 +715,50 @@ a {
 }
 
 .btn-danger {
-  background: var(--red);
-  color: #ffffff;
-  border-color: var(--red);
+  background: var(--red-soft);
+  color: var(--red);
+  border-color: var(--red-line);
+}
+
+/* Generic unclassed buttons inside pages */
+.page button:not(.btn-primary):not(.btn-secondary):not(.btn-ghost):not(.btn-danger):not(.tab-btn):not(.app-sidebar-item):not(.sidebar-nav-item) {
+  min-height: 42px;
+  border-radius: 12px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--navy);
+  font-weight: 700;
+}
+
+/* ============================================================
+   TABS / FILTER PILLS
+   ============================================================ */
+
+.tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 20px;
+}
+
+.tab-btn,
+.page .tab-row button {
+  border: 1px solid var(--line-strong) !important;
+  background: var(--paper) !important;
+  color: var(--navy) !important;
+  padding: 10px 18px !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  min-height: 44px !important;
+}
+
+.tab-btn.active,
+.page .tab-row button.active {
+  background: var(--navy) !important;
+  color: #ffffff !important;
+  border-color: var(--navy) !important;
 }
 
 /* ============================================================
@@ -743,7 +793,7 @@ textarea {
   border: 1px solid var(--line-strong);
   background: var(--paper);
   border-radius: 12px;
-  padding: 11px 12px;
+  padding: 12px 13px;
   color: var(--ink);
   outline: none;
 }
@@ -771,33 +821,69 @@ textarea {
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: var(--shadow-sm);
 }
 
 table {
   width: 100%;
-  max-width: 100%;
-  border-collapse: collapse;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--paper);
+}
+
+thead {
+  background: var(--sand-soft);
 }
 
 th,
 td {
-  padding: 12px;
+  padding: 18px 20px;
   border-bottom: 1px solid var(--line);
   text-align: left;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 th {
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr:nth-child(even) {
+  background: #fffaf0;
 }
 
 .td-right {
   text-align: right;
+}
+
+/* Badges / status pills */
+.badge,
+.status,
+.pill,
+.tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  background: var(--sand-soft);
+  color: var(--navy);
 }
 
 /* ============================================================
@@ -841,7 +927,7 @@ th {
 }
 
 /* ============================================================
-   SOP / MESSAGE TEMPLATES
+   SOP / MESSAGES
    ============================================================ */
 
 .sop-section {
@@ -902,29 +988,6 @@ th {
 .sop-text {
   font-size: 13px;
   line-height: 1.5;
-}
-
-.tab-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.tab-btn {
-  border: 1px solid var(--line);
-  background: var(--paper);
-  color: var(--muted);
-  padding: 9px 12px;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 12px;
-}
-
-.tab-btn.active {
-  background: var(--navy);
-  color: #ffffff;
-  border-color: var(--navy);
 }
 
 .msg-card {
@@ -989,7 +1052,7 @@ th {
 }
 
 /* ============================================================
-   MODAL
+   MODALS
    ============================================================ */
 
 .modal-backdrop,
@@ -1040,7 +1103,7 @@ th {
 }
 
 /* ============================================================
-   SETTINGS RESET SECTION
+   SETTINGS RESET
    ============================================================ */
 
 .settings-reset-card {
@@ -1096,7 +1159,7 @@ th {
   padding: 12px 14px;
   border-radius: var(--radius-sm);
   background: var(--amber-soft);
-  border: 1px solid #ebd491;
+  border: 1px solid var(--amber-line);
   color: var(--amber);
   font-size: 12px;
   line-height: 1.55;
@@ -1108,14 +1171,14 @@ th {
    ============================================================ */
 
 .account-card {
-  padding: 20px;
+  padding: 24px;
 }
 
 .account-card-header {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 14px;
+  margin-bottom: 22px;
 }
 
 .account-card-header svg {
@@ -1125,13 +1188,13 @@ th {
 
 .account-card-header h2 {
   font-family: "Fraunces", serif;
-  font-size: 18px;
-  margin: 0 0 3px;
+  font-size: 22px;
+  margin: 0 0 5px;
 }
 
 .account-card-header p {
   color: var(--muted);
-  font-size: 12.5px;
+  font-size: 13.5px;
   margin: 0;
 }
 
@@ -1140,24 +1203,24 @@ th {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 12px 0;
+  padding: 14px 0;
   border-bottom: 1px solid var(--line);
 }
 
 .account-detail-row span {
   color: var(--muted);
-  font-size: 12.5px;
+  font-size: 13px;
 }
 
 .account-detail-row strong {
-  font-size: 13.5px;
+  font-size: 14px;
   text-align: right;
 }
 
 .account-muted {
   margin-top: 14px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.6;
 }
 
@@ -1181,24 +1244,24 @@ th {
 .account-alert.success {
   background: var(--green-soft);
   color: var(--green);
-  border: 1px solid #bce0c5;
+  border: 1px solid var(--green-line);
 }
 
 .account-alert.error {
   background: var(--red-soft);
   color: var(--red);
-  border: 1px solid #efb8ae;
+  border: 1px solid var(--red-line);
 }
 
 /* ============================================================
-   AUTH / LOGIN PAGE
+   AUTH PAGE
    ============================================================ */
 
 .auth-shell {
   min-height: 100vh;
   background: radial-gradient(circle at top left, rgba(27, 153, 139, 0.16), transparent 34%),
     radial-gradient(circle at bottom right, rgba(244, 233, 214, 0.95), transparent 34%),
-    var(--bg);
+    var(--cream);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1215,7 +1278,7 @@ th {
   border: 1px solid var(--line);
   border-radius: 26px;
   overflow: hidden;
-  box-shadow: 0 24px 70px rgba(11, 37, 69, 0.14);
+  box-shadow: var(--shadow-lg);
 }
 
 .auth-brand-panel {
@@ -1421,7 +1484,7 @@ th {
   place-items: center;
   background: var(--teal-soft);
   color: var(--teal);
-  border: 1px solid #9fd8cf;
+  border: 1px solid var(--teal-line);
   font-size: 22px;
   font-weight: 800;
   flex-shrink: 0;
@@ -1466,7 +1529,7 @@ th {
 .auth-mode-toggle button.active {
   background: var(--paper);
   color: var(--navy);
-  box-shadow: 0 4px 12px rgba(11, 37, 69, 0.08);
+  box-shadow: var(--shadow-xs);
 }
 
 .auth-clean-form {
@@ -1544,18 +1607,18 @@ th {
 .auth-alert.error {
   background: var(--red-soft);
   color: var(--red);
-  border: 1px solid #efb8ae;
+  border: 1px solid var(--red-line);
 }
 
 .auth-message.success,
 .auth-alert.success {
   background: var(--green-soft);
   color: var(--green);
-  border: 1px solid #bce0c5;
+  border: 1px solid var(--green-line);
 }
 
 /* ============================================================
-   LOADING / AUTH ERROR
+   LOADING / ERROR
    ============================================================ */
 
 .loading-screen,
@@ -1563,7 +1626,7 @@ th {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: var(--bg);
+  background: var(--cream);
   color: var(--navy);
   font-weight: 700;
   padding: 24px;
@@ -1578,7 +1641,7 @@ th {
 }
 
 /* ============================================================
-   RESPONSIVE BREAKPOINTS
+   RESPONSIVE
    ============================================================ */
 
 @media (max-width: 1280px) {
@@ -1688,6 +1751,10 @@ th {
   th,
   td {
     white-space: normal;
+  }
+
+  table {
+    min-width: 720px;
   }
 
   .page-header-row,
