@@ -34,6 +34,11 @@ export default function App() {
   const [page, setPage] = useState("dashboard");
   const [monthFilter, setMonthFilter] = useState(currentMonth());
   const [propFilter, setPropFilter] = useState("all");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed((currentValue) => !currentValue);
+  };
 
   const renderPage = () => {
     switch (page) {
@@ -160,8 +165,13 @@ export default function App() {
 
   return (
     <AppProvider>
-      <div className="app-shell">
-        <Sidebar page={page} setPage={setPage} />
+      <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+        <Sidebar
+          page={page}
+          setPage={setPage}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapse}
+        />
 
         <main className="main-content">
           <TopBar
