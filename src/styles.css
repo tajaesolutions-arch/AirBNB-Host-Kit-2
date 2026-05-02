@@ -4599,3 +4599,183 @@ body.sidebar-open .main-content .topbar-currency-select {
     display: none !important;
   }
 }
+/* ==========================================================================
+   FINAL OVERRIDE — ONE-ROW TOPBAR, NO HAMBURGER, INLINE CURRENCY SELECT
+   ========================================================================== */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  min-height: var(--header-h);
+  height: auto;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Remove hamburger from the topbar completely */
+.topbar-menu-btn,
+.topbar-mobile-btn {
+  display: none !important;
+}
+
+/* Keep all filters in one row */
+.topbar-filters {
+  grid-column: 1;
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  max-width: none !important;
+  min-width: 0;
+  flex-wrap: nowrap !important;
+  overflow: hidden;
+}
+
+/* Keep label + input/select locked together */
+.topbar-filter-group {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  min-width: 0;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.topbar-label {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.topbar-control,
+.topbar-property-select,
+.topbar-month-input,
+.topbar-currency-select {
+  height: 36px;
+  min-width: 0 !important;
+  max-width: none !important;
+  padding: 0 9px;
+  font-size: 12.25px;
+  line-height: 1.2;
+  border-radius: 9px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+  box-sizing: border-box;
+}
+
+.topbar-property-select {
+  width: 176px !important;
+}
+
+.topbar-month-input {
+  width: 132px !important;
+}
+
+.topbar-currency-select {
+  width: 84px !important;
+}
+
+.topbar-right {
+  grid-column: 2;
+  justify-self: end;
+  min-width: max-content;
+  margin-left: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.topbar-currency-chip {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* When sidebar is open, make the row tighter */
+.app-shell:not(.sidebar-collapsed) .topbar {
+  padding-left: 16px;
+  padding-right: 16px;
+  gap: 8px;
+}
+
+.app-shell:not(.sidebar-collapsed) .topbar-filters {
+  gap: 7px;
+}
+
+.app-shell:not(.sidebar-collapsed) .topbar-property-select {
+  width: 164px !important;
+}
+
+.app-shell:not(.sidebar-collapsed) .topbar-month-input {
+  width: 124px !important;
+}
+
+.app-shell:not(.sidebar-collapsed) .topbar-currency-select {
+  width: 80px !important;
+}
+
+/* Hide decorative currency chip before the row breaks */
+@media (max-width: 1100px) {
+  .topbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .topbar-right {
+    display: none !important;
+  }
+}
+
+/* Keep one row even on tighter laptop widths */
+@media (max-width: 900px) {
+  .topbar {
+    display: block !important;
+    padding: 8px 12px;
+  }
+
+  .topbar-filters {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .topbar-filter-group {
+    gap: 4px;
+  }
+
+  .topbar-label {
+    font-size: 9px;
+    letter-spacing: 0.03em;
+  }
+
+  .topbar-property-select {
+    width: 142px !important;
+  }
+
+  .topbar-month-input {
+    width: 112px !important;
+  }
+
+  .topbar-currency-select {
+    width: 72px !important;
+  }
+}
