@@ -507,9 +507,9 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
 
   const cur = settings.default_currency || "JMD";
 
-  const goToPage = (page) => {
+  const goToPage = (nextPage) => {
     if (typeof setPage === "function") {
-      setPage(page);
+      setPage(nextPage);
     }
   };
 
@@ -559,7 +559,10 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
   }
 
   const selectedMonth = monthFilter || new Date().toISOString().slice(0, 7);
-  const selectedPropFilter = propFilter || "ALL";
+  const selectedPropFilter =
+    !propFilter || propFilter === "all" || propFilter === "ALL"
+      ? "ALL"
+      : propFilter;
 
   const filterByProp = (arr, key = "property_id") =>
     selectedPropFilter === "ALL"
@@ -1089,74 +1092,7 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
         </div>
       </div>
 
-      {hasNoBookings && hasNoExpenses ? (
-        <div className="grid-2" style={{ marginBottom: 22 }}>
-          <EmptyCard
-            title="No booking data yet"
-            body="Add your first booking to activate revenue, occupancy, check-in, checkout, tax reserve, and owner report calculations."
-            buttonLabel="Add Booking"
-            onClick={() => goToPage("bookings")}
-          />
-
-          <EmptyCard
-            title="No expense data yet"
-            body="Add your first expense so the dashboard can calculate true profit instead of only gross revenue."
-            buttonLabel="Add Expense"
-            onClick={() => goToPage("revenue")}
-          />
-        </div>
-      ) : (
-        <div className="card" style={{ padding: 18, marginBottom: 22 }}>
-          <h3 className="section-title">Monthly Profit Breakdown</h3>
-
-          <p
-            style={{
-              fontSize: 12,
-              color: "var(--muted)",
-              marginBottom: 14,
-            }}
-          >
-            Revenue alone is not profit. Here's what you actually keep after all
-            costs.
-          </p>
-
-          <div className="profit-table">
-            {profitBreakdown.map((row, index) => (
-              <div key={index} className="profit-row">
-                <span
-                  className={row.bold ? "profit-label bold" : "profit-label"}
-                >
-                  {row.label}
-                </span>
-
-                <span
-                  className={`profit-value ${
-                    row.value < 0 ? "" : "positive"
-                  }`}
-                >
-                  {fmtCurrency(row.value, cur)}
-                </span>
-              </div>
-            ))}
-
-            <div className="profit-row total">
-              <span className="fw-bold" style={{ color: "var(--teal)" }}>
-                Net Profit (Estimated)
-              </span>
-
-              <span
-                className={`profit-value ${
-                  netProfit >= 0 ? "teal" : "negative"
-                }`}
-              >
-                {fmtCurrency(netProfit, cur)}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="grid-2">
+      <div className="grid-2" style={{ marginBottom: 22 }}>
         <div className="card" style={{ padding: 18 }}>
           <h3 className="section-title">Next Check-ins</h3>
 
@@ -1224,6 +1160,73 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
           )}
         </div>
       </div>
+
+      {hasNoBookings && hasNoExpenses ? (
+        <div className="grid-2" style={{ marginBottom: 22 }}>
+          <EmptyCard
+            title="No booking data yet"
+            body="Add your first booking to activate revenue, occupancy, check-in, checkout, tax reserve, and owner report calculations."
+            buttonLabel="Add Booking"
+            onClick={() => goToPage("bookings")}
+          />
+
+          <EmptyCard
+            title="No expense data yet"
+            body="Add your first expense so the dashboard can calculate true profit instead of only gross revenue."
+            buttonLabel="Add Expense"
+            onClick={() => goToPage("revenue")}
+          />
+        </div>
+      ) : (
+        <div className="card" style={{ padding: 18, marginBottom: 22 }}>
+          <h3 className="section-title">Monthly Profit Breakdown</h3>
+
+          <p
+            style={{
+              fontSize: 12,
+              color: "var(--muted)",
+              marginBottom: 14,
+            }}
+          >
+            Revenue alone is not profit. Here&apos;s what you actually keep
+            after all costs.
+          </p>
+
+          <div className="profit-table">
+            {profitBreakdown.map((row, index) => (
+              <div key={index} className="profit-row">
+                <span
+                  className={row.bold ? "profit-label bold" : "profit-label"}
+                >
+                  {row.label}
+                </span>
+
+                <span
+                  className={`profit-value ${
+                    row.value < 0 ? "" : "positive"
+                  }`}
+                >
+                  {fmtCurrency(row.value, cur)}
+                </span>
+              </div>
+            ))}
+
+            <div className="profit-row total">
+              <span className="fw-bold" style={{ color: "var(--teal)" }}>
+                Net Profit (Estimated)
+              </span>
+
+              <span
+                className={`profit-value ${
+                  netProfit >= 0 ? "teal" : "negative"
+                }`}
+              >
+                {fmtCurrency(netProfit, cur)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {hasNoCleaning && (
         <div className="card" style={{ padding: 18, marginTop: 22 }}>
