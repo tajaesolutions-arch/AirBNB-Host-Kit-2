@@ -2185,7 +2185,114 @@ tbody tr:hover {
 .current-dashboard p {
   line-height: 1.65 !important;
 }
+/* =========================================================
+   LOGIN PAGE HARD FIX
+   ========================================================= */
 
+.login-page,
+.auth-page,
+.login-screen,
+.auth-screen,
+.login-container,
+.auth-container {
+  min-height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 32px !important;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 28%),
+    linear-gradient(135deg, #f8fafc 0%, #eef4ff 100%) !important;
+}
+
+.login-card,
+.auth-card,
+.login-box,
+.auth-box,
+.signin-card {
+  width: 100% !important;
+  max-width: 430px !important;
+  padding: 36px !important;
+  border-radius: 28px !important;
+  border: 1px solid #e5e7eb !important;
+  background: #ffffff !important;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.10) !important;
+}
+
+.login-card h1,
+.auth-card h1,
+.login-title,
+.auth-title {
+  margin-bottom: 10px !important;
+  font-size: 32px !important;
+  line-height: 1.1 !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.04em !important;
+  color: #111827 !important;
+}
+
+.login-card p,
+.auth-card p,
+.login-subtitle,
+.auth-subtitle {
+  margin-bottom: 26px !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  color: #6b7280 !important;
+}
+
+.login-card form,
+.auth-card form {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+.login-card label,
+.auth-card label {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #374151 !important;
+}
+
+.login-card input,
+.auth-card input {
+  height: 48px !important;
+  padding: 0 14px !important;
+  border: 1px solid #dfe5ef !important;
+  border-radius: 14px !important;
+  background: #f9fafb !important;
+  color: #111827 !important;
+  outline: none !important;
+}
+
+.login-card input:focus,
+.auth-card input:focus {
+  border-color: #93c5fd !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.10) !important;
+}
+
+.login-card button,
+.auth-card button,
+.login-button,
+.auth-button {
+  height: 48px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22) !important;
+}
+
+.login-card button:hover,
+.auth-card button:hover,
+.login-button:hover,
+.auth-button:hover {
+  background: #1d4ed8 !important;
+}
 /* =========================================================
    END OF FILE
    ========================================================= */
