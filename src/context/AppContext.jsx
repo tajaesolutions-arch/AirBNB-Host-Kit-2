@@ -10,6 +10,7 @@ import {
   SAMPLE_LEADS,
   DEFAULT_SETTINGS,
 } from "../data/sampleData.js";
+import { normalizeCurrency } from "../utils/helpers.js";
 
 const AppContext = createContext(null);
 
@@ -66,11 +67,17 @@ const safeSettings = (value) => {
     return clone(BLANK_SETTINGS);
   }
 
-  return {
+  const mergedSettings = {
     ...clone(BLANK_SETTINGS),
     ...value,
     cleaners: safeArray(value.cleaners),
     vendors: safeArray(value.vendors),
+  };
+
+  return {
+    ...mergedSettings,
+    default_currency: normalizeCurrency(mergedSettings.default_currency || "JMD"),
+    airbnb_currency: normalizeCurrency(mergedSettings.airbnb_currency || "USD"),
   };
 };
 
@@ -148,8 +155,6 @@ const saveBlankStorageState = () => {
   try {
     localStorage.setItem(CLEARED_SAMPLE_DATA_FLAG, "true");
 
-    // Clear any older app-owned JAK keys that may have been created by prior versions.
-    // This avoids leaving stale owner report / tax / record data behind.
     Object.keys(localStorage).forEach((key) => {
       if (
         key.startsWith("jak_") &&
@@ -235,14 +240,17 @@ export function AppProvider({ children }) {
 
   const [settings, setSettingsRaw] = useState(() => loadSettings());
 
-  const persist = (key, setter) => (valueOrUpdater) => {
+  const persist = (key, setter, normalizer = null) => (valueOrUpdater) => {
     setter((previousValue) => {
-      const nextValue =
+      const rawNextValue =
         typeof valueOrUpdater === "function"
           ? valueOrUpdater(previousValue)
           : valueOrUpdater;
 
+      const nextValue = normalizer ? normalizer(rawNextValue) : rawNextValue;
+
       save(key, nextValue);
+
       return nextValue;
     });
   };
@@ -255,7 +263,11 @@ export function AppProvider({ children }) {
   const setSupplies = persist(STORAGE_KEYS.supplies, setSuppliesRaw);
   const setExpenses = persist(STORAGE_KEYS.expenses, setExpensesRaw);
   const setLeads = persist(STORAGE_KEYS.leads, setLeadsRaw);
-  const setSettings = persist(STORAGE_KEYS.settings, setSettingsRaw);
+  const setSettings = persist(
+    STORAGE_KEYS.settings,
+    setSettingsRaw,
+    safeSettings
+  );
 
   const resetToBlankData = () => {
     saveBlankStorageState();
@@ -283,6 +295,13 @@ export function AppProvider({ children }) {
     setExpenses(SAMPLE_EXPENSES);
     setLeads(SAMPLE_LEADS);
     setSettings(DEFAULT_SETTINGS);
+  };
+
+  const updateCurrency = (nextCurrency) => {
+    setSettings((previousSettings) => ({
+      ...previousSettings,
+      default_currency: normalizeCurrency(nextCurrency),
+    }));
   };
 
   const getBackupData = () => {
@@ -332,8 +351,6 @@ export function AppProvider({ children }) {
     return nextData;
   };
 
-  // Kept for compatibility with any old button/component name.
-  // In this app, resetToSampleData should mean "show sample data again".
   const resetToSampleData = restoreSampleData;
 
   return (
@@ -365,6 +382,7 @@ export function AppProvider({ children }) {
 
         settings,
         setSettings,
+        updateCurrency,
 
         resetToBlankData,
         resetToSampleData,
