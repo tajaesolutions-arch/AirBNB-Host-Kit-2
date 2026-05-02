@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
-import { PageHeader, Modal, Field, ConfirmBar, Chip, EmptyState } from "../components/index.jsx";
+import { PageHeader, Modal, Field, ConfirmBar, Chip } from "../components/index.jsx";
 import { uid, todayISO, calcNights, bookingTotal, fmtCurrency, fmtDateShort, downloadCSV, bookingStatusChip, paymentStatusChip } from "../utils/helpers.js";
 import { PLATFORMS } from "../data/sampleData.js";
 import { Plus, Download, ChevronRight, Trash2 } from "lucide-react";
@@ -62,7 +62,12 @@ function BookingForm({ record, onClose, onSave, onDelete, properties }) {
   );
 }
 
-export default function Bookings({ monthFilter, propFilter }) {
+export default function Bookings({
+  monthFilter,
+  propFilter,
+  pageAction,
+  onPageActionHandled,
+}) {
   const { bookings, setBookings, properties, settings } = useApp();
   const [editing, setEditing] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -72,14 +77,40 @@ export default function Bookings({ monthFilter, propFilter }) {
     .filter(b => statusFilter === "ALL" || b.booking_status === statusFilter)
     .sort((a, b) => new Date(b.checkin_date) - new Date(a.checkin_date));
 
-  const emptyRecord = { booking_id: "", property_id: properties[0]?.property_id || "", guest_id: "", guest_name: "", platform: "Airbnb", checkin_date: todayISO(), checkout_date: todayISO(), nightly_rate: 0, cleaning_fee: 0, extra_fees: 0, discounts: 0, payment_status: "Pending", booking_status: "Confirmed", source_notes: "" };
+  const emptyRecord = {
+    booking_id: "",
+    property_id: properties[0]?.property_id || "",
+    guest_id: "",
+    guest_name: "",
+    platform: "Airbnb",
+    checkin_date: todayISO(),
+    checkout_date: todayISO(),
+    nightly_rate: 0,
+    cleaning_fee: 0,
+    extra_fees: 0,
+    discounts: 0,
+    payment_status: "Pending",
+    booking_status: "Confirmed",
+    source_notes: "",
+  };
+
+  useEffect(() => {
+    if (pageAction === "add-booking") {
+      setEditing(emptyRecord);
+      onPageActionHandled?.();
+    }
+  }, [pageAction]);
 
   const save = b => {
     if (!b.booking_id) setBookings([...bookings, { ...b, booking_id: uid("BK") }]);
     else setBookings(bookings.map(x => x.booking_id === b.booking_id ? b : x));
     setEditing(null);
   };
-  const del = id => { setBookings(bookings.filter(x => x.booking_id !== id)); setEditing(null); };
+
+  const del = id => {
+    setBookings(bookings.filter(x => x.booking_id !== id));
+    setEditing(null);
+  };
 
   const getProp = id => properties.find(p => p.property_id === id);
 
@@ -138,7 +169,16 @@ export default function Bookings({ monthFilter, propFilter }) {
           </table>
         </div>
       </div>
-      {editing && <BookingForm record={editing} onClose={() => setEditing(null)} onSave={save} onDelete={del} properties={properties} />}
+
+      {editing && (
+        <BookingForm
+          record={editing}
+          onClose={() => setEditing(null)}
+          onSave={save}
+          onDelete={del}
+          properties={properties}
+        />
+      )}
     </div>
   );
 }
