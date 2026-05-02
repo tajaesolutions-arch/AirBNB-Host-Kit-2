@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, UserCircle } from "lucide-react";
 import { useApp } from "../context/AppContext.jsx";
 import {
   SUPPORTED_CURRENCIES,
@@ -70,6 +70,8 @@ export default function TopBar({
     };
   }, []);
 
+  const normalizedPropFilter = String(propFilter || "ALL").toUpperCase() === "ALL" ? "ALL" : propFilter;
+
   const selectedCurrency = normalizeCurrency(settings?.default_currency || "JMD");
 
   const updateCurrency = (nextCurrency) => {
@@ -96,14 +98,10 @@ export default function TopBar({
         <span className="topbar-label">Property</span>
 
         <select
-          value={propFilter}
+          id="property-filter"
+          className="topbar-control topbar-property-select"
+          value={normalizedPropFilter}
           onChange={(event) => setPropFilter(event.target.value)}
-          style={{
-            width: "auto",
-            minWidth: 170,
-            padding: "6px 10px",
-            fontSize: 13,
-          }}
         >
           <option value="ALL">All Properties</option>
           {normalizedProperties.map((property) => (
@@ -133,15 +131,10 @@ export default function TopBar({
         </span>
 
         <select
+          className="topbar-control"
           value={selectedCurrency}
           onChange={(event) => updateCurrency(event.target.value)}
           title={getCurrencyHelperText(selectedCurrency)}
-          style={{
-            width: "auto",
-            minWidth: 96,
-            padding: "6px 10px",
-            fontSize: 13,
-          }}
         >
           {SUPPORTED_CURRENCIES.map((currency) => (
             <option key={currency} value={currency}>
@@ -156,6 +149,7 @@ export default function TopBar({
           className="chip chip-gray"
           title={getCurrencyHelperText(selectedCurrency)}
         >
+                    <UserCircle size={14} />
           {CURRENCY_DISPLAY_NAMES[selectedCurrency] || selectedCurrency}
         </span>
       </div>
