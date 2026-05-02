@@ -30,7 +30,7 @@ export default function TopBar({
   return (
     <header className="topbar">
       <button
-        className="btn-ghost topbar-mobile-btn"
+        className="topbar-menu-btn"
         onClick={onMenuClick}
         type="button"
         aria-label="Open sidebar menu"
