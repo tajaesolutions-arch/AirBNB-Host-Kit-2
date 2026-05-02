@@ -109,17 +109,16 @@ const Settings = pickComponent(
 const Account = pickComponent(AccountModule, ["Account", "AccountPage"], "My Account");
 
 function LoadingScreen({ label = "Loading your host dashboard…" }) {
-  return (
-    <div className="loading-screen">
-      {label}
-    </div>
-  );
+  return <div className="loading-screen">{label}</div>;
 }
 
 function DashboardShell() {
   const [page, setPage] = useState("dashboard");
   const [monthFilter, setMonthFilter] = useState(currentMonth());
-  const [propFilter, setPropFilter] = useState("ALL");
+
+  // Important:
+  // This should be "all" because the TopBar option value is also "all".
+  const [propFilter, setPropFilter] = useState("all");
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     return localStorage.getItem("hostSidebarCollapsed") === "true";
@@ -221,17 +220,10 @@ function DashboardShell() {
             setMonthFilter={setMonthFilter}
             propFilter={propFilter}
             setPropFilter={setPropFilter}
+            onAccountClick={() => setPage("account")}
           />
 
-          <div className="account-toolbar">
-            <button className="btn-secondary" onClick={() => setPage("account")}>
-              My Account
-            </button>
-          </div>
-
-          <div className="page-scroll-frame">
-            {renderPage()}
-          </div>
+          <div className="page-scroll-frame">{renderPage()}</div>
         </main>
       </div>
     </AppProvider>
