@@ -4972,3 +4972,83 @@ body.sidebar-open .main-content .topbar-currency-select {
     max-width: none;
   }
 }
+/* ==========================================================================
+   ISSUE 2 FIX — PAGE TOP PADDING + TOPBAR CUTOFF PROTECTION
+   Keeps page content from being clipped under the sticky topbar.
+   Add this at the very bottom of styles.css.
+   ========================================================================== */
+
+:root {
+  --safe-topbar-h: 74px;
+  --page-top-safe-space: 38px;
+}
+
+/* Make the topbar tall enough for the filter controls */
+.topbar,
+.app-main .topbar,
+.main-content .topbar {
+  min-height: var(--safe-topbar-h) !important;
+  height: auto !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+/* Main content should not clip page children */
+.main-content,
+.app-main {
+  overflow: visible !important;
+}
+
+/* The frame that holds each rendered page */
+.page-scroll-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  overflow: visible !important;
+}
+
+/* Add reliable breathing room below the sticky topbar */
+.page-scroll-frame > .page,
+.main-content > .page,
+.app-main > .page,
+main > .page {
+  padding-top: var(--page-top-safe-space) !important;
+}
+
+/* Keep page headers fully visible */
+.page-header {
+  margin-top: 0 !important;
+  margin-bottom: 24px;
+}
+
+/* Prevent large titles from touching the topbar */
+.page-title {
+  padding-top: 0 !important;
+  line-height: 1.15;
+}
+
+/* Mobile/tablet spacing */
+@media (max-width: 900px) {
+  :root {
+    --safe-topbar-h: 68px;
+    --page-top-safe-space: 26px;
+  }
+
+  .topbar,
+  .app-main .topbar,
+  .main-content .topbar {
+    min-height: var(--safe-topbar-h) !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .page-scroll-frame > .page,
+  .main-content > .page,
+  .app-main > .page,
+  main > .page {
+    padding-top: var(--page-top-safe-space) !important;
+  }
+}
