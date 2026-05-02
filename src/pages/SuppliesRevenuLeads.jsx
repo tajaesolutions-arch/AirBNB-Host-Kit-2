@@ -1,10 +1,10 @@
 // ============================================================
 //  SUPPLIES PAGE
 // ============================================================
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
-import { PageHeader, Modal, Field, ConfirmBar, Chip, EmptyState } from "../components/index.jsx";
-import { uid, todayISO, fmtCurrency, fmtDateShort, downloadCSV, supplyStatus, supplyChip, bookingTotal, calcNights, fmtPct, isDirectPlatform, inSelectedMonth, leadStatusChip } from "../utils/helpers.js";
+import { PageHeader, Modal, Field, ConfirmBar, Chip } from "../components/index.jsx";
+import { uid, todayISO, fmtCurrency, fmtDateShort, downloadCSV, supplyStatus, supplyChip, bookingTotal, fmtPct, isDirectPlatform, inSelectedMonth, leadStatusChip } from "../utils/helpers.js";
 import { EXPENSE_CATEGORIES } from "../data/sampleData.js";
 import { Plus, Download, ChevronRight, Trash2 } from "lucide-react";
 
@@ -132,8 +132,12 @@ function ExpenseForm({ record, onClose, onSave, onDelete, properties }) {
   );
 }
 
-
-export function Revenue({ monthFilter, propFilter }) {
+export function Revenue({
+  monthFilter,
+  propFilter,
+  pageAction,
+  onPageActionHandled,
+}) {
   const { expenses, setExpenses, bookings, properties, settings } = useApp();
   const [editing, setEditing] = useState(null);
   const cur = settings.default_currency;
@@ -156,6 +160,14 @@ export function Revenue({ monthFilter, propFilter }) {
   const maxCat = Math.max(...catEntries.map(([, v]) => v), 1);
 
   const empty = { expense_id: "", property_id: "", expense_date: todayISO(), category: "Cleaning", vendor: "", description: "", amount: 0, reimbursable: false, paid_by: "Manager", receipt_link: "", notes: "" };
+
+  useEffect(() => {
+    if (pageAction === "add-expense") {
+      setEditing(empty);
+      onPageActionHandled?.();
+    }
+  }, [pageAction]);
+
   const save = e => { if (!e.expense_id) setExpenses([...expenses, { ...e, expense_id: uid("EXP") }]); else setExpenses(expenses.map(x => x.expense_id === e.expense_id ? e : x)); setEditing(null); };
   const del = id => { setExpenses(expenses.filter(x => x.expense_id !== id)); setEditing(null); };
   const getProp = id => properties.find(p => p.property_id === id);
@@ -252,7 +264,6 @@ function LeadForm({ record, onClose, onSave, onDelete, properties }) {
     </Modal>
   );
 }
-
 
 export function Leads({ propFilter }) {
   const { leads, setLeads, properties } = useApp();
