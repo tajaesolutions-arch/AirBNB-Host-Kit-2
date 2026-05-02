@@ -4328,3 +4328,274 @@ body.sidebar-open .main-content .topbar-currency-select {
     justify-content: flex-start;
   }
 }
+/* ==========================================================================
+   ABSOLUTE FINAL TOPBAR FIX — OPEN SIDEBAR SAFE
+   This must stay at the very bottom of style.css.
+   Reason: .btn-ghost was overriding .topbar-mobile-btn and showing the
+   hamburger on desktop, which made the topbar wrap/break when sidebar opened.
+   ========================================================================== */
+
+@media (min-width: 901px) {
+  .topbar,
+  .app-main .topbar,
+  .main-content .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    width: 100%;
+    min-height: var(--header-h);
+    height: var(--header-h);
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 22px !important;
+    padding: 0 32px !important;
+    overflow: hidden !important;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    box-sizing: border-box;
+  }
+
+  .topbar .topbar-mobile-btn,
+  .app-main .topbar .topbar-mobile-btn,
+  .main-content .topbar .topbar-mobile-btn {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    flex: 0 0 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .topbar .topbar-filters,
+  .app-main .topbar .topbar-filters,
+  .main-content .topbar .topbar-filters {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex: 0 1 auto !important;
+    flex-wrap: nowrap !important;
+    gap: 22px !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    order: 0 !important;
+  }
+
+  .topbar .topbar-filter-group,
+  .app-main .topbar .topbar-filter-group,
+  .main-content .topbar .topbar-filter-group {
+    display: flex !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  .topbar .topbar-label,
+  .app-main .topbar .topbar-label,
+  .main-content .topbar .topbar-label {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: var(--muted) !important;
+  }
+
+  .topbar .topbar-control,
+  .app-main .topbar .topbar-control,
+  .main-content .topbar .topbar-control {
+    flex: 0 0 auto !important;
+    height: 40px !important;
+    min-width: 0 !important;
+    padding: 0 12px !important;
+    font-size: 13.5px !important;
+    line-height: 1.2 !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--line-strong) !important;
+    background: var(--paper) !important;
+    color: var(--ink) !important;
+  }
+
+  .topbar .topbar-property-select,
+  .app-main .topbar .topbar-property-select,
+  .main-content .topbar .topbar-property-select {
+    width: 250px !important;
+    max-width: 250px !important;
+  }
+
+  .topbar .topbar-month-input,
+  .app-main .topbar .topbar-month-input,
+  .main-content .topbar .topbar-month-input {
+    width: 205px !important;
+    max-width: 205px !important;
+  }
+
+  .topbar .topbar-currency-select,
+  .app-main .topbar .topbar-currency-select,
+  .main-content .topbar .topbar-currency-select {
+    width: 120px !important;
+    max-width: 120px !important;
+  }
+
+  .topbar .topbar-right,
+  .app-main .topbar .topbar-right,
+  .main-content .topbar .topbar-right {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: max-content !important;
+    margin-left: auto !important;
+    gap: 8px !important;
+  }
+
+  .topbar .topbar-currency-chip,
+  .app-main .topbar .topbar-currency-chip,
+  .main-content .topbar .topbar-currency-chip {
+    display: inline-flex !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* Medium desktop safety: hide only the decorative currency name chip first. */
+@media (min-width: 901px) and (max-width: 1180px) {
+  .topbar .topbar-currency-chip,
+  .app-main .topbar .topbar-currency-chip,
+  .main-content .topbar .topbar-currency-chip {
+    display: none !important;
+  }
+
+  .topbar,
+  .app-main .topbar,
+  .main-content .topbar {
+    gap: 16px !important;
+    padding-left: 22px !important;
+    padding-right: 22px !important;
+  }
+
+  .topbar .topbar-filters,
+  .app-main .topbar .topbar-filters,
+  .main-content .topbar .topbar-filters {
+    gap: 16px !important;
+  }
+
+  .topbar .topbar-property-select,
+  .app-main .topbar .topbar-property-select,
+  .main-content .topbar .topbar-property-select {
+    width: 220px !important;
+    max-width: 220px !important;
+  }
+
+  .topbar .topbar-month-input,
+  .app-main .topbar .topbar-month-input,
+  .main-content .topbar .topbar-month-input {
+    width: 185px !important;
+    max-width: 185px !important;
+  }
+
+  .topbar .topbar-currency-select,
+  .app-main .topbar .topbar-currency-select,
+  .main-content .topbar .topbar-currency-select {
+    width: 105px !important;
+    max-width: 105px !important;
+  }
+}
+
+/* Mobile/tablet: show the menu button and stack filters cleanly. */
+@media (max-width: 900px) {
+  .topbar,
+  .app-main .topbar,
+  .main-content .topbar {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    align-items: start !important;
+    gap: 10px !important;
+    height: auto !important;
+    min-height: var(--header-h) !important;
+    padding: 10px 14px !important;
+    overflow: visible !important;
+  }
+
+  .topbar .topbar-mobile-btn,
+  .app-main .topbar .topbar-mobile-btn,
+  .main-content .topbar .topbar-mobile-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    border: 1px solid var(--line-strong) !important;
+    border-radius: var(--radius-sm) !important;
+    background: var(--paper) !important;
+    color: var(--muted) !important;
+  }
+
+  .topbar .topbar-filters,
+  .app-main .topbar .topbar-filters,
+  .main-content .topbar .topbar-filters {
+    grid-column: 1 / -1 !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .topbar .topbar-filter-group,
+  .app-main .topbar .topbar-filter-group,
+  .main-content .topbar .topbar-filter-group {
+    display: grid !important;
+    grid-template-columns: 86px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .topbar .topbar-control,
+  .topbar .topbar-property-select,
+  .topbar .topbar-month-input,
+  .topbar .topbar-currency-select,
+  .app-main .topbar .topbar-control,
+  .app-main .topbar .topbar-property-select,
+  .app-main .topbar .topbar-month-input,
+  .app-main .topbar .topbar-currency-select,
+  .main-content .topbar .topbar-control,
+  .main-content .topbar .topbar-property-select,
+  .main-content .topbar .topbar-month-input,
+  .main-content .topbar .topbar-currency-select {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .topbar .topbar-right,
+  .app-main .topbar .topbar-right,
+  .main-content .topbar .topbar-right {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    margin-left: 0 !important;
+  }
+
+  .topbar .topbar-currency-chip,
+  .app-main .topbar .topbar-currency-chip,
+  .main-content .topbar .topbar-currency-chip {
+    display: none !important;
+  }
+}
