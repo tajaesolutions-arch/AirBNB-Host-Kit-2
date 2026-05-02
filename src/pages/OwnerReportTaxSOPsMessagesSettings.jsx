@@ -7,7 +7,7 @@ import {
 } from "../services/resetService.js";
 import { useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
-import { PageHeader, Disclaimer } from "../components/index.jsx";
+import { PageHeader, Disclaimer, Modal, ConfirmBar } from "../components/index.jsx";
 import { bookingTotal, calcNights, fmtCurrency, fmtPct, fmtDateShort, inSelectedMonth, daysInMonth, uid as uidHelper, todayISO } from "../utils/helpers.js";
 import { Copy, CheckCircle2, Plus, Trash2 } from "lucide-react";
 
@@ -402,7 +402,7 @@ export function Messages() {
 // ============================================================
 
 export function Settings() {
-  const { properties, setProperties, settings, setSettings, resetToSampleData } = useApp();
+  const { properties, setProperties, settings, setSettings } = useApp();
   const [editingProp, setEditingProp] = useState(null);
   const [propForm, setPropForm] = useState(null);
   const [newCleaner, setNewCleaner] = useState({ name: "", phone: "" });
@@ -507,12 +507,8 @@ export function Settings() {
         </div>
       </div>
 
-      {/* Reset */}
-      <div className="card" style={{ padding: 22, background: "var(--red-soft)", border: "1px solid #EFB8AE" }}>
-        <div style={{ fontWeight: 700, marginBottom: 6, color: "var(--red)" }}>Reset to Sample Data</div>
-        <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 14 }}>This will replace all data with the built-in sample data. Use only if you want to start fresh. This cannot be undone.</p>
-        <button className="btn-danger" onClick={() => { if (window.confirm("Reset all data to sample data? This cannot be undone.")) resetToSampleData(); }}>Reset All Data</button>
-      </div>
+      {/* Reset dashboard data */}
+      <ResetDashboardDataCard />
 
       {/* Property modal */}
       {editingProp && propForm && (
@@ -544,9 +540,9 @@ export function Settings() {
   );
 }
 function ResetDashboardDataCard() {
-  const [resetLoading, setResetLoading] = React.useState(false);
-  const [resetMessage, setResetMessage] = React.useState("");
-  const [resetError, setResetError] = React.useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
+  const [resetError, setResetError] = useState("");
 
   const handleResetBlank = async () => {
     const confirmed = window.confirm(
@@ -660,21 +656,5 @@ function ResetDashboardDataCard() {
         account.
       </div>
       </div>
-  );
-}
-export function Settings() {
-  return (
-    <div className="page">
-      <div className="page-header">
-        <h1 className="page-title">Settings</h1>
-        <p className="page-subtitle">
-          Manage your default host settings and dashboard preferences.
-        </p>
-      </div>
-
-      {/* existing settings content here */}
-
-      <ResetDashboardDataCard />
-    </div>
   );
 }
