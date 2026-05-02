@@ -13,6 +13,7 @@ import {
 
 const AppContext = createContext(null);
 
+const BACKUP_VERSION = 1;
 const CLEARED_SAMPLE_DATA_FLAG = "jak_sample_data_cleared";
 
 const STORAGE_KEYS = {
@@ -58,6 +59,21 @@ const BLANK_SETTINGS = {
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
+const safeArray = (value) => (Array.isArray(value) ? value : []);
+
+const safeSettings = (value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return clone(BLANK_SETTINGS);
+  }
+
+  return {
+    ...clone(BLANK_SETTINGS),
+    ...value,
+    cleaners: safeArray(value.cleaners),
+    vendors: safeArray(value.vendors),
+  };
+};
+
 const isSampleDataCleared = () => {
   try {
     return localStorage.getItem(CLEARED_SAMPLE_DATA_FLAG) === "true";
@@ -85,18 +101,34 @@ const loadSettings = () => {
     const raw = localStorage.getItem(STORAGE_KEYS.settings);
 
     if (raw !== null) {
-      return JSON.parse(raw);
+      return safeSettings(JSON.parse(raw));
     }
 
-    return isSampleDataCleared() ? clone(BLANK_SETTINGS) : clone(DEFAULT_SETTINGS);
+    return isSampleDataCleared()
+      ? clone(BLANK_SETTINGS)
+      : safeSettings(DEFAULT_SETTINGS);
   } catch {
-    return isSampleDataCleared() ? clone(BLANK_SETTINGS) : clone(DEFAULT_SETTINGS);
+    return isSampleDataCleared()
+      ? clone(BLANK_SETTINGS)
+      : safeSettings(DEFAULT_SETTINGS);
   }
 };
 
 const save = (key, value) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Keep the app from crashing if storage is blocked or full.
+  }
+};
+
+const setSampleClearedFlag = (value) => {
+  try {
+    if (value) {
+      localStorage.setItem(CLEARED_SAMPLE_DATA_FLAG, "true");
+    } else {
+      localStorage.removeItem(CLEARED_SAMPLE_DATA_FLAG);
+    }
   } catch {
     // Keep the app from crashing if storage is blocked or full.
   }
@@ -130,6 +162,42 @@ const saveBlankStorageState = () => {
   } catch {
     // Keep the app from crashing if storage is blocked or full.
   }
+};
+
+const hasOperationalRecords = (data) => {
+  return [
+    data.properties,
+    data.bookings,
+    data.guests,
+    data.cleaning,
+    data.maintenance,
+    data.supplies,
+    data.expenses,
+    data.leads,
+  ].some((value) => Array.isArray(value) && value.length > 0);
+};
+
+const normalizeImportedBackup = (payload) => {
+  const source =
+    payload && typeof payload === "object" && payload.data
+      ? payload.data
+      : payload;
+
+  if (!source || typeof source !== "object" || Array.isArray(source)) {
+    throw new Error("Invalid backup file. The file does not contain app data.");
+  }
+
+  return {
+    properties: safeArray(source.properties),
+    bookings: safeArray(source.bookings),
+    guests: safeArray(source.guests),
+    cleaning: safeArray(source.cleaning),
+    maintenance: safeArray(source.maintenance),
+    supplies: safeArray(source.supplies),
+    expenses: safeArray(source.expenses),
+    leads: safeArray(source.leads),
+    settings: safeSettings(source.settings),
+  };
 };
 
 export function AppProvider({ children }) {
@@ -204,11 +272,7 @@ export function AppProvider({ children }) {
   };
 
   const restoreSampleData = () => {
-    try {
-      localStorage.removeItem(CLEARED_SAMPLE_DATA_FLAG);
-    } catch {
-      // Keep the app from crashing if storage is blocked or full.
-    }
+    setSampleClearedFlag(false);
 
     setProperties(SAMPLE_PROPERTIES);
     setBookings(SAMPLE_BOOKINGS);
@@ -219,6 +283,53 @@ export function AppProvider({ children }) {
     setExpenses(SAMPLE_EXPENSES);
     setLeads(SAMPLE_LEADS);
     setSettings(DEFAULT_SETTINGS);
+  };
+
+  const getBackupData = () => {
+    return {
+      app: "Jamaica Airbnb Host Operations Kit",
+      backup_version: BACKUP_VERSION,
+      exported_at: new Date().toISOString(),
+      data: {
+        properties: clone(properties),
+        bookings: clone(bookings),
+        guests: clone(guests),
+        cleaning: clone(cleaning),
+        maintenance: clone(maintenance),
+        supplies: clone(supplies),
+        expenses: clone(expenses),
+        leads: clone(leads),
+        settings: clone(settings),
+      },
+    };
+  };
+
+  const importBackupData = (payload) => {
+    const nextData = normalizeImportedBackup(payload);
+
+    save(STORAGE_KEYS.properties, nextData.properties);
+    save(STORAGE_KEYS.bookings, nextData.bookings);
+    save(STORAGE_KEYS.guests, nextData.guests);
+    save(STORAGE_KEYS.cleaning, nextData.cleaning);
+    save(STORAGE_KEYS.maintenance, nextData.maintenance);
+    save(STORAGE_KEYS.supplies, nextData.supplies);
+    save(STORAGE_KEYS.expenses, nextData.expenses);
+    save(STORAGE_KEYS.leads, nextData.leads);
+    save(STORAGE_KEYS.settings, nextData.settings);
+
+    setSampleClearedFlag(!hasOperationalRecords(nextData));
+
+    setPropertiesRaw(nextData.properties);
+    setBookingsRaw(nextData.bookings);
+    setGuestsRaw(nextData.guests);
+    setCleaningRaw(nextData.cleaning);
+    setMaintenanceRaw(nextData.maintenance);
+    setSuppliesRaw(nextData.supplies);
+    setExpensesRaw(nextData.expenses);
+    setLeadsRaw(nextData.leads);
+    setSettingsRaw(nextData.settings);
+
+    return nextData;
   };
 
   // Kept for compatibility with any old button/component name.
@@ -258,6 +369,9 @@ export function AppProvider({ children }) {
         resetToBlankData,
         resetToSampleData,
         restoreSampleData,
+
+        getBackupData,
+        importBackupData,
       }}
     >
       {children}
