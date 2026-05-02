@@ -3617,3 +3617,59 @@ body.sidebar-collapsed .menu-item svg {
         pointer-events: auto !important;
     }
 }
+/* Sidebar brand text fix */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sidebar-brand-copy {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+}
+
+.sidebar-brand-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 22px;
+  line-height: 1.05;
+  font-weight: 700;
+  color: var(--cream, #fffaf0);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  max-width: none;
+}
+
+.sidebar-brand-subtitle {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.sidebar-brand-mark {
+  flex-shrink: 0;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.sidebar-collapse-btn {
+  flex-shrink: 0;
+}
+
+.sidebar.is-collapsed .sidebar-brand {
+  justify-content: center;
+}
+
+.sidebar.is-collapsed .sidebar-brand-copy {
+  display: none;
+}
