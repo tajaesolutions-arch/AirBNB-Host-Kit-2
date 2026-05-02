@@ -89,17 +89,20 @@ const isSampleDataCleared = () => {
   }
 };
 
-const load = (key, sampleFallback, blankFallback = []) => {
+const load = (key, sampleFallback, blankFallback = [], normalizer = null) => {
   try {
     const raw = localStorage.getItem(key);
 
     if (raw !== null) {
-      return JSON.parse(raw);
+      const parsedValue = JSON.parse(raw);
+      return normalizer ? normalizer(parsedValue) : parsedValue;
     }
 
-    return isSampleDataCleared() ? clone(blankFallback) : clone(sampleFallback);
+    const fallback = isSampleDataCleared() ? clone(blankFallback) : clone(sampleFallback);
+    return normalizer ? normalizer(fallback) : fallback;
   } catch {
-    return isSampleDataCleared() ? clone(blankFallback) : clone(sampleFallback);
+    const fallback = isSampleDataCleared() ? clone(blankFallback) : clone(sampleFallback);
+    return normalizer ? normalizer(fallback) : fallback;
   }
 };
 
@@ -207,35 +210,35 @@ const normalizeImportedBackup = (payload) => {
 
 export function AppProvider({ children }) {
   const [properties, setPropertiesRaw] = useState(() =>
-    load(STORAGE_KEYS.properties, SAMPLE_PROPERTIES)
+    load(STORAGE_KEYS.properties, SAMPLE_PROPERTIES, [], safeArray)
   );
 
   const [bookings, setBookingsRaw] = useState(() =>
-    load(STORAGE_KEYS.bookings, SAMPLE_BOOKINGS)
+    load(STORAGE_KEYS.bookings, SAMPLE_BOOKINGS, [], safeArray)
   );
 
   const [guests, setGuestsRaw] = useState(() =>
-    load(STORAGE_KEYS.guests, SAMPLE_GUESTS)
+    load(STORAGE_KEYS.guests, SAMPLE_GUESTS, [], safeArray)
   );
 
   const [cleaning, setCleaningRaw] = useState(() =>
-    load(STORAGE_KEYS.cleaning, SAMPLE_CLEANING)
+    load(STORAGE_KEYS.cleaning, SAMPLE_CLEANING, [], safeArray)
   );
 
   const [maintenance, setMaintenanceRaw] = useState(() =>
-    load(STORAGE_KEYS.maintenance, SAMPLE_MAINTENANCE)
+    load(STORAGE_KEYS.maintenance, SAMPLE_MAINTENANCE, [], safeArray)
   );
 
   const [supplies, setSuppliesRaw] = useState(() =>
-    load(STORAGE_KEYS.supplies, SAMPLE_SUPPLIES)
+    load(STORAGE_KEYS.supplies, SAMPLE_SUPPLIES, [], safeArray)
   );
 
   const [expenses, setExpensesRaw] = useState(() =>
-    load(STORAGE_KEYS.expenses, SAMPLE_EXPENSES)
+    load(STORAGE_KEYS.expenses, SAMPLE_EXPENSES, [], safeArray)
   );
 
   const [leads, setLeadsRaw] = useState(() =>
-    load(STORAGE_KEYS.leads, SAMPLE_LEADS)
+    load(STORAGE_KEYS.leads, SAMPLE_LEADS, [], safeArray)
   );
 
   const [settings, setSettingsRaw] = useState(() => loadSettings());
@@ -255,14 +258,14 @@ export function AppProvider({ children }) {
     });
   };
 
-  const setProperties = persist(STORAGE_KEYS.properties, setPropertiesRaw);
-  const setBookings = persist(STORAGE_KEYS.bookings, setBookingsRaw);
-  const setGuests = persist(STORAGE_KEYS.guests, setGuestsRaw);
-  const setCleaning = persist(STORAGE_KEYS.cleaning, setCleaningRaw);
-  const setMaintenance = persist(STORAGE_KEYS.maintenance, setMaintenanceRaw);
-  const setSupplies = persist(STORAGE_KEYS.supplies, setSuppliesRaw);
-  const setExpenses = persist(STORAGE_KEYS.expenses, setExpensesRaw);
-  const setLeads = persist(STORAGE_KEYS.leads, setLeadsRaw);
+  const setProperties = persist(STORAGE_KEYS.properties, setPropertiesRaw, safeArray);
+  const setBookings = persist(STORAGE_KEYS.bookings, setBookingsRaw, safeArray);
+  const setGuests = persist(STORAGE_KEYS.guests, setGuestsRaw, safeArray);
+  const setCleaning = persist(STORAGE_KEYS.cleaning, setCleaningRaw, safeArray);
+  const setMaintenance = persist(STORAGE_KEYS.maintenance, setMaintenanceRaw, safeArray);
+  const setSupplies = persist(STORAGE_KEYS.supplies, setSuppliesRaw, safeArray);
+  const setExpenses = persist(STORAGE_KEYS.expenses, setExpensesRaw, safeArray);
+  const setLeads = persist(STORAGE_KEYS.leads, setLeadsRaw, safeArray);
   const setSettings = persist(
     STORAGE_KEYS.settings,
     setSettingsRaw,

@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 
 const SETUP_PROGRESS_STORAGE_KEY = "jak_dashboard_setup_progress";
+const SETUP_EXPANDED_STORAGE_KEY = "jak_dashboard_setup_expanded";
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -60,6 +61,27 @@ function loadSetupProgress() {
 function saveSetupProgress(nextProgress) {
   try {
     localStorage.setItem(SETUP_PROGRESS_STORAGE_KEY, JSON.stringify(nextProgress));
+  } catch {
+    // Keep dashboard usable if browser storage is blocked.
+  }
+}
+
+
+function loadSetupExpandedPreference() {
+  try {
+    const raw = localStorage.getItem(SETUP_EXPANDED_STORAGE_KEY);
+
+    if (raw === null) return false;
+
+    return raw === "true";
+  } catch {
+    return false;
+  }
+}
+
+function saveSetupExpandedPreference(isExpanded) {
+  try {
+    localStorage.setItem(SETUP_EXPANDED_STORAGE_KEY, String(Boolean(isExpanded)));
   } catch {
     // Keep dashboard usable if browser storage is blocked.
   }
@@ -171,7 +193,14 @@ function getSetupChecklist({
   ];
 }
 
-function SetupProgressCard({ checklist, onGoToPage, onMarkComplete, compact = false }) {
+function SetupProgressCard({
+  checklist,
+  onGoToPage,
+  onMarkComplete,
+  compact = false,
+  expanded = true,
+  onToggleExpanded,
+}) {
   const completedCount = checklist.filter((item) => item.completed).length;
   const totalCount = checklist.length;
   const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -202,10 +231,31 @@ function SetupProgressCard({ checklist, onGoToPage, onMarkComplete, compact = fa
           </p>
         </div>
 
-        <Chip tone={percent === 100 ? "green" : "teal"}>
-          {completedCount}/{totalCount} Complete
-        </Chip>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <button
+            className="btn-ghost"
+            style={{ fontSize: 12 }}
+            onClick={() => onToggleExpanded?.()}
+            type="button"
+          >
+            {expanded ? "Hide Checklist" : "Show Checklist"}
+          </button>
+
+          <Chip tone={percent === 100 ? "green" : "teal"}>
+            {completedCount}/{totalCount} Complete
+          </Chip>
+        </div>
       </div>
+
+      {percent === 100 && (
+        <div
+          className="setup-complete-banner"
+          role="status"
+          aria-live="polite"
+        >
+          🎉 Setup Complete! Your host workspace is fully configured.
+        </div>
+      )}
 
       <div
         style={{
@@ -228,7 +278,8 @@ function SetupProgressCard({ checklist, onGoToPage, onMarkComplete, compact = fa
         />
       </div>
 
-      <div style={{ display: "grid", gap: 10 }}>
+      {expanded && (
+        <div style={{ display: "grid", gap: 10 }}>
         {checklist.map((item) => (
           <div
             key={item.id}
@@ -281,12 +332,20 @@ function SetupProgressCard({ checklist, onGoToPage, onMarkComplete, compact = fa
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function EmptyDashboardSetup({ setPage, restoreSampleData, checklist, onMarkComplete }) {
+function EmptyDashboardSetup({
+  setPage,
+  restoreSampleData,
+  checklist,
+  onMarkComplete,
+  setupExpanded,
+  onToggleSetupExpanded,
+}) {
   const handleRestoreDemo = () => {
     const confirmed = window.confirm("This will restore the sample demo data. Continue?");
 
@@ -407,7 +466,13 @@ function EmptyDashboardSetup({ setPage, restoreSampleData, checklist, onMarkComp
         })}
       </div>
 
-      <SetupProgressCard checklist={checklist} onGoToPage={setPage} onMarkComplete={onMarkComplete} />
+      <SetupProgressCard
+        checklist={checklist}
+        onGoToPage={setPage}
+        onMarkComplete={onMarkComplete}
+        expanded={setupExpanded}
+        onToggleExpanded={toggleSetupExpanded}
+      />
     </div>
   );
 }
@@ -450,6 +515,7 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
   const settings = safeSettings(rawSettings);
 
   const [savedSetupProgress, setSavedSetupProgress] = useState(() => loadSetupProgress());
+  const [setupExpanded, setSetupExpanded] = useState(() => loadSetupExpandedPreference());
 
   const cur = settings.default_currency || "JMD";
 
@@ -457,6 +523,14 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
     if (typeof setPage === "function") {
       setPage(page);
     }
+  };
+
+  const toggleSetupExpanded = () => {
+    setSetupExpanded((previous) => {
+      const next = !previous;
+      saveSetupExpandedPreference(next);
+      return next;
+    });
   };
 
   const markSetupComplete = (id) => {
@@ -491,6 +565,8 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
         restoreSampleData={restoreSampleData}
         checklist={setupChecklist}
         onMarkComplete={markSetupComplete}
+        setupExpanded={setupExpanded}
+        onToggleSetupExpanded={toggleSetupExpanded}
       />
     );
   }
@@ -673,6 +749,8 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
         onGoToPage={goToPage}
         onMarkComplete={markSetupComplete}
         compact
+        expanded={setupExpanded}
+        onToggleExpanded={toggleSetupExpanded}
       />
 
       {(hasNoBookings || hasNoExpenses || hasNoSupplies || hasNoMaintenance) && (
@@ -943,7 +1021,8 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
             Open Backup Tools
           </button>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
