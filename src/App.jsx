@@ -118,6 +118,7 @@ function LoadingScreen({ label = "Loading your host dashboard…" }) {
 
 function DashboardShell() {
   const [page, setPage] = useState("dashboard");
+  const [pageAction, setPageAction] = useState(null);
   const [monthFilter, setMonthFilter] = useState(currentMonth());
   const [propFilter, setPropFilter] = useState("ALL");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -136,13 +137,24 @@ function DashboardShell() {
 
   const closeMobileSidebar = () => setMobileSidebarOpen(false);
 
-  const goToPage = (nextPage) => {
+  const goToPage = (nextPage, action = null) => {
     setPage(nextPage);
+    setPageAction(action);
     closeMobileSidebar();
   };
 
+  const clearPageAction = () => {
+    setPageAction(null);
+  };
+
   const renderPage = () => {
-    const shared = { monthFilter, propFilter, setPage: goToPage };
+    const shared = {
+      monthFilter,
+      propFilter,
+      setPage: goToPage,
+      pageAction,
+      onPageActionHandled: clearPageAction,
+    };
 
     switch (page) {
       case "dashboard":
@@ -243,7 +255,7 @@ function DashboardShell() {
           />
 
           <div className="account-toolbar">
-            <button className="btn-secondary" onClick={() => setPage("account")}>
+            <button className="btn-secondary" onClick={() => goToPage("account")}>
               My Account
             </button>
           </div>
