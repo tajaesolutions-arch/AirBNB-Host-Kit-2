@@ -27,10 +27,6 @@ const STORAGE_KEYS = {
   settings: "jak_settings",
 };
 
-/**
- * These are extra possible keys used by owner report / tax reserve pages.
- * Saving empty arrays here helps clear pages that may be using localStorage directly.
- */
 const EXTRA_RECORD_KEYS_TO_CLEAR = [
   "jak_ownerReports",
   "jak_owner_reports",
@@ -44,7 +40,33 @@ const EXTRA_RECORD_KEYS_TO_CLEAR = [
   "jak_gct_reserve",
 ];
 
-const load = (key, fallback, emptyFallback = []) => {
+const BLANK_SETTINGS = {
+  default_currency: "JMD",
+  airbnb_currency: "USD",
+  platform_fee_percentage: 0,
+  management_fee_percentage: 0,
+  tax_reserve_percentage: 0,
+  default_checkin_time: "",
+  default_checkout_time: "",
+  business_name: "",
+  host_name: "",
+  host_phone: "",
+  host_email: "",
+  cleaners: [],
+  vendors: [],
+};
+
+const clone = (value) => JSON.parse(JSON.stringify(value));
+
+const isSampleDataCleared = () => {
+  try {
+    return localStorage.getItem(CLEARED_SAMPLE_DATA_FLAG) === "true";
+  } catch {
+    return false;
+  }
+};
+
+const load = (key, sampleFallback, blankFallback = []) => {
   try {
     const raw = localStorage.getItem(key);
 
@@ -52,42 +74,62 @@ const load = (key, fallback, emptyFallback = []) => {
       return JSON.parse(raw);
     }
 
-    const sampleDataWasCleared =
-      localStorage.getItem(CLEARED_SAMPLE_DATA_FLAG) === "true";
-
-    return sampleDataWasCleared ? emptyFallback : fallback;
+    return isSampleDataCleared() ? clone(blankFallback) : clone(sampleFallback);
   } catch {
-    return fallback;
+    return isSampleDataCleared() ? clone(blankFallback) : clone(sampleFallback);
   }
 };
 
 const loadSettings = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.settings);
-    return raw ? JSON.parse(raw) : DEFAULT_SETTINGS;
+
+    if (raw !== null) {
+      return JSON.parse(raw);
+    }
+
+    return isSampleDataCleared() ? clone(BLANK_SETTINGS) : clone(DEFAULT_SETTINGS);
   } catch {
-    return DEFAULT_SETTINGS;
+    return isSampleDataCleared() ? clone(BLANK_SETTINGS) : clone(DEFAULT_SETTINGS);
   }
 };
 
-const save = (key, val) => {
+const save = (key, value) => {
   try {
-    localStorage.setItem(key, JSON.stringify(val));
+    localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Ignore storage errors so the app does not crash.
+    // Keep the app from crashing if storage is blocked or full.
   }
 };
 
-const saveEmptyRecordKeys = () => {
-  Object.values(STORAGE_KEYS).forEach((key) => {
-    if (key !== STORAGE_KEYS.settings) {
+const saveBlankStorageState = () => {
+  Object.entries(STORAGE_KEYS).forEach(([name, key]) => {
+    if (name === "settings") {
+      save(key, BLANK_SETTINGS);
+    } else {
       save(key, []);
     }
   });
 
-  EXTRA_RECORD_KEYS_TO_CLEAR.forEach((key) => {
-    save(key, []);
-  });
+  EXTRA_RECORD_KEYS_TO_CLEAR.forEach((key) => save(key, []));
+
+  try {
+    localStorage.setItem(CLEARED_SAMPLE_DATA_FLAG, "true");
+
+    // Clear any older app-owned JAK keys that may have been created by prior versions.
+    // This avoids leaving stale owner report / tax / record data behind.
+    Object.keys(localStorage).forEach((key) => {
+      if (
+        key.startsWith("jak_") &&
+        key !== CLEARED_SAMPLE_DATA_FLAG &&
+        !Object.values(STORAGE_KEYS).includes(key)
+      ) {
+        save(key, []);
+      }
+    });
+  } catch {
+    // Keep the app from crashing if storage is blocked or full.
+  }
 };
 
 export function AppProvider({ children }) {
@@ -147,18 +189,8 @@ export function AppProvider({ children }) {
   const setLeads = persist(STORAGE_KEYS.leads, setLeadsRaw);
   const setSettings = persist(STORAGE_KEYS.settings, setSettingsRaw);
 
-  /**
-   * Clears the app so the user can start from scratch.
-   * This is the important fix.
-   */
   const resetToBlankData = () => {
-    try {
-      localStorage.setItem(CLEARED_SAMPLE_DATA_FLAG, "true");
-      saveEmptyRecordKeys();
-      save(STORAGE_KEYS.settings, DEFAULT_SETTINGS);
-    } catch {
-      // Ignore storage errors.
-    }
+    saveBlankStorageState();
 
     setPropertiesRaw([]);
     setBookingsRaw([]);
@@ -168,25 +200,14 @@ export function AppProvider({ children }) {
     setSuppliesRaw([]);
     setExpensesRaw([]);
     setLeadsRaw([]);
-    setSettingsRaw(DEFAULT_SETTINGS);
+    setSettingsRaw(clone(BLANK_SETTINGS));
   };
 
-  /**
-   * Backwards-compatible alias.
-   * If your Settings page currently calls resetToSampleData(),
-   * it will now clear everything instead of bringing the sample data back.
-   */
-  const resetToSampleData = resetToBlankData;
-
-  /**
-   * Optional function if you ever want a separate button
-   * that actually restores the original sample data.
-   */
   const restoreSampleData = () => {
     try {
       localStorage.removeItem(CLEARED_SAMPLE_DATA_FLAG);
     } catch {
-      // Ignore storage errors.
+      // Keep the app from crashing if storage is blocked or full.
     }
 
     setProperties(SAMPLE_PROPERTIES);
@@ -199,6 +220,10 @@ export function AppProvider({ children }) {
     setLeads(SAMPLE_LEADS);
     setSettings(DEFAULT_SETTINGS);
   };
+
+  // Kept for compatibility with any old button/component name.
+  // In this app, resetToSampleData should mean "show sample data again".
+  const resetToSampleData = restoreSampleData;
 
   return (
     <AppContext.Provider
