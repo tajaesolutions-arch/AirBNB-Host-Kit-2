@@ -69,6 +69,13 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let mounted = true;
 
+    const safetyTimer = window.setTimeout(() => {
+      if (mounted) {
+        console.warn("Auth check timed out. Releasing loading state.");
+        setLoading(false);
+      }
+    }, 5000);
+
     const loadSession = async () => {
       try {
         setLoading(true);
@@ -99,8 +106,9 @@ export function AuthProvider({ children }) {
         setUser(currentUser);
 
         if (currentUser) {
-          const nextProfile = await ensureProfile(currentUser);
-          if (mounted) setProfile(nextProfile);
+          ensureProfile(currentUser).then((nextProfile) => {
+            if (mounted) setProfile(nextProfile);
+          });
         } else {
           setProfile(null);
         }
@@ -124,39 +132,41 @@ export function AuthProvider({ children }) {
 
     loadSession();
 
-    if (!supabase) {
-      return () => {
-        mounted = false;
-      };
-    }
+    let subscription;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
-      try {
-        const nextUser = nextSession?.user || null;
+    if (supabase) {
+      const { data } = supabase.auth.onAuthStateChange(
+        async (_event, nextSession) => {
+          try {
+            const nextUser = nextSession?.user || null;
 
-        setSession(nextSession);
-        setUser(nextUser);
+            setSession(nextSession);
+            setUser(nextUser);
 
-        if (nextUser) {
-          const nextProfile = await ensureProfile(nextUser);
-          setProfile(nextProfile);
-        } else {
-          setProfile(null);
+            if (nextUser) {
+              ensureProfile(nextUser).then((nextProfile) => {
+                if (mounted) setProfile(nextProfile);
+              });
+            } else {
+              setProfile(null);
+            }
+
+            setAuthError("");
+          } catch (err) {
+            console.error("Auth state change error:", err?.message || err);
+            setAuthError(err?.message || "Authentication error.");
+          } finally {
+            setLoading(false);
+          }
         }
+      );
 
-        setAuthError("");
-      } catch (err) {
-        console.error("Auth state change error:", err?.message || err);
-        setAuthError(err?.message || "Authentication error.");
-      } finally {
-        setLoading(false);
-      }
-    });
+      subscription = data?.subscription;
+    }
 
     return () => {
       mounted = false;
+      window.clearTimeout(safetyTimer);
       subscription?.unsubscribe();
     };
   }, []);
@@ -177,8 +187,7 @@ export function AuthProvider({ children }) {
     setUser(data.user);
 
     if (data.user) {
-      const nextProfile = await ensureProfile(data.user);
-      setProfile(nextProfile);
+      ensureProfile(data.user).then(setProfile);
     }
 
     return data;
@@ -203,8 +212,7 @@ export function AuthProvider({ children }) {
     if (error) throw error;
 
     if (data.user) {
-      const nextProfile = await ensureProfile(data.user);
-      setProfile(nextProfile);
+      ensureProfile(data.user).then(setProfile);
     }
 
     if (data.session) {
