@@ -21,7 +21,7 @@ export default function TopBar({
   const normalizedProperties = safeProperties
     .map((property, index) => ({
       ...property,
-      property_id: property?.property_id || property?.id || `property-${index}` ,
+      property_id: property?.property_id || property?.id || `property-${index}`,
       property_name: property?.property_name || property?.name || `Property ${index + 1}`,
     }))
     .filter((property) => Boolean(property.property_id));
@@ -45,13 +45,17 @@ export default function TopBar({
       const currentY = window.scrollY;
       const delta = currentY - lastScrollYRef.current;
 
-      if (!isMobileFiltersCollapsed && currentY > COLLAPSE_AT_Y && delta > 0) {
-        setIsMobileFiltersCollapsed(true);
-      }
+      setIsMobileFiltersCollapsed((previous) => {
+        if (!previous && currentY > COLLAPSE_AT_Y && delta > 0) {
+          return true;
+        }
 
-      if (isMobileFiltersCollapsed && (currentY <= EXPAND_NEAR_TOP_AT_Y || delta <= -EXPAND_SCROLL_UP_DELTA)) {
-        setIsMobileFiltersCollapsed(false);
-      }
+        if (previous && (currentY <= EXPAND_NEAR_TOP_AT_Y || delta <= -EXPAND_SCROLL_UP_DELTA)) {
+          return false;
+        }
+
+        return previous;
+      });
 
       lastScrollYRef.current = currentY;
     };
@@ -64,7 +68,7 @@ export default function TopBar({
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [isMobileFiltersCollapsed]);
+  }, []);
 
   const selectedCurrency = normalizeCurrency(settings?.default_currency || "JMD");
 
