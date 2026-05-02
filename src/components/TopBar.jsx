@@ -1,4 +1,3 @@
-import { Menu } from "lucide-react";
 import { useApp } from "../context/AppContext.jsx";
 import {
   SUPPORTED_CURRENCIES,
@@ -12,7 +11,6 @@ export default function TopBar({
   setMonthFilter,
   propFilter,
   setPropFilter,
-  onMenuClick,
 }) {
   const { properties, settings, setSettings } = useApp();
 
@@ -29,15 +27,6 @@ export default function TopBar({
 
   return (
     <header className="topbar">
-      <button
-        className="topbar-menu-btn"
-        onClick={onMenuClick}
-        type="button"
-        aria-label="Open sidebar menu"
-      >
-        <Menu size={20} />
-      </button>
-
       <div className="topbar-filters">
         <div className="topbar-filter-group">
           <label className="topbar-label" htmlFor="property-filter">
