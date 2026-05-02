@@ -659,8 +659,9 @@ function ResetDashboardDataCard() {
         delete the user login, email, password, or Supabase authentication
         account.
       </div>
-    </div>
+      </div>
   );
+}
 export function Settings() {
   return (
     <div className="page">
