@@ -127,10 +127,21 @@ function DashboardShell() {
 }
 
 function AuthGate() {
-  const { user, loading } = useAuth();
+  const { user, loading, authError } = useAuth();
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;
+  }
+
+  if (authError) {
+    return (
+      <div className="loading-screen" style={{ padding: 24, textAlign: "center" }}>
+        <div>
+          <strong>Authentication Setup Issue</strong>
+          <p style={{ marginTop: 8, maxWidth: 520 }}>{authError}</p>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -141,13 +152,5 @@ function AuthGate() {
     <AppProvider>
       <DashboardShell />
     </AppProvider>
-  );
-}
-
-export default function App() {
-  return (
-    <AuthProvider>
-      <AuthGate />
-    </AuthProvider>
   );
 }
