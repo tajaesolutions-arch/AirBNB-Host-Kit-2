@@ -27,69 +27,66 @@ export default function TopBar({
 
   return (
     <header className="topbar">
-      <div className="topbar-filters">
-        <div className="topbar-filter-group">
-          <label className="topbar-label" htmlFor="property-filter">
-            Property
-          </label>
+      <div className="topbar-inner">
+        <div className="topbar-filters">
+          <div className="topbar-filter-group">
+            <label className="topbar-label" htmlFor="property-filter">
+              Property
+            </label>
 
-          <select
-            id="property-filter"
-            className="topbar-control topbar-property-select"
-            value={propFilter}
-            onChange={(event) => setPropFilter(event.target.value)}
-          >
-            <option value="ALL">All Properties</option>
-            {properties.map((property) => (
-              <option key={property.property_id} value={property.property_id}>
-                {property.property_name}
-              </option>
-            ))}
-          </select>
+            <select
+              id="property-filter"
+              className="topbar-select topbar-select-property"
+              value={propFilter}
+              onChange={(event) => setPropFilter(event.target.value)}
+            >
+              <option value="all">All Properties</option>
+
+              {properties?.map((property) => (
+                <option key={property.id} value={property.id}>
+                  {property.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="topbar-filter-group">
+            <label className="topbar-label" htmlFor="month-filter">
+              Month
+            </label>
+
+            <input
+              id="month-filter"
+              className="topbar-input topbar-input-month"
+              type="month"
+              value={monthFilter}
+              onChange={(event) => setMonthFilter(event.target.value)}
+            />
+          </div>
+
+          <div className="topbar-filter-group">
+            <label className="topbar-label" htmlFor="currency-filter">
+              Currency
+            </label>
+
+            <select
+              id="currency-filter"
+              className="topbar-select topbar-select-currency"
+              value={selectedCurrency}
+              onChange={(event) => updateCurrency(event.target.value)}
+            >
+              {SUPPORTED_CURRENCIES.map((currency) => (
+                <option key={currency} value={currency}>
+                  {currency}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="topbar-filter-group">
-          <label className="topbar-label" htmlFor="month-filter">
-            Month
-          </label>
-
-          <input
-            id="month-filter"
-            className="topbar-control topbar-month-input"
-            type="month"
-            value={monthFilter}
-            onChange={(event) => setMonthFilter(event.target.value)}
-          />
-        </div>
-
-        <div className="topbar-filter-group">
-          <label className="topbar-label" htmlFor="currency-filter">
-            Currency
-          </label>
-
-          <select
-            id="currency-filter"
-            className="topbar-control topbar-currency-select"
-            value={selectedCurrency}
-            onChange={(event) => updateCurrency(event.target.value)}
-            title={getCurrencyHelperText(selectedCurrency)}
-          >
-            {SUPPORTED_CURRENCIES.map((currency) => (
-              <option key={currency} value={currency}>
-                {currency}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="topbar-right">
-        <span
-          className="chip chip-gray topbar-currency-chip"
-          title={getCurrencyHelperText(selectedCurrency)}
-        >
+        <div className="topbar-currency-pill" title={getCurrencyHelperText(selectedCurrency)}>
           {CURRENCY_DISPLAY_NAMES[selectedCurrency] || selectedCurrency}
-        </span>
+        </div>
       </div>
     </header>
   );
