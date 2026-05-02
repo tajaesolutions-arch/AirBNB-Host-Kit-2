@@ -12,6 +12,7 @@ export default function AuthScreen() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const isSignup = mode === "signup";
 
@@ -51,6 +52,7 @@ export default function AuthScreen() {
           "Account created. If email confirmation is turned on, check your inbox before logging in."
         );
         setMode("login");
+        setShowPassword(false);
       } else {
         await signIn({
           email,
@@ -84,6 +86,7 @@ export default function AuthScreen() {
 
   const switchMode = (nextMode) => {
     setMode(nextMode);
+    setShowPassword(false);
     clearMessages();
   };
 
@@ -217,14 +220,57 @@ export default function AuthScreen() {
 
               <label>
                 <span>Password</span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Minimum 6 characters"
-                  autoComplete={isSignup ? "new-password" : "current-password"}
-                  required
-                />
+
+                <div
+                  className="auth-password-field"
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                  }}
+                >
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Minimum 6 characters"
+                    autoComplete={
+                      isSignup ? "new-password" : "current-password"
+                    }
+                    required
+                    style={{
+                      width: "100%",
+                      paddingRight: "48px",
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    className="auth-password-toggle"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    aria-pressed={showPassword}
+                    title={showPassword ? "Hide password" : "Show password"}
+                    style={{
+                      position: "absolute",
+                      right: "14px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      border: "none",
+                      background: "transparent",
+                      cursor: "pointer",
+                      fontSize: "18px",
+                      lineHeight: "1",
+                      padding: "0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {showPassword ? "🙈" : "👁️"}
+                  </button>
+                </div>
               </label>
 
               <button
