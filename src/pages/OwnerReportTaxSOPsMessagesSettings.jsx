@@ -1,10 +1,6 @@
 // ============================================================
 //  OWNER REPORT PAGE
 // ============================================================
-import {
-  resetAccountToBlank,
-  resetAccountToSampleData,
-} from "../services/resetService.js";
 import { useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
 import { PageHeader, Disclaimer, Modal, ConfirmBar } from "../components/index.jsx";
@@ -163,7 +159,7 @@ ${extraNotes || "(None)"}
 // ============================================================
 export function TaxReserve({ monthFilter }) {
   const { settings, setSettings, bookings } = useApp();
-  const [rate, setRate] = useState(Number(settings.tax_reserve_percentage || 0.15));
+  const [rate, setRate] = useState(() => Number(settings.tax_reserve_percentage ?? 0));
   const [notes, setNotes] = useState("");
   const cur = settings.default_currency;
 
@@ -447,7 +443,7 @@ export function Settings() {
           <div className="field"><label className="field-label">Platform Fee %</label><p style={{ fontSize: 11.5, color: "var(--muted)", margin: "0 0 6px" }}>Airbnb / Booking.com fee. Typical: 3%</p><input type="number" min={0} max={100} step={0.5} value={+(Number(settings.platform_fee_percentage || 0) * 100).toFixed(2)} onChange={e => updateSetting("platform_fee_percentage", Number(e.target.value) / 100)} /></div>
           <div className="field"><label className="field-label">Management Fee %</label><p style={{ fontSize: 11.5, color: "var(--muted)", margin: "0 0 6px" }}>Co-host/manager fee. Typical: 10–25%</p><input type="number" min={0} max={100} step={0.5} value={+(Number(settings.management_fee_percentage || 0) * 100).toFixed(2)} onChange={e => updateSetting("management_fee_percentage", Number(e.target.value) / 100)} /></div>
           <div className="field"><label className="field-label">Tax Reserve %</label><p style={{ fontSize: 11.5, color: "var(--muted)", margin: "0 0 6px" }}>Planning reserve. Confirm with your accountant.</p><input type="number" min={0} max={100} step={0.5} value={+(Number(settings.tax_reserve_percentage || 0) * 100).toFixed(2)} onChange={e => updateSetting("tax_reserve_percentage", Number(e.target.value) / 100)} /></div>
-          <div className="field"><label className="field-label">Default Check-in Time</label><input type="time" value={settings.default_checkin_time || "15:00"} onChange={e => updateSetting("default_checkin_time", e.target.value)} /></div>
+          <div className="field"><label className="field-label">Default Check-in Time</label><input type="time" value={settings.default_checkin_time ?? ""} onChange={e => updateSetting("default_checkin_time", e.target.value)} /></div>
         </div>
       </div>
 
@@ -540,13 +536,14 @@ export function Settings() {
   );
 }
 function ResetDashboardDataCard() {
+  const { resetToBlankData, restoreSampleData } = useApp();
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
   const [resetError, setResetError] = useState("");
 
-  const handleResetBlank = async () => {
+  const handleResetBlank = () => {
     const confirmed = window.confirm(
-      "This will permanently clear all dashboard records for this account. Your login account will not be deleted. Continue?"
+      "This will permanently clear all dashboard records and blank out the workspace for this account. Your login account will not be deleted. Continue?"
     );
 
     if (!confirmed) return;
@@ -556,9 +553,9 @@ function ResetDashboardDataCard() {
     setResetError("");
 
     try {
-      await resetAccountToBlank();
+      resetToBlankData();
       setResetMessage(
-        "Your dashboard has been reset to a blank template. Refresh the page to see the clean version."
+        "Your dashboard is now blank. You can start by adding your first property, booking, guest, expense, supply, maintenance item, or lead."
       );
     } catch (err) {
       setResetError(err?.message || "Could not reset account data.");
@@ -567,7 +564,7 @@ function ResetDashboardDataCard() {
     }
   };
 
-  const handleResetSample = async () => {
+  const handleResetSample = () => {
     const confirmed = window.confirm(
       "This will replace your current dashboard records with sample data. Your current records will be deleted. Continue?"
     );
@@ -579,10 +576,8 @@ function ResetDashboardDataCard() {
     setResetError("");
 
     try {
-      await resetAccountToSampleData();
-      setResetMessage(
-        "Sample data has been reloaded. Refresh the page to view the sample dashboard."
-      );
+      restoreSampleData();
+      setResetMessage("Sample data has been reloaded.");
     } catch (err) {
       setResetError(err?.message || "Could not reload sample data.");
     } finally {
@@ -619,7 +614,8 @@ function ResetDashboardDataCard() {
           <h3>Blank Template</h3>
           <p>
             Clears your properties, bookings, guests, expenses, supplies,
-            maintenance, leads, owner reports, and tax reserve records.
+            maintenance, leads, owner reports, tax reserve records, cleaners,
+            vendors, and business profile fields.
           </p>
 
           <button
@@ -655,6 +651,6 @@ function ResetDashboardDataCard() {
         delete the user login, email, password, or Supabase authentication
         account.
       </div>
-      </div>
+    </div>
   );
 }
