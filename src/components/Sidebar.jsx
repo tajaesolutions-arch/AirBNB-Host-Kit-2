@@ -51,77 +51,65 @@ const NAV_GROUPS = [
 ];
 
 export default function Sidebar({
-  page,
-  activePage,
+  page = "dashboard",
   setPage,
-  setActivePage,
   collapsed = false,
   onToggleCollapse,
   mobile = false,
   onClose,
 }) {
-  const currentPage = page || activePage || "dashboard";
-
   const handleNavigate = (nextPage) => {
     if (setPage) setPage(nextPage);
-    if (setActivePage) setActivePage(nextPage);
     if (mobile && onClose) onClose();
   };
 
   return (
-    <aside
-      className={[
-        "sidebar",
-        collapsed ? "collapsed" : "",
-        mobile ? "mobile" : "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      <div className="sidebar-top">
-        <div className="sidebar-brand">
-          <div className="sidebar-logo-icon">🇯🇲</div>
+    <aside className={`app-sidebar ${collapsed ? "is-collapsed" : ""} ${mobile ? "is-mobile" : ""}`}>
+      <div className="app-sidebar-header">
+        <div className="app-sidebar-brand">
+          <div className="app-sidebar-logo">🇯🇲</div>
 
-          <div className="sidebar-brand-text">
-            <div className="sidebar-title">Host Operations</div>
-            <div className="sidebar-subtitle">Jamaica Airbnb Kit</div>
+          <div className="app-sidebar-brand-text">
+            <div className="app-sidebar-title">Host Operations</div>
+            <div className="app-sidebar-subtitle">Jamaica Airbnb Kit</div>
           </div>
         </div>
 
         {mobile ? (
-          <button className="sidebar-icon-btn" onClick={onClose} title="Close menu">
-            <X size={20} />
+          <button className="app-sidebar-toggle" onClick={onClose} title="Close menu">
+            <X size={19} />
           </button>
         ) : (
           <button
-            className="sidebar-icon-btn"
+            className="app-sidebar-toggle"
             onClick={onToggleCollapse}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+            {collapsed ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}
           </button>
         )}
       </div>
 
-      <nav className="sidebar-nav">
+      <nav className="app-sidebar-nav">
         {NAV_GROUPS.map((group) => (
-          <div className="sidebar-group" key={group.label}>
-            <div className="sidebar-section-label">{group.label}</div>
+          <div className="app-sidebar-group" key={group.label}>
+            <div className="app-sidebar-group-label">{group.label}</div>
 
-            <div className="sidebar-items">
+            <div className="app-sidebar-items">
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = currentPage === item.key;
+                const isActive = page === item.key;
 
                 return (
                   <button
                     key={item.key}
-                    className={`sidebar-nav-item ${isActive ? "active" : ""}`}
+                    type="button"
+                    className={`app-sidebar-item ${isActive ? "active" : ""}`}
                     onClick={() => handleNavigate(item.key)}
                     title={collapsed ? item.label : ""}
                   >
-                    <Icon size={22} className="sidebar-nav-icon" />
-                    <span className="sidebar-nav-label">{item.label}</span>
+                    <Icon size={22} className="app-sidebar-icon" />
+                    <span className="app-sidebar-label">{item.label}</span>
                   </button>
                 );
               })}
@@ -130,7 +118,7 @@ export default function Sidebar({
         ))}
       </nav>
 
-      <div className="sidebar-footer-note">
+      <div className="app-sidebar-note">
         <span>💡</span>
         <p>Add bookings first — the dashboard fills in automatically.</p>
       </div>
