@@ -37,17 +37,8 @@ function pickComponent(moduleObject, possibleNames, fallbackLabel) {
   };
 }
 
-const Dashboard = pickComponent(
-  DashboardModule,
-  ["Dashboard", "DashboardPage"],
-  "Dashboard"
-);
-
-const Bookings = pickComponent(
-  BookingsModule,
-  ["Bookings", "BookingsPage"],
-  "Bookings"
-);
+const Dashboard = pickComponent(DashboardModule, ["Dashboard", "DashboardPage"], "Dashboard");
+const Bookings = pickComponent(BookingsModule, ["Bookings", "BookingsPage"], "Bookings");
 
 const Guests = pickComponent(
   GuestCleaningMaintenanceModule,
@@ -115,26 +106,11 @@ const Settings = pickComponent(
   "Settings"
 );
 
-const Account = pickComponent(
-  AccountModule,
-  ["Account", "AccountPage"],
-  "My Account"
-);
+const Account = pickComponent(AccountModule, ["Account", "AccountPage"], "My Account");
 
 function LoadingScreen({ label = "Loading your host dashboard…" }) {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        fontWeight: 700,
-        color: "#0B2545",
-        background: "#FAF8F4",
-        padding: 24,
-        textAlign: "center",
-      }}
-    >
+    <div className="loading-screen">
       {label}
     </div>
   );
@@ -144,24 +120,25 @@ function DashboardShell() {
   const [page, setPage] = useState("dashboard");
   const [monthFilter, setMonthFilter] = useState(currentMonth());
   const [propFilter, setPropFilter] = useState("ALL");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-  return localStorage.getItem("hostSidebarCollapsed") === "true";
-});
-
-const toggleSidebarCollapsed = () => {
-  setSidebarCollapsed((previousValue) => {
-    const nextValue = !previousValue;
-    localStorage.setItem("hostSidebarCollapsed", String(nextValue));
-    return nextValue;
+    return localStorage.getItem("hostSidebarCollapsed") === "true";
   });
-};
 
-  const closeSidebar = () => setSidebarOpen(false);
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed((previousValue) => {
+      const nextValue = !previousValue;
+      localStorage.setItem("hostSidebarCollapsed", String(nextValue));
+      return nextValue;
+    });
+  };
+
+  const closeMobileSidebar = () => setMobileSidebarOpen(false);
 
   const goToPage = (nextPage) => {
     setPage(nextPage);
-    closeSidebar();
+    closeMobileSidebar();
   };
 
   const renderPage = () => {
@@ -234,36 +211,35 @@ const toggleSidebarCollapsed = () => {
 
   return (
     <AppProvider>
-   <div className={`app-layout ${sidebarCollapsed ? "sidebar-is-collapsed" : ""}`}>
-       <Sidebar
-  page={page}
-  setPage={goToPage}
-  activePage={page}
-  collapsed={sidebarCollapsed}
-  onToggleCollapse={toggleSidebarCollapsed}
-/>
+      <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+        <Sidebar
+          page={page}
+          setPage={goToPage}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapsed}
+        />
 
-        {sidebarOpen && (
+        {mobileSidebarOpen && (
           <>
-            <div className="sidebar-overlay open" onClick={closeSidebar} />
+            <div className="mobile-sidebar-overlay" onClick={closeMobileSidebar} />
             <Sidebar
               page={page}
-              activePage={page}
               setPage={goToPage}
+              collapsed={false}
               mobile
-              onClose={closeSidebar}
+              onClose={closeMobileSidebar}
             />
           </>
         )}
 
-        <div className="main-content">
+        <main className="app-main">
           <TopBar
             monthFilter={monthFilter}
             setMonthFilter={setMonthFilter}
             propFilter={propFilter}
             setPropFilter={setPropFilter}
-            onMenuClick={() => setSidebarOpen(true)}
-            setSidebarOpen={setSidebarOpen}
+            onMenuClick={() => setMobileSidebarOpen(true)}
+            setSidebarOpen={setMobileSidebarOpen}
           />
 
           <div className="account-toolbar">
@@ -272,8 +248,10 @@ const toggleSidebarCollapsed = () => {
             </button>
           </div>
 
-          <main>{renderPage()}</main>
-        </div>
+          <div className="page-scroll-frame">
+            {renderPage()}
+          </div>
+        </main>
       </div>
     </AppProvider>
   );
@@ -288,19 +266,10 @@ function AuthGate() {
 
   if (authError) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "grid",
-          placeItems: "center",
-          background: "#FAF8F4",
-          padding: 24,
-          textAlign: "center",
-        }}
-      >
+      <div className="auth-setup-error">
         <div>
           <strong>Authentication Setup Issue</strong>
-          <p style={{ marginTop: 8, maxWidth: 560 }}>{authError}</p>
+          <p>{authError}</p>
         </div>
       </div>
     );
