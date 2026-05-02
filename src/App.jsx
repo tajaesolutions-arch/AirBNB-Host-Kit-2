@@ -120,7 +120,6 @@ function DashboardShell() {
   const [page, setPage] = useState("dashboard");
   const [monthFilter, setMonthFilter] = useState(currentMonth());
   const [propFilter, setPropFilter] = useState("ALL");
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     return localStorage.getItem("hostSidebarCollapsed") === "true";
@@ -134,11 +133,8 @@ function DashboardShell() {
     });
   };
 
-  const closeMobileSidebar = () => setMobileSidebarOpen(false);
-
   const goToPage = (nextPage) => {
     setPage(nextPage);
-    closeMobileSidebar();
   };
 
   const renderPage = () => {
@@ -219,27 +215,12 @@ function DashboardShell() {
           onToggleCollapse={toggleSidebarCollapsed}
         />
 
-        {mobileSidebarOpen && (
-          <>
-            <div className="mobile-sidebar-overlay" onClick={closeMobileSidebar} />
-            <Sidebar
-              page={page}
-              setPage={goToPage}
-              collapsed={false}
-              mobile
-              onClose={closeMobileSidebar}
-            />
-          </>
-        )}
-
         <main className="app-main">
           <TopBar
             monthFilter={monthFilter}
             setMonthFilter={setMonthFilter}
             propFilter={propFilter}
             setPropFilter={setPropFilter}
-            onMenuClick={() => setMobileSidebarOpen(true)}
-            setSidebarOpen={setMobileSidebarOpen}
           />
 
           <div className="account-toolbar">
