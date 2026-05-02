@@ -19,59 +19,21 @@ import {
   Leads,
 } from "./pages/SuppliesRevenuLeads.jsx";
 
-import * as OwnerPages from "./pages/OwnerReportTaxSOPsMessagesSettings.jsx";
+import {
+  OwnerReport,
+  TaxReserve,
+  SOPs,
+  Messages,
+  Settings,
+} from "./pages/OwnerReportTaxSOPsMessagesSettings.jsx";
 
 // Default month = current YYYY-MM
 const currentMonth = () => new Date().toISOString().slice(0, 7);
-
-function MissingPage({ pageName }) {
-  return (
-    <div className="page">
-      <div className="page-header">
-        <h1 className="page-title">{pageName}</h1>
-        <p className="page-subtitle">
-          This page component was not found in the current source file.
-        </p>
-      </div>
-    </div>
-  );
-}
 
 export default function App() {
   const [page, setPage] = useState("dashboard");
   const [monthFilter, setMonthFilter] = useState(currentMonth());
   const [propFilter, setPropFilter] = useState("all");
-
-  const OwnerReportPage =
-    OwnerPages.OwnerReport ||
-    OwnerPages.OwnerReportPage ||
-    (() => <MissingPage pageName="Owner Report" />);
-
-  const TaxReservePage =
-    OwnerPages.TaxReserve ||
-    OwnerPages.TaxReservePage ||
-    (() => <MissingPage pageName="Tax Reserve" />);
-
-  const SOPsPage =
-    OwnerPages.SOPs ||
-    OwnerPages.SOP ||
-    OwnerPages.Sops ||
-    OwnerPages.SOPPage ||
-    OwnerPages.SOPsPage ||
-    OwnerPages.SOPTemplates ||
-    OwnerPages.SOPLibrary ||
-    OwnerPages.StandardOperatingProcedures ||
-    (() => <MissingPage pageName="SOPs" />);
-
-  const MessagesPage =
-    OwnerPages.Messages ||
-    OwnerPages.MessagesPage ||
-    (() => <MissingPage pageName="Messages" />);
-
-  const SettingsPage =
-    OwnerPages.Settings ||
-    OwnerPages.SettingsPage ||
-    (() => <MissingPage pageName="Settings" />);
 
   const renderPage = () => {
     switch (page) {
@@ -84,6 +46,7 @@ export default function App() {
         );
 
       case "bookings":
+      case "booking-calendar":
         return (
           <Bookings
             monthFilter={monthFilter}
@@ -92,6 +55,7 @@ export default function App() {
         );
 
       case "guests":
+      case "guest-crm":
         return (
           <Guests
             monthFilter={monthFilter}
@@ -100,6 +64,7 @@ export default function App() {
         );
 
       case "cleaning":
+      case "cleaning-schedule":
         return (
           <Cleaning
             monthFilter={monthFilter}
@@ -108,6 +73,7 @@ export default function App() {
         );
 
       case "maintenance":
+      case "maintenance-tracker":
         return (
           <Maintenance
             monthFilter={monthFilter}
@@ -116,6 +82,7 @@ export default function App() {
         );
 
       case "supplies":
+      case "supplies-inventory":
         return (
           <Supplies
             monthFilter={monthFilter}
@@ -124,6 +91,7 @@ export default function App() {
         );
 
       case "revenue":
+      case "revenue-profit":
         return (
           <Revenue
             monthFilter={monthFilter}
@@ -132,6 +100,8 @@ export default function App() {
         );
 
       case "leads":
+      case "direct-leads":
+      case "direct-booking":
         return (
           <Leads
             monthFilter={monthFilter}
@@ -139,37 +109,44 @@ export default function App() {
           />
         );
 
+      case "owner":
       case "owner-report":
+      case "owner-reports":
       case "ownerReport":
         return (
-          <OwnerReportPage
+          <OwnerReport
             monthFilter={monthFilter}
             propFilter={propFilter}
           />
         );
 
+      case "tax":
       case "tax-reserve":
       case "taxReserve":
+      case "gct":
         return (
-          <TaxReservePage
+          <TaxReserve
             monthFilter={monthFilter}
             propFilter={propFilter}
           />
         );
 
       case "sops":
-      case "SOPs":
       case "sop":
+      case "SOPs":
       case "SOP":
-        return <SOPsPage />;
+      case "checklists":
+        return <SOPs />;
 
       case "messages":
-        return <MessagesPage />;
+      case "templates":
+      case "guest-messages":
+        return <Messages />;
 
       case "settings":
       case "account":
       case "my-account":
-        return <SettingsPage />;
+        return <Settings />;
 
       default:
         return (
