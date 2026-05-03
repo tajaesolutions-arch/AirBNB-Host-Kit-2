@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
-import { MetricCard, Chip } from "../components/index.jsx";
+import { MetricCard, Chip, PageHeader } from "../components/index.jsx";
 import {
   bookingTotal,
   calcNights,
@@ -601,6 +601,12 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
   }
 
   const selectedMonth = monthFilter || new Date().toISOString().slice(0, 7);
+  const parseDateSafe = (value) => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
   const selectedPropFilter =
     !propFilter || propFilter === "all" || propFilter === "ALL"
       ? "ALL"
@@ -725,30 +731,24 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
 
   const upcoming = filterByProp(bookings)
     .filter((booking) => {
-      const checkinDate = new Date(booking.checkin_date);
+      const checkinDate = parseDateSafe(booking.checkin_date);
+      if (!checkinDate) return false;
       const diff = (checkinDate - today) / 86400000;
 
-      return (
-        diff >= 0 &&
-        diff <= 14 &&
-        booking.booking_status === "Confirmed"
-      );
+      return diff >= 0 && diff <= 14 && booking.booking_status === "Confirmed";
     })
-    .sort((a, b) => new Date(a.checkin_date) - new Date(b.checkin_date))
+    .sort((a, b) => (parseDateSafe(a.checkin_date)?.getTime() || 0) - (parseDateSafe(b.checkin_date)?.getTime() || 0))
     .slice(0, 5);
 
   const upcomingCheckouts = filterByProp(bookings)
     .filter((booking) => {
-      const checkoutDate = new Date(booking.checkout_date);
+      const checkoutDate = parseDateSafe(booking.checkout_date);
+      if (!checkoutDate) return false;
       const diff = (checkoutDate - today) / 86400000;
 
-      return (
-        diff >= 0 &&
-        diff <= 14 &&
-        ["Checked In", "Confirmed"].includes(booking.booking_status)
-      );
+      return diff >= 0 && diff <= 14 && ["Checked In", "Confirmed"].includes(booking.booking_status);
     })
-    .sort((a, b) => new Date(a.checkout_date) - new Date(b.checkout_date))
+    .sort((a, b) => (parseDateSafe(a.checkout_date)?.getTime() || 0) - (parseDateSafe(b.checkout_date)?.getTime() || 0))
     .slice(0, 5);
 
   const lowStock = filterByProp(supplies).filter(
@@ -770,7 +770,10 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
   health -= urgentMaint.length * 10;
   health -= lowStock.length * 5;
   health -=
-    cleaningDue.filter((task) => new Date(task.checkout_date) < today).length *
+    cleaningDue.filter((task) => {
+      const checkoutDate = parseDateSafe(task.checkout_date);
+      return checkoutDate ? checkoutDate < today : false;
+    }).length *
     5;
   health = Math.max(0, health);
 
@@ -949,7 +952,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
         <MetricCard
           tone="navy"
           label="Booking Revenue"
-          value={fmtCurrency(grossRevenue, cur)}
+          value={fmtCurrency(grossRevenue, selectedCurrency)}
           sub={`${monthBookings.length} bookings this month`}
           icon={DollarSign}
         />
@@ -957,7 +960,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
         <MetricCard
           tone={netProfit >= 0 ? "teal" : "red"}
           label="Net Profit (Est.)"
-          value={fmtCurrency(netProfit, cur)}
+          value={fmtCurrency(netProfit, selectedCurrency)}
           sub="After all fees & expenses"
           icon={TrendingUp}
         />
@@ -971,7 +974,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
 
         <MetricCard
           label="Avg Nightly Rate"
-          value={fmtCurrency(avgNightly, cur)}
+          value={fmtCurrency(avgNightly, selectedCurrency)}
           sub="Excludes cleaning fee"
           icon={Star}
         />
@@ -981,28 +984,28 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
         <MetricCard
           tone="sand"
           label="Airbnb Revenue"
-          value={fmtCurrency(airbnbRevenue, cur)}
+          value={fmtCurrency(airbnbRevenue, selectedCurrency)}
           sub="Platform bookings"
         />
 
         <MetricCard
           tone="sand"
           label="Direct Revenue"
-          value={fmtCurrency(directRevenue, cur)}
+          value={fmtCurrency(directRevenue, selectedCurrency)}
           sub="WhatsApp, IG, Direct"
         />
 
         <MetricCard
           tone="sand"
           label="Cleaning Cost"
-          value={fmtCurrency(cleaningCost, cur)}
+          value={fmtCurrency(cleaningCost, selectedCurrency)}
           sub="Logged this month"
         />
 
         <MetricCard
           tone="amber"
           label="Tax Reserve (Est.)"
-          value={fmtCurrency(taxReserve, cur)}
+          value={fmtCurrency(taxReserve, selectedCurrency)}
           sub={`${fmtPct(taxReservePercentage)} — planning only`}
         />
       </div>
@@ -1269,7 +1272,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
                     row.value < 0 ? "" : "positive"
                   }`}
                 >
-                  {fmtCurrency(row.value, cur)}
+                  {fmtCurrency(row.value, selectedCurrency)}
                 </span>
               </div>
             ))}
@@ -1284,7 +1287,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
                   netProfit >= 0 ? "teal" : "negative"
                 }`}
               >
-                {fmtCurrency(netProfit, cur)}
+                {fmtCurrency(netProfit, selectedCurrency)}
               </span>
             </div>
           </div>
