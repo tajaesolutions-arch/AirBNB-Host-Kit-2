@@ -324,6 +324,7 @@ function DashboardShell() {
             setPropFilter={setPropFilter}
             onMenuClick={() => setMobileSidebarOpen(true)}
             onAccountClick={() => goToPage("account")}
+            onToggleSidebar={toggleSidebarCollapsed}
             pageTitle={PAGE_TITLES[page] || "Dashboard"}
           />
 

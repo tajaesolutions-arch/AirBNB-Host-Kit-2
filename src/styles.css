@@ -3120,145 +3120,49 @@ textarea:focus-visible,
   }
 }
 
-/* Mobile-first topbar/header compaction */
-.topbar {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-  height: var(--header-h);
-}
 
-.topbar-desktop-filters {
-  display: grid;
-}
+/* SaaS shell polish + responsive regression fixes */
+:root { --header-h: 116px; --app-bg: #f7f5f0; }
+body { background: var(--app-bg); }
+.app-shell { display: flex; min-height: 100vh; }
+.main-content { background: var(--app-bg); }
+.topbar { position: sticky; top: 0; z-index: 70; height: auto; display: block; padding: 0; background: #fff; border-bottom: 1px solid #e7e3d8; }
+.desktop-top-header { height: 62px; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; }
+.desktop-brand-wrap { display: flex; align-items: center; gap: 12px; }
+.desktop-brand-title { font-family: Fraunces, serif; font-size: 18px; line-height: 1; }
+.desktop-brand-subtitle { font-size: 11px; color: #d0dcf2; margin-top: 3px; }
+.desktop-header-actions { display: flex; align-items: center; gap: 10px; }
+.icon-btn, .desktop-collapse-btn { border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: #fff; border-radius: 8px; padding: 8px; display: inline-flex; }
+.topbar-desktop-filters { display: flex; align-items: center; gap: 10px; justify-content: flex-end; padding: 12px 24px; border-top: 1px solid #eef1f5; }
+.topbar-control { height: 34px; border: 1px solid #d8dfe8; border-radius: 999px; padding: 0 12px; background: #fff; font-size: 13px; min-width: 130px; }
+.topbar-currency-pill { font-size: 12px; padding: 6px 10px; border-radius: 999px; background: var(--teal-soft); color: #0d4f48; border: 1px solid #bfe6df; }
+.topbar-account-btn { background: #fff; color: var(--navy); border: 1px solid #c7d4e6; border-radius: 999px; padding: 7px 12px; display: inline-flex; gap: 6px; align-items: center; }
+.sidebar { background: linear-gradient(180deg, #0b2545, #102f54); }
+.sidebar-brand { padding: 14px; border-bottom: 1px solid rgba(255,255,255,.1); display: flex; justify-content: space-between; align-items: center; }
+.sidebar-brand-mark { background: #1f8f84; color: #fff; font-weight: 700; border-radius: 10px; padding: 6px 8px; font-size: 12px; }
+.sidebar-nav-item { width: 100%; display: flex; align-items: center; gap: 10px; border: 1px solid transparent; background: transparent; color: #d2deef; padding: 10px 12px; border-radius: 10px; }
+.sidebar-nav-item:hover { background: rgba(255,255,255,.08); color: #fff; }
+.sidebar-nav-item.active { background: rgba(27,153,139,.2); border-color: rgba(87,206,192,.45); color: #fff; }
+.page { padding: 20px 24px 48px; max-width: 1400px; }
+.metric-grid { gap: 14px; }
+.metric-card { box-shadow: 0 4px 14px rgba(16,38,68,.05); }
 
-.mobile-app-header,
-.mobile-page-bar,
-.mobile-filter-menu {
-  display: none;
+/* Hide mobile-only UI on desktop by default */
+.mobile-app-header, .mobile-page-bar, .mobile-filter-menu { display: none; }
+
+@media (min-width: 769px) {
+  .desktop-top-header, .topbar-desktop-filters { display: flex; }
 }
 
 @media (max-width: 768px) {
-  .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 70;
-    padding: 8px 12px !important;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    height: auto;
-  }
-
-  .topbar-desktop-filters {
-    display: none !important;
-  }
-
-  .mobile-app-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 40px;
-    gap: 8px;
-  }
-
-  .mobile-brand {
-    font-family: Fraunces, serif;
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1;
-  }
-
-  .mobile-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .topbar-menu-btn,
-  .mobile-actions-button,
-  .mobile-account-btn {
-    border: 1px solid rgba(193, 168, 126, 0.45);
-    background: #fff;
-    border-radius: 10px;
-    color: var(--ink);
-    cursor: pointer;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .topbar-menu-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .mobile-account-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .mobile-page-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .mobile-page-title {
-    font-family: Fraunces, serif;
-    font-size: 17px;
-    font-weight: 600;
-    line-height: 1.1;
-  }
-
-  .mobile-actions-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-  }
-
-  .mobile-filter-menu {
-    display: none;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: var(--paper);
-    padding: 10px;
-  }
-
-  .mobile-filter-menu.open {
-    display: block;
-  }
-
-  .mobile-filter-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .mobile-filter-grid .topbar-filter-group {
-    display: flex !important;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .page {
-    padding-top: 16px;
-  }
-
-  .sidebar.sidebar-mobile,
-  .sidebar.is-mobile,
-  .sidebar.mobile {
-    z-index: 120;
-  }
-
-  .mobile-sidebar-overlay,
-  .sidebar-overlay {
-    z-index: 110;
-  }
+  .desktop-top-header, .topbar-desktop-filters { display: none !important; }
+  .mobile-app-header { display: flex; background: var(--navy); color: #fff; align-items: center; justify-content: space-between; padding: 10px 12px; }
+  .mobile-page-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #fff; border-bottom: 1px solid #ece6d8; }
+  .mobile-brand { font-family: Fraunces, serif; }
+  .mobile-account-btn, .mobile-actions-button { border: 1px solid #d4dce8; background: #fff; border-radius: 8px; padding: 6px; display: inline-flex; }
+  .mobile-filter-menu.open { display: block; padding: 10px 12px; background: #fff; border-bottom: 1px solid #ece6d8; }
+  .mobile-filter-grid { display: grid; gap: 8px; }
+  .main-content { margin-left: 0; }
+  .sidebar { display: none; }
+  .sidebar.sidebar-mobile.is-mobile { display: flex; position: fixed; z-index: 130; width: 280px; }
 }

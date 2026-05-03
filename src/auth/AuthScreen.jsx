@@ -95,7 +95,7 @@ export default function AuthScreen() {
       <div className="auth-shell-inner">
         <section className="auth-brand-panel">
           <div className="auth-logo-block">
-            <div className="auth-logo-mark">🇯🇲</div>
+            <div className="auth-logo-mark">HK</div>
             <div>
               <div className="auth-logo-title">Host Operations</div>
               <div className="auth-logo-subtitle">AirBNB Host Kit</div>
