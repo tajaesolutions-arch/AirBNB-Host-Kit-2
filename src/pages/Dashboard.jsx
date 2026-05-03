@@ -15,6 +15,10 @@ import {
   paymentStatusChip,
   cleaningStatusChip,
   supplyChip,
+  SUPPORTED_CURRENCIES,
+  CURRENCY_DISPLAY_NAMES,
+  getCurrencyHelperText,
+  normalizeCurrency,
 } from "../utils/helpers.js";
 import {
   DollarSign,
@@ -511,7 +515,13 @@ function EmptyCard({ title, body, buttonLabel, onClick }) {
   );
 }
 
-export default function Dashboard({ setPage, monthFilter, propFilter }) {
+export default function Dashboard({
+  setPage,
+  monthFilter,
+  setMonthFilter,
+  propFilter,
+  setPropFilter,
+}) {
   const {
     bookings: rawBookings,
     expenses: rawExpenses,
@@ -520,6 +530,7 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
     cleaning: rawCleaning,
     properties: rawProperties,
     settings: rawSettings,
+    setSettings,
     restoreSampleData,
   } = useApp();
 
@@ -536,6 +547,7 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
   );
 
   const cur = settings.default_currency || "JMD";
+  const selectedCurrency = normalizeCurrency(cur);
 
   const goToPage = (nextPage) => {
     if (typeof setPage === "function") {
@@ -845,6 +857,65 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
           </>
         }
       />
+      <div className="card dashboard-filter-card">
+        <div className="dashboard-filter-row">
+          <div className="dashboard-filter-group">
+            <label className="dashboard-filter-label" htmlFor="dashboard-property-filter">
+              Property
+            </label>
+            <select
+              id="dashboard-property-filter"
+              className="topbar-control"
+              value={propFilter || "ALL"}
+              onChange={(event) => setPropFilter?.(event.target.value)}
+            >
+              <option value="ALL">All Properties</option>
+              {properties.map((property) => (
+                <option key={property.property_id} value={property.property_id}>
+                  {property.property_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="dashboard-filter-group">
+            <label className="dashboard-filter-label" htmlFor="dashboard-month-filter">
+              Month
+            </label>
+            <input
+              id="dashboard-month-filter"
+              className="topbar-control"
+              type="month"
+              value={selectedMonth}
+              onChange={(event) => setMonthFilter?.(event.target.value)}
+            />
+          </div>
+
+          <div className="dashboard-filter-group">
+            <label className="dashboard-filter-label" htmlFor="dashboard-currency-filter">
+              Currency
+            </label>
+            <select
+              id="dashboard-currency-filter"
+              className="topbar-control"
+              value={selectedCurrency}
+              title={getCurrencyHelperText(selectedCurrency)}
+              onChange={(event) =>
+                setSettings?.((previous) => ({
+                  ...(previous ?? {}),
+                  default_currency: normalizeCurrency(event.target.value),
+                }))
+              }
+            >
+              {SUPPORTED_CURRENCIES.map((currency) => (
+                <option key={currency} value={currency}>
+                  {currency} — {CURRENCY_DISPLAY_NAMES[currency]}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
 
       <SetupProgressCard
         checklist={setupChecklist}

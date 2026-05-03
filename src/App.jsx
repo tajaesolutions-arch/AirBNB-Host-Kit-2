@@ -214,7 +214,9 @@ function DashboardShell() {
   const renderPage = () => {
     const shared = {
       monthFilter,
+      setMonthFilter,
       propFilter,
+      setPropFilter,
       setPage: goToPage,
       pageAction,
       onPageActionHandled: clearPageAction,
@@ -318,12 +320,7 @@ function DashboardShell() {
 
         <main className="app-main main-content">
           <TopBar
-            monthFilter={monthFilter}
-            setMonthFilter={setMonthFilter}
-            propFilter={propFilter}
-            setPropFilter={setPropFilter}
             onMenuClick={() => setMobileSidebarOpen(true)}
-            onAccountClick={() => goToPage("account")}
             onToggleSidebar={toggleSidebarCollapsed}
             pageTitle={PAGE_TITLES[page] || "Dashboard"}
           />
