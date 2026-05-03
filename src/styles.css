@@ -3803,3 +3803,59 @@ body { background: var(--app-bg); }
 @media (max-width: 760px) {
   .dashboard-recent-bookings-table table { min-width: 960px; }
 }
+
+.smart-tools-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.smart-tool-card {
+  border-color: var(--line);
+}
+
+.smart-tool-card-header {
+  color: var(--navy);
+}
+
+.smart-tool-modal-section {
+  display: grid;
+  gap: 14px;
+}
+
+.smart-tool-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.smart-tool-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.smart-tool-preview-card {
+  padding: 14px;
+  background: var(--sand-soft);
+  border-color: var(--line-strong);
+}
+
+.smart-tool-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .smart-tools-grid,
+  .smart-tool-form-grid,
+  .smart-tool-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
