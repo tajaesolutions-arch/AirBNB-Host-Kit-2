@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
 import AuthScreen from "./auth/AuthScreen.jsx";
 import { AppProvider } from "./context/AppContext.jsx";
@@ -139,27 +139,49 @@ const Account = pickComponent(
 );
 
 
-class PageErrorBoundary extends Error {
-  constructor(error) {
-    super(error?.message || "Unknown page error");
-    this.originalError = error;
+class DashboardErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
   }
-}
 
-function SafePage({ children, pageName }) {
-  try {
-    return children();
-  } catch (error) {
-    const wrapped = new PageErrorBoundary(error);
-    return (
-      <div className="page">
-        <div className="card" style={{ padding: 16 }}>
-          <h2>Page failed to render</h2>
-          <p><strong>Page:</strong> {pageName}</p>
-          <p>{wrapped.message}</p>
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    console.error("Dashboard shell render error:", error);
+  }
+
+  resetLocalAppData = () => {
+    try {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("jak_")) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch {
+      // If storage is unavailable, still attempt reload.
+    }
+
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="page">
+          <div className="card" style={{ padding: 16 }}>
+            <h2>Something went wrong loading your dashboard.</h2>
+            <button type="button" className="btn-danger" onClick={this.resetLocalAppData}>
+              Reset local app data
+            </button>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+
+    return this.props.children;
   }
 }
 
@@ -317,6 +339,7 @@ function DashboardShell() {
           </>
         )}
 
+        <DashboardErrorBoundary>
         <main className="app-main main-content">
           <button
             type="button"
@@ -327,8 +350,9 @@ function DashboardShell() {
             ☰ Menu
           </button>
 
-          <div className="page-scroll-frame"><SafePage pageName={page}>{() => renderPage()}</SafePage></div>
+          <div className="page-scroll-frame">{renderPage()}</div>
         </main>
+      </DashboardErrorBoundary>
       </div>
     </AppProvider>
   );
