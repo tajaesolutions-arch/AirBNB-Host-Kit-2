@@ -2665,7 +2665,7 @@ body.sidebar-collapsed .sidebar .sidebar-item-label,
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   :root {
     --safe-topbar-h: 68px;
     --page-top-safe-space: 26px;
@@ -3150,11 +3150,11 @@ body { background: var(--app-bg); }
 /* Hide mobile-only UI on desktop by default */
 .mobile-app-header, .mobile-page-bar, .mobile-filter-menu { display: none; }
 
-@media (min-width: 769px) {
+@media (min-width: 901px) {
   .desktop-top-header, .topbar-desktop-filters { display: flex; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .desktop-top-header, .topbar-desktop-filters { display: none !important; }
   .mobile-app-header { display: flex; background: var(--navy); color: #fff; align-items: center; justify-content: space-between; padding: 10px 12px; }
   .mobile-page-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #fff; border-bottom: 1px solid #ece6d8; }
@@ -3249,12 +3249,12 @@ body { background: var(--app-bg); }
   }
 }
 
-@media (min-width: 769px) {
+@media (min-width: 901px) {
   .desktop-top-header { display: none !important; }
   .topbar-account-btn { display: none !important; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .topbar { min-height: initial; display: block; padding: 0; }
   .topbar-desktop { display: none !important; }
 }
