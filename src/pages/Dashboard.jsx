@@ -17,6 +17,7 @@ import {
   supplyChip,
   SUPPORTED_CURRENCIES,
   CURRENCY_DISPLAY_NAMES,
+  getCurrencyHelperText,
   normalizeCurrency,
 } from "../utils/helpers.js";
 import {
@@ -220,10 +221,10 @@ function SetupProgressCard({
   };
 
   return (
-    <div className={`card setup-progress-card ${isOpen ? "open" : "closed"}`}>
-      <div className="setup-progress-header">
+    <div className={`card setup-progress-card dashboard-setup-card ${isOpen ? "open" : "closed"}`}>
+      <div className="setup-progress-header dashboard-setup-top">
         <div className="setup-progress-copy">
-          <h3 className="section-title setup-progress-title">
+          <h3 className="section-title setup-progress-title dashboard-setup-title-row">
             Setup Checklist
           </h3>
 
@@ -250,9 +251,9 @@ function SetupProgressCard({
         </div>
       </div>
 
-      <div className="setup-progress-bar">
+      <div className="setup-progress-bar dashboard-setup-progress">
         <div
-          className="setup-progress-bar-fill"
+          className="setup-progress-bar-fill dashboard-setup-progress-fill"
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -539,7 +540,14 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
     loadSetupProgress()
   );
 
-  const cur = settings.default_currency || "JMD";
+  const selectedCurrency = normalizeCurrency(settings?.default_currency || "JMD");
+
+  const updateCurrency = (nextCurrency) => {
+    setSettings?.((previous) => ({
+      ...(previous || {}),
+      default_currency: normalizeCurrency(nextCurrency),
+    }));
+  };
 
   const goToPage = (nextPage) => {
     if (typeof setPage === "function") {
@@ -816,27 +824,22 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
 
   return (
     <div className="page">
-      <div className="dashboard-hero dashboard-section-spacing">
-        <div className="dashboard-hero-copy">
-          <h1 className="page-title">Host Dashboard</h1>
-          <p className="page-subtitle">{`Snapshot for ${
+      <div className="dashboard-command-row dashboard-section-spacing">
+        <div className="dashboard-title-block">
+          <h1>Host Dashboard</h1>
+          <p>{`Snapshot for ${
             selectedPropFilter === "ALL"
               ? "all properties"
-              : getProp(selectedPropFilter)?.property_name || ""
+              : getProp(selectedPropFilter)?.property_name || "selected property"
           } — ${selectedMonth}`}</p>
         </div>
 
-        <div className="dashboard-toolbar-card">
-          <div className="dashboard-toolbar">
-            <div className="dashboard-mini-filters">
-              <label className="dashboard-mini-filter-group">
-                <span>Property</span>
-                <select
-                  className="dashboard-mini-filter"
-                  value={selectedPropFilter}
-                  onChange={(e) => setPropFilter?.(e.target.value)}
-                  aria-label="Property filter"
-                >
+        <div className="dashboard-control-card">
+          <div className="dashboard-control-columns">
+            <div className="dashboard-filter-stack">
+              <label className="dashboard-filter-pill">
+                <span className="dashboard-filter-label">Property</span>
+                <select value={selectedPropFilter} onChange={(e) => setPropFilter?.(e.target.value)} aria-label="Property filter">
                   <option value="ALL">All Properties</option>
                   {properties.map((property) => (
                     <option key={property.property_id} value={property.property_id}>
@@ -846,30 +849,14 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
                 </select>
               </label>
 
-              <label className="dashboard-mini-filter-group">
-                <span>Month</span>
-                <input
-                  className="dashboard-mini-filter"
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(e) => setMonthFilter?.(e.target.value)}
-                  aria-label="Month filter"
-                />
+              <label className="dashboard-filter-pill">
+                <span className="dashboard-filter-label">Month</span>
+                <input type="month" value={selectedMonth} onChange={(e) => setMonthFilter?.(e.target.value)} aria-label="Month filter" />
               </label>
 
-              <label className="dashboard-mini-filter-group">
-                <span>Currency</span>
-                <select
-                  className="dashboard-mini-filter"
-                  value={normalizeCurrency(settings.default_currency || "JMD")}
-                  onChange={(e) =>
-                    setSettings?.((previous) => ({
-                      ...(previous || {}),
-                      default_currency: normalizeCurrency(e.target.value),
-                    }))
-                  }
-                  aria-label="Currency filter"
-                >
+              <label className="dashboard-filter-pill">
+                <span className="dashboard-filter-label">Currency</span>
+                <select value={selectedCurrency} onChange={(e) => updateCurrency(e.target.value)} aria-label={getCurrencyHelperText(selectedCurrency)}>
                   {SUPPORTED_CURRENCIES.map((currency) => (
                     <option key={currency} value={currency}>
                       {CURRENCY_DISPLAY_NAMES[currency] || currency}
@@ -879,19 +866,12 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
               </label>
             </div>
 
-            <div className="dashboard-actions">
-              <button className="btn-secondary" onClick={() => goToPage("settings")}>
-                <Settings size={14} />
-                Setup
+            <div className="dashboard-action-stack">
+              <button className="dashboard-action-pill dashboard-action-pill-outline" onClick={() => goToPage("settings")}>
+                <Settings size={14} /> Setup
               </button>
-
-              <button className="btn-secondary" onClick={() => goToPage("bookings")}>
-                + Add Booking
-              </button>
-
-              <button className="btn-primary" onClick={() => goToPage("revenue")}>
-                + Add Expense
-              </button>
+              <button className="dashboard-action-pill dashboard-action-pill-outline" onClick={() => goToPage("bookings")}>+ Add Booking</button>
+              <button className="dashboard-action-pill dashboard-action-pill-primary" onClick={() => goToPage("revenue")}>+ Add Expense</button>
             </div>
           </div>
         </div>

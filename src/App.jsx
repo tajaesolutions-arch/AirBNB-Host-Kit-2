@@ -3,7 +3,6 @@ import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
 import AuthScreen from "./auth/AuthScreen.jsx";
 import { AppProvider } from "./context/AppContext.jsx";
 import Sidebar from "./components/Sidebar.jsx";
-import TopBar from "./components/TopBar.jsx";
 
 import * as DashboardModule from "./pages/Dashboard.jsx";
 import * as BookingsModule from "./pages/Bookings.jsx";
@@ -319,10 +318,14 @@ function DashboardShell() {
         )}
 
         <main className="app-main main-content">
-          <TopBar
-            onMenuClick={() => setMobileSidebarOpen(true)}
-            onToggleSidebar={toggleSidebarCollapsed}
-          />
+          <button
+            type="button"
+            className="mobile-menu-trigger"
+            onClick={() => setMobileSidebarOpen(true)}
+            aria-label="Open navigation menu"
+          >
+            ☰ Menu
+          </button>
 
           <div className="page-scroll-frame"><SafePage pageName={page}>{() => renderPage()}</SafePage></div>
         </main>
