@@ -107,7 +107,7 @@ export const getCurrencyHelperText = (currency = BASE_CURRENCY) => {
   const safeCurrency = normalizeCurrency(currency);
 
   if (safeCurrency === BASE_CURRENCY) {
-    return "Amounts are stored and displayed in JMD.";
+    return "Base amounts are stored in JMD. You can switch display estimates to supported currencies.";
   }
 
   return `Displaying converted ${safeCurrency} estimates. Stored amounts remain in JMD.`;

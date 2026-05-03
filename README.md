@@ -1,6 +1,6 @@
-# 🇯🇲 Jamaica Airbnb Host Operations Kit
+# AirBNB Host Kit
 
-A beginner-friendly short-term rental operations dashboard for Jamaican Airbnb hosts, villa owners, co-hosts, diaspora property owners, and property managers.
+AirBNB Host Kit is a short-term rental operations dashboard for Airbnb hosts, villa owners, co-hosts, diaspora property owners, and property managers worldwide.
 
 **Track bookings, revenue, expenses, cleaning turnovers, supplies, maintenance, guest follow-ups, owner reports, and tax reserves — in one organized system.**
 
@@ -19,7 +19,7 @@ A beginner-friendly short-term rental operations dashboard for Jamaican Airbnb h
 | 💰 Revenue & Profit | Expenses ledger + net profit breakdown |
 | 💬 Direct Leads | WhatsApp, Instagram, referral lead pipeline |
 | 📝 Owner Report | Monthly summary for property owners |
-| 🧾 Tax Reserve | GCT planning tracker + accountant checklist |
+| 🧾 Tax Reserve | Tax planning tracker + accountant checklist |
 | ✅ SOP Checklists | 9 step-by-step operating procedure checklists |
 | 💬 Message Templates | 17 copy-ready guest & owner message templates |
 | ⚙️ Settings | Properties, fees, cleaners, vendors |
@@ -36,8 +36,8 @@ A beginner-friendly short-term rental operations dashboard for Jamaican Airbnb h
 
 ```bash
 # 1. Extract the zip file
-unzip jamaica-airbnb-kit.zip
-cd jamaica-airbnb-kit
+unzip airbnb-host-kit.zip
+cd airbnb-host-kit
 
 # 2. Install dependencies
 npm install
@@ -90,8 +90,8 @@ Your app will be live at `https://your-project-name.vercel.app` in under 60 seco
 # Push to GitHub
 git init
 git add .
-git commit -m "Initial commit — Jamaica Airbnb Host Operations Kit"
-git remote add origin https://github.com/yourusername/jamaica-airbnb-kit.git
+git commit -m "Initial commit — AirBNB Host Kit"
+git remote add origin https://github.com/yourusername/airbnb-host-kit.git
 git push -u origin main
 ```
 
@@ -131,7 +131,7 @@ Output is in the `dist/` folder. Upload this folder to any static hosting provid
 ## Project Structure
 
 ```
-jamaica-airbnb-kit/
+airbnb-host-kit/
 ├── index.html                  # App entry point
 ├── package.json                # Dependencies
 ├── vite.config.js              # Vite config
@@ -203,9 +203,9 @@ To reset to sample data: go to **Settings → Reset All Data**.
 
 ---
 
-## Tax / GCT Disclaimer
+## Tax Planning Disclaimer
 
-> ⚠️ The Tax/GCT Reserve Tracker is **for planning and organisation only**. It is **not** legal, accounting, or tax advice. Tax rules may change and obligations vary by host, property, platform, and business structure. Always confirm your actual requirements with a qualified Jamaican accountant or tax professional.
+> ⚠️ The Tax Reserve Tracker is **for planning and organisation only**. It is **not** legal, accounting, or tax advice. Tax rules may change and obligations vary by host, property, platform, and business structure. Use this for VAT, GCT, sales tax, occupancy tax, or other tax planning categories based on your market, and confirm your requirements with a qualified professional.
 
 ---
 
@@ -255,5 +255,5 @@ This product is for the buyer's personal or business use only. Resale or redistr
 
 ---
 
-*Built specifically for Jamaican Airbnb hosts, villa owners, co-hosts, and property managers.*  
-*🇯🇲 Run your rental like a real business.*
+*Built for Airbnb hosts, villa owners, co-hosts, diaspora property owners, and property managers worldwide.*  
+*Run your rental operations like a real business.*

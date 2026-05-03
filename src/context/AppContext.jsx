@@ -306,7 +306,7 @@ export function AppProvider({ children }) {
 
   const getBackupData = () => {
     return {
-      app: "Jamaica Airbnb Host Operations Kit",
+      app: "AirBNB Host Kit",
       backup_version: BACKUP_VERSION,
       exported_at: new Date().toISOString(),
       data: {

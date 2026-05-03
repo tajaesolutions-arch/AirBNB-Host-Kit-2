@@ -137,7 +137,7 @@ export default function Sidebar({
           {!collapsed && (
             <div className="sidebar-brand-copy">
               <div className="sidebar-brand-title">Host Operations</div>
-              <div className="sidebar-brand-subtitle">Jamaica Airbnb Kit</div>
+              <div className="sidebar-brand-subtitle">AirBNB Host Kit</div>
             </div>
           )}
         </div>
