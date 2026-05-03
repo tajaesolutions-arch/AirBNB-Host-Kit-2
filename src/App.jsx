@@ -139,6 +139,31 @@ const Account = pickComponent(
   "My Account"
 );
 
+
+class PageErrorBoundary extends Error {
+  constructor(error) {
+    super(error?.message || "Unknown page error");
+    this.originalError = error;
+  }
+}
+
+function SafePage({ children, pageName }) {
+  try {
+    return children();
+  } catch (error) {
+    const wrapped = new PageErrorBoundary(error);
+    return (
+      <div className="page">
+        <div className="card" style={{ padding: 16 }}>
+          <h2>Page failed to render</h2>
+          <p><strong>Page:</strong> {pageName}</p>
+          <p>{wrapped.message}</p>
+        </div>
+      </div>
+    );
+  }
+}
+
 function LoadingScreen({ label = "Loading your host dashboard…" }) {
   return <div className="loading-screen">{label}</div>;
 }
@@ -299,9 +324,10 @@ function DashboardShell() {
             setPropFilter={setPropFilter}
             onMenuClick={() => setMobileSidebarOpen(true)}
             onAccountClick={() => goToPage("account")}
+            pageTitle={PAGE_TITLES[page] || "Dashboard"}
           />
 
-          <div className="page-scroll-frame">{renderPage()}</div>
+          <div className="page-scroll-frame"><SafePage pageName={page}>{() => renderPage()}</SafePage></div>
         </main>
       </div>
     </AppProvider>
