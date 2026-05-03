@@ -32,6 +32,8 @@ const AppContext = createContext(null);
 
 const BACKUP_VERSION = 1;
 const CLEARED_SAMPLE_DATA_FLAG = "jak_sample_data_cleared";
+const SETUP_PROGRESS_STORAGE_KEY = "jak_dashboard_setup_progress";
+const BACKUP_EXPORTED_AT_STORAGE_KEY = "jak_backup_exported_at";
 
 const STORAGE_KEYS = {
   properties: "jak_properties",
@@ -323,6 +325,8 @@ export function AppProvider({ children }) {
 
   const resetToBlankData = () => {
     saveBlankStorageState();
+    save(SETUP_PROGRESS_STORAGE_KEY, {});
+    save(BACKUP_EXPORTED_AT_STORAGE_KEY, "");
 
     setPropertiesRaw([]);
     setBookingsRaw([]);
@@ -341,6 +345,8 @@ export function AppProvider({ children }) {
 
   const restoreSampleData = () => {
     setSampleClearedFlag(false);
+    save(SETUP_PROGRESS_STORAGE_KEY, {});
+    save(BACKUP_EXPORTED_AT_STORAGE_KEY, "");
 
     setProperties(SAMPLE_PROPERTIES);
     setBookings(SAMPLE_BOOKINGS);
@@ -369,6 +375,10 @@ export function AppProvider({ children }) {
       app: "AirBNB Host Kit",
       backup_version: BACKUP_VERSION,
       exported_at: new Date().toISOString(),
+      setup_progress: clone(
+        JSON.parse(localStorage.getItem(SETUP_PROGRESS_STORAGE_KEY) || "{}")
+      ),
+      backup_exported_at: localStorage.getItem(BACKUP_EXPORTED_AT_STORAGE_KEY) || "",
       data: {
         properties: clone(properties),
         bookings: clone(bookings),
@@ -389,6 +399,14 @@ export function AppProvider({ children }) {
 
   const importBackupData = (payload) => {
     const nextData = normalizeImportedBackup(payload);
+    const rawSetupProgress =
+      payload && typeof payload === "object" ? payload.setup_progress : {};
+    const normalizedSetupProgress =
+      rawSetupProgress && typeof rawSetupProgress === "object" && !Array.isArray(rawSetupProgress)
+        ? rawSetupProgress
+        : {};
+    const backupExportedAt =
+      payload && typeof payload === "object" ? payload.backup_exported_at : "";
 
     save(STORAGE_KEYS.properties, nextData.properties);
     save(STORAGE_KEYS.bookings, nextData.bookings);
@@ -403,6 +421,8 @@ export function AppProvider({ children }) {
     save(STORAGE_KEYS.messageHistory, nextData.messageHistory);
     save(STORAGE_KEYS.reviewTasks, nextData.reviewTasks);
     save(STORAGE_KEYS.settings, nextData.settings);
+    save(SETUP_PROGRESS_STORAGE_KEY, normalizedSetupProgress);
+    save(BACKUP_EXPORTED_AT_STORAGE_KEY, String(backupExportedAt || ""));
 
     setSampleClearedFlag(!hasOperationalRecords(nextData));
 
