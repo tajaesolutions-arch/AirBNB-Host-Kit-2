@@ -298,8 +298,7 @@ function DashboardShell() {
             propFilter={propFilter}
             setPropFilter={setPropFilter}
             onMenuClick={() => setMobileSidebarOpen(true)}
-            pageTitle={PAGE_TITLES[page] || "Dashboard"}
-            onAccountClick={() => setPage("account")}
+            onAccountClick={() => goToPage("account")}
           />
 
           <div className="page-scroll-frame">{renderPage()}</div>
