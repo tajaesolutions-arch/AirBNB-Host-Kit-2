@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
 import AuthScreen from "./auth/AuthScreen.jsx";
 import { AppProvider } from "./context/AppContext.jsx";
 import Sidebar from "./components/Sidebar.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 import * as DashboardModule from "./pages/Dashboard.jsx";
 import * as BookingsModule from "./pages/Bookings.jsx";
@@ -138,52 +139,6 @@ const Account = pickComponent(
   "My Account"
 );
 
-
-class DashboardErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error) {
-    console.error("Dashboard shell render error:", error);
-  }
-
-  resetLocalAppData = () => {
-    try {
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith("jak_")) {
-          localStorage.removeItem(key);
-        }
-      });
-    } catch {
-      // If storage is unavailable, still attempt reload.
-    }
-
-    window.location.reload();
-  };
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="page">
-          <div className="card" style={{ padding: 16 }}>
-            <h2>Something went wrong loading your dashboard.</h2>
-            <button type="button" className="btn-danger" onClick={this.resetLocalAppData}>
-              Reset local app data
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
 
 function LoadingScreen({ label = "Loading your host dashboard…" }) {
   return <div className="loading-screen">{label}</div>;
@@ -339,7 +294,7 @@ function DashboardShell() {
           </>
         )}
 
-        <DashboardErrorBoundary>
+        <ErrorBoundary key={page}>
         <main className="app-main main-content">
           <button
             type="button"
@@ -352,7 +307,7 @@ function DashboardShell() {
 
           <div className="page-scroll-frame">{renderPage()}</div>
         </main>
-      </DashboardErrorBoundary>
+      </ErrorBoundary>
       </div>
     </AppProvider>
   );

@@ -11,6 +11,22 @@ import {
   DEFAULT_SETTINGS,
 } from "../data/sampleData.js";
 import { normalizeCurrency } from "../utils/helpers.js";
+import {
+  normalizeSettings,
+  normalizeProperty,
+  normalizeBooking,
+  normalizeGuest,
+  normalizeCleaningTask,
+  normalizeMaintenanceIssue,
+  normalizeSupply,
+  normalizeExpense,
+  normalizeLead,
+  normalizeCalendarEvent,
+  normalizeQuote,
+  normalizeMessageHistoryItem,
+  normalizeReviewTask,
+  normalizeCollection,
+} from "../utils/normalizers.js";
 
 const AppContext = createContext(null);
 
@@ -112,16 +128,16 @@ const loadSettings = () => {
     const raw = localStorage.getItem(STORAGE_KEYS.settings);
 
     if (raw !== null) {
-      return safeSettings(JSON.parse(raw));
+      return normalizeSettings(safeSettings(JSON.parse(raw)));
     }
 
     return isSampleDataCleared()
       ? clone(BLANK_SETTINGS)
-      : safeSettings(DEFAULT_SETTINGS);
+      : normalizeSettings(safeSettings(DEFAULT_SETTINGS));
   } catch {
     return isSampleDataCleared()
       ? clone(BLANK_SETTINGS)
-      : safeSettings(DEFAULT_SETTINGS);
+      : normalizeSettings(safeSettings(DEFAULT_SETTINGS));
   }
 };
 
@@ -197,67 +213,67 @@ const normalizeImportedBackup = (payload) => {
   }
 
   return {
-    properties: safeArray(source.properties),
-    bookings: safeArray(source.bookings),
-    guests: safeArray(source.guests),
-    cleaning: safeArray(source.cleaning),
-    maintenance: safeArray(source.maintenance),
-    supplies: safeArray(source.supplies),
-    expenses: safeArray(source.expenses),
-    leads: safeArray(source.leads),
-    calendarEvents: safeArray(source.calendarEvents),
-    quotes: safeArray(source.quotes),
-    messageHistory: safeArray(source.messageHistory),
-    reviewTasks: safeArray(source.reviewTasks),
-    settings: safeSettings(source.settings),
+    properties: normalizeCollection(source.properties, normalizeProperty),
+    bookings: normalizeCollection(source.bookings, normalizeBooking),
+    guests: normalizeCollection(source.guests, normalizeGuest),
+    cleaning: normalizeCollection(source.cleaning, normalizeCleaningTask),
+    maintenance: normalizeCollection(source.maintenance, normalizeMaintenanceIssue),
+    supplies: normalizeCollection(source.supplies, normalizeSupply),
+    expenses: normalizeCollection(source.expenses, normalizeExpense),
+    leads: normalizeCollection(source.leads, normalizeLead),
+    calendarEvents: normalizeCollection(source.calendarEvents, normalizeCalendarEvent),
+    quotes: normalizeCollection(source.quotes, normalizeQuote),
+    messageHistory: normalizeCollection(source.messageHistory, normalizeMessageHistoryItem),
+    reviewTasks: normalizeCollection(source.reviewTasks, normalizeReviewTask),
+    settings: normalizeSettings(safeSettings(source.settings)),
   };
 };
 
 export function AppProvider({ children }) {
   const [properties, setPropertiesRaw] = useState(() =>
-    load(STORAGE_KEYS.properties, SAMPLE_PROPERTIES)
+    normalizeCollection(load(STORAGE_KEYS.properties, SAMPLE_PROPERTIES), normalizeProperty)
   );
 
   const [bookings, setBookingsRaw] = useState(() =>
-    load(STORAGE_KEYS.bookings, SAMPLE_BOOKINGS)
+    normalizeCollection(load(STORAGE_KEYS.bookings, SAMPLE_BOOKINGS), normalizeBooking)
   );
 
   const [guests, setGuestsRaw] = useState(() =>
-    load(STORAGE_KEYS.guests, SAMPLE_GUESTS)
+    normalizeCollection(load(STORAGE_KEYS.guests, SAMPLE_GUESTS), normalizeGuest)
   );
 
   const [cleaning, setCleaningRaw] = useState(() =>
-    load(STORAGE_KEYS.cleaning, SAMPLE_CLEANING)
+    normalizeCollection(load(STORAGE_KEYS.cleaning, SAMPLE_CLEANING), normalizeCleaningTask)
   );
 
   const [maintenance, setMaintenanceRaw] = useState(() =>
-    load(STORAGE_KEYS.maintenance, SAMPLE_MAINTENANCE)
+    normalizeCollection(load(STORAGE_KEYS.maintenance, SAMPLE_MAINTENANCE), normalizeMaintenanceIssue)
   );
 
   const [supplies, setSuppliesRaw] = useState(() =>
-    load(STORAGE_KEYS.supplies, SAMPLE_SUPPLIES)
+    normalizeCollection(load(STORAGE_KEYS.supplies, SAMPLE_SUPPLIES), normalizeSupply)
   );
 
   const [expenses, setExpensesRaw] = useState(() =>
-    load(STORAGE_KEYS.expenses, SAMPLE_EXPENSES)
+    normalizeCollection(load(STORAGE_KEYS.expenses, SAMPLE_EXPENSES), normalizeExpense)
   );
 
   const [leads, setLeadsRaw] = useState(() =>
-    load(STORAGE_KEYS.leads, SAMPLE_LEADS)
+    normalizeCollection(load(STORAGE_KEYS.leads, SAMPLE_LEADS), normalizeLead)
   );
 
-  const [settings, setSettingsRaw] = useState(() => loadSettings());
+  const [settings, setSettingsRaw] = useState(() => normalizeSettings(loadSettings()));
   const [calendarEvents, setCalendarEventsRaw] = useState(() =>
-    load(STORAGE_KEYS.calendarEvents, [], [])
+    normalizeCollection(load(STORAGE_KEYS.calendarEvents, [], []), normalizeCalendarEvent)
   );
   const [quotes, setQuotesRaw] = useState(() =>
-    load(STORAGE_KEYS.quotes, [], [])
+    normalizeCollection(load(STORAGE_KEYS.quotes, [], []), normalizeQuote)
   );
   const [messageHistory, setMessageHistoryRaw] = useState(() =>
-    load(STORAGE_KEYS.messageHistory, [], [])
+    normalizeCollection(load(STORAGE_KEYS.messageHistory, [], []), normalizeMessageHistoryItem)
   );
   const [reviewTasks, setReviewTasksRaw] = useState(() =>
-    load(STORAGE_KEYS.reviewTasks, [], [])
+    normalizeCollection(load(STORAGE_KEYS.reviewTasks, [], []), normalizeReviewTask)
   );
 
   const persist = (key, setter, normalizer = null) => (valueOrUpdater) => {
@@ -275,34 +291,34 @@ export function AppProvider({ children }) {
     });
   };
 
-  const setProperties = persist(STORAGE_KEYS.properties, setPropertiesRaw);
-  const setBookings = persist(STORAGE_KEYS.bookings, setBookingsRaw);
-  const setGuests = persist(STORAGE_KEYS.guests, setGuestsRaw);
-  const setCleaning = persist(STORAGE_KEYS.cleaning, setCleaningRaw);
-  const setMaintenance = persist(STORAGE_KEYS.maintenance, setMaintenanceRaw);
-  const setSupplies = persist(STORAGE_KEYS.supplies, setSuppliesRaw);
-  const setExpenses = persist(STORAGE_KEYS.expenses, setExpensesRaw);
-  const setLeads = persist(STORAGE_KEYS.leads, setLeadsRaw);
+  const setProperties = persist(STORAGE_KEYS.properties, setPropertiesRaw, (value) => normalizeCollection(value, normalizeProperty));
+  const setBookings = persist(STORAGE_KEYS.bookings, setBookingsRaw, (value) => normalizeCollection(value, normalizeBooking));
+  const setGuests = persist(STORAGE_KEYS.guests, setGuestsRaw, (value) => normalizeCollection(value, normalizeGuest));
+  const setCleaning = persist(STORAGE_KEYS.cleaning, setCleaningRaw, (value) => normalizeCollection(value, normalizeCleaningTask));
+  const setMaintenance = persist(STORAGE_KEYS.maintenance, setMaintenanceRaw, (value) => normalizeCollection(value, normalizeMaintenanceIssue));
+  const setSupplies = persist(STORAGE_KEYS.supplies, setSuppliesRaw, (value) => normalizeCollection(value, normalizeSupply));
+  const setExpenses = persist(STORAGE_KEYS.expenses, setExpensesRaw, (value) => normalizeCollection(value, normalizeExpense));
+  const setLeads = persist(STORAGE_KEYS.leads, setLeadsRaw, (value) => normalizeCollection(value, normalizeLead));
   const setCalendarEvents = persist(
     STORAGE_KEYS.calendarEvents,
     setCalendarEventsRaw,
-    safeArray
+    (value) => normalizeCollection(value, normalizeCalendarEvent)
   );
-  const setQuotes = persist(STORAGE_KEYS.quotes, setQuotesRaw, safeArray);
+  const setQuotes = persist(STORAGE_KEYS.quotes, setQuotesRaw, (value) => normalizeCollection(value, normalizeQuote));
   const setMessageHistory = persist(
     STORAGE_KEYS.messageHistory,
     setMessageHistoryRaw,
-    safeArray
+    (value) => normalizeCollection(value, normalizeMessageHistoryItem)
   );
   const setReviewTasks = persist(
     STORAGE_KEYS.reviewTasks,
     setReviewTasksRaw,
-    safeArray
+    (value) => normalizeCollection(value, normalizeReviewTask)
   );
   const setSettings = persist(
     STORAGE_KEYS.settings,
     setSettingsRaw,
-    safeSettings
+    (value) => normalizeSettings(safeSettings(value))
   );
 
   const resetToBlankData = () => {
