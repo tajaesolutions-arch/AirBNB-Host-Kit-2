@@ -3842,20 +3842,27 @@ body { background: var(--app-bg); }
 }
 
 .smart-tool-actions {
-  position: sticky;
-  bottom: 0;
-  background: var(--paper);
-  border-top: 1px solid var(--line);
-  padding-top: 10px;
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
+.quote-modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.quote-section-card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; }
+.quote-summary-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.quote-summary-item { background: var(--sand-soft); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px; }
+.quote-preview-card { background: var(--sand-soft); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 12px; }
+.quote-actions { display: flex; flex-wrap: wrap; gap: 8px; border-top: 1px solid var(--line); padding-top: 10px; }
+.quote-status-message { padding: 8px 10px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--sand-soft); color: var(--navy); }
+.quote-status-message.error { border-color: #ef4444; color: #b91c1c; }
+.quote-status-message.success { border-color: var(--teal); color: var(--navy); }
+.quote-property-summary { border: 1px solid var(--line-strong); background: var(--paper); border-radius: var(--radius-sm); padding: 8px 10px; box-shadow: var(--shadow); }
+
 @media (max-width: 900px) {
   .smart-tools-grid,
   .smart-tool-form-grid,
-  .smart-tool-summary-grid {
+  .smart-tool-summary-grid,
+  .quote-modal-grid {
     grid-template-columns: 1fr;
   }
 }
