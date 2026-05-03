@@ -1,5 +1,5 @@
 // ============================================================
-//  JAMAICA AIRBNB HOST OPERATIONS KIT — SAMPLE DATA
+//  AIRBNB HOST KIT — SAMPLE DATA (INTERNATIONAL STR OPERATIONS)
 // ============================================================
 
 export const SAMPLE_PROPERTIES = [
@@ -18,7 +18,7 @@ export const SAMPLE_PROPERTIES = [
     default_checkin_time: "15:00",
     default_checkout_time: "11:00",
     wifi_name: "SunsetVilla_Guest",
-    wifi_password: "Jamaica2024!",
+    wifi_password: "HostKit2026!",
     address: "12 Sunset Drive, Ironshore, Montego Bay",
     active: true,
     notes: "",
@@ -128,7 +128,7 @@ export const SAMPLE_BOOKINGS = [
     discounts: 0,
     payment_status: "Paid",
     booking_status: "Confirmed",
-    source_notes: "First-time Jamaica visitor",
+    source_notes: "First-time Caribbean visitor",
   },
   {
     booking_id: "BK-005",
@@ -212,15 +212,15 @@ export const SAMPLE_GUESTS = [
     phone: "+1 305 555 4422",
     review_left: false,
     direct_followup_sent: false,
-    preferences: "Beach access, first-time Jamaica",
-    notes: "First-time Jamaica visitor",
+    preferences: "Beach access, first-time Caribbean trip",
+    notes: "First-time Caribbean visitor",
     last_contacted_date: "2026-04-28",
     next_followup_date: "2026-06-26",
   },
   {
     guest_id: "GUEST-005",
     guest_name: "Marcus Bell",
-    country: "Jamaica (Diaspora)",
+    country: "Canada (Diaspora owner)",
     email: "mbell@email.com",
     phone: "+1 876 555 9911",
     review_left: false,

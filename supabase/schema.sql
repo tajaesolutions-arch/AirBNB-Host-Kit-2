@@ -1,5 +1,5 @@
 -- ============================================================
--- Jamaica Airbnb Host Operations Kit — Supabase Schema
+-- AirBNB Host Kit — Supabase Schema for international short-term rental operations
 -- Run this in Supabase SQL Editor before deploying the SaaS app.
 -- ============================================================
 

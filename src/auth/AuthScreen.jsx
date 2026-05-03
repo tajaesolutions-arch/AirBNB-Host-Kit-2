@@ -98,7 +98,7 @@ export default function AuthScreen() {
             <div className="auth-logo-mark">🇯🇲</div>
             <div>
               <div className="auth-logo-title">Host Operations</div>
-              <div className="auth-logo-subtitle">Jamaica Airbnb Kit</div>
+              <div className="auth-logo-subtitle">AirBNB Host Kit</div>
             </div>
           </div>
 
@@ -109,8 +109,8 @@ export default function AuthScreen() {
 
             <p>
               Track bookings, guests, cleaning, supplies, expenses, owner
-              reports, and Tax/GCT planning records from a secure cloud-based
-              workspace built for Jamaican hosts and property managers.
+              reports, tax reserve planning records, and day-to-day operations from a secure cloud-based
+              workspace built for Airbnb hosts, villa owners, co-hosts, and property managers.
             </p>
           </div>
 
@@ -135,7 +135,7 @@ export default function AuthScreen() {
           </div>
 
           <div className="auth-note-card">
-            <strong>Built for Jamaican short-term rentals.</strong>
+            <strong>Built for short-term rental operations.</strong>
             <p>
               Use it for Airbnb, Booking.com, direct bookings, WhatsApp leads,
               owner reporting, cleaning tasks, and monthly profit tracking.
@@ -156,7 +156,7 @@ export default function AuthScreen() {
                 <p>
                   {isSignup
                     ? "Start your private workspace for managing short-term rental operations."
-                    : "Access your private Jamaica Airbnb Host Operations Kit."}
+                    : "Access your private short-term rental operations dashboard."}
                 </p>
               </div>
             </div>

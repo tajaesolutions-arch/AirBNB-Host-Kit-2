@@ -459,7 +459,7 @@ export function TaxReserve({ monthFilter }) {
     "Gather maintenance vendor invoices",
     "Print or export bank statements",
     "Confirm tax reserve amount with accountant",
-    "Book appointment with Jamaican accountant",
+    "Book review meeting with your accountant or tax advisor",
     "Submit all documents to accountant",
     "Confirm filing is complete",
   ];
@@ -486,14 +486,14 @@ export function TaxReserve({ monthFilter }) {
   return (
     <div className="page">
       <PageHeader
-        title="Tax / GCT Reserve Tracker"
+        title="Tax Reserve Tracker"
         subtitle="Set aside money from rental revenue for possible tax obligations."
         helper={`Currently reserving ${(rate * 100).toFixed(
           1
         )}% of gross revenue. Edit the percentage in Settings → Tax Reserve %.`}
       />
 
-      <Disclaimer text="This tool is for planning and organisation only. It is NOT legal, accounting, or tax advice. Tax rules may change and obligations vary by host, property, platform, and business structure. Confirm requirements with a qualified Jamaican accountant or tax professional." />
+      <Disclaimer text="This tool is for planning and organisation only. It is NOT legal, accounting, or tax advice. Tax rules may change and obligations vary by host, property, platform, and business structure. Use this for VAT, GCT, sales tax, occupancy tax, or other tax planning categories based on your market. Confirm requirements with a qualified accountant or tax professional." />
 
       <div className="grid-2" style={{ alignItems: "start" }}>
         <div>
@@ -813,8 +813,7 @@ export function Settings() {
             </select>
 
             <p className="field-helper">
-              The dashboard stores values as JMD and converts display totals
-              when another currency is selected.
+              Base amounts are stored in JMD. Display totals can be shown as converted estimates in JMD, USD, CAD, GBP, or EUR.
             </p>
           </div>
 
@@ -1442,7 +1441,7 @@ function ResetDashboardDataCard() {
 
         <div className="settings-reset-option">
           <h3>Sample Data</h3>
-          <p>Reloads sample Jamaica Airbnb host data for testing.</p>
+          <p>Reloads illustrative sample short-term rental data for testing.</p>
 
           <button
             type="button"

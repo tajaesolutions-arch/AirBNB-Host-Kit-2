@@ -112,7 +112,7 @@ const OwnerReport = pickComponent(
 const TaxReserve = pickComponent(
   OwnerTaxMessagesSettingsModule,
   ["TaxReserve", "TaxReservePage"],
-  "Tax/GCT Reserve"
+  "Tax Reserve Tracker"
 );
 
 const SOPs = pickComponent(

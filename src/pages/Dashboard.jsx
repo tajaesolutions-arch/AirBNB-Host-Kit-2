@@ -354,8 +354,8 @@ function EmptyDashboardSetup({
       page: "settings",
     },
     {
-      title: "Track expenses and supplies",
-      body: "Log JPS, NWC, internet, cleaning, repairs, inventory, and restocking costs.",
+      title: "Track expenses, supplies, and utilities",
+      body: "Log utilities, internet, cleaning, repairs, inventory, and restocking costs across your properties.",
       icon: ReceiptText,
       action: "Open Revenue",
       page: "revenue",
