@@ -82,6 +82,11 @@ const NAV_ITEMS = [
     label: "Settings",
     icon: Settings,
   },
+  {
+    key: "account",
+    label: "My Account",
+    icon: Users,
+  },
 ];
 
 function isActivePage(currentPage, itemKey) {
@@ -131,12 +136,12 @@ export default function Sidebar({
       <div className="sidebar-brand">
         <div className="sidebar-brand-main">
           <div className="sidebar-brand-mark" aria-hidden="true">
-            🇯🇲
+            HK
           </div>
 
           {!collapsed && (
             <div className="sidebar-brand-copy">
-              <div className="sidebar-brand-title">Host Operations</div>
+              <div className="sidebar-brand-title">Host Kit</div>
               <div className="sidebar-brand-subtitle">AirBNB Host Kit</div>
             </div>
           )}

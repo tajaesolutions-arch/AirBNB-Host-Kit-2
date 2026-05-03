@@ -36,7 +36,7 @@ export default function Account() {
     if (!user?.created_at) return "Not available";
 
     try {
-      return new Date(user.created_at).toLocaleString("en-JM", {
+      return new Date(user.created_at).toLocaleString("en-US", {
         year: "numeric",
         month: "short",
         day: "2-digit",
@@ -139,7 +139,7 @@ export default function Account() {
             <h1 className="page-title">My Account</h1>
             <p className="page-subtitle">
               Manage your login, profile details, password, and account security
-              for your private host dashboard.
+              for your secure Host Kit workspace.
             </p>
           </div>
 
