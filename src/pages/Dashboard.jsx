@@ -7,7 +7,6 @@ import {
   fmtCurrency,
   fmtPct,
   fmtDateShort,
-  isDirectPlatform,
   supplyStatus,
   inSelectedMonth,
   daysInMonth,
@@ -25,12 +24,10 @@ import {
   Package,
   Wrench,
   Sparkles,
-  Home,
   Database,
   ArrowRight,
   CheckCircle2,
   PlusCircle,
-  Users,
   ReceiptText,
   Circle,
   ChevronDown,
@@ -71,7 +68,6 @@ function getSetupChecklist({ properties, bookings, expenses, supplies, cleaning,
   ];
 }
 
-function CircularStat({ value = 0, label }) { const pct = Math.max(0, Math.min(100, Math.round(value * 100))); return <div className="dashboard-progress-ring"><div className="ring-inner"><strong>{pct}%</strong><span>{label}</span></div></div>; }
 function HorizontalBarList({ items = [] }) {
   const max = Math.max(1, ...items.map((i) => i.value || 0));
   const clampPercent = (value) => Math.max(0, Math.min(100, value));
@@ -91,7 +87,7 @@ function SetupProgressCard({ checklist, onGoToPage, onMarkComplete, onMarkSkippe
 
 export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFilter, setPropFilter }) {
   const app = useApp();
-  const bookings = safeArray(app.bookings); const expenses = safeArray(app.expenses); const maintenance = safeArray(app.maintenance); const supplies = safeArray(app.supplies); const cleaning = safeArray(app.cleaning); const properties = safeArray(app.properties); const guests = safeArray(app.guests); const leads = safeArray(app.leads); const settings = safeSettings(app.settings);
+  const bookings = safeArray(app.bookings); const expenses = safeArray(app.expenses); const maintenance = safeArray(app.maintenance); const supplies = safeArray(app.supplies); const cleaning = safeArray(app.cleaning); const properties = safeArray(app.properties); const settings = safeSettings(app.settings);
   const [savedSetupProgress, setSavedSetupProgress] = useState(() => loadSetupProgress());
   const goToPage = (p) => typeof setPage === "function" && setPage(p);
   const selectedMonth = monthFilter || new Date().toISOString().slice(0, 7);
@@ -184,10 +180,6 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
 
     <section className="dashboard-full-section">
       <SetupProgressCard checklist={checklist} onGoToPage={goToPage} onMarkComplete={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:true,skipped:false}}; saveSetupProgress(n); return n;})} onMarkSkipped={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:false,skipped:true}}; saveSetupProgress(n); return n;})} />
-    </section>
-
-    <section className="dashboard-full-section">
-      <div className="dashboard-panel dashboard-card"><h3>Guest / Direct Snapshot</h3><p>Total guests: <strong>{guests.length}</strong></p><p>Direct booking %: <strong>{fmtPct(monthBookings.length ? monthBookings.filter((b)=>isDirectPlatform(b.platform)).length / monthBookings.length : 0)}</strong></p><p>Direct leads: <strong>{leads.filter((l)=>isDirectPlatform(l?.source || "")).length}</strong></p><CircularStat value={occupancy} label="Occupancy" /></div>
     </section>
 
     <section className="dashboard-full-section">
