@@ -260,6 +260,107 @@ export const maintStatusChip = (s) =>
     Cancelled: "gray",
   }[s] || "gray");
 
+// ============================================================
+//  ICAL + MASTER CALENDAR HELPERS
+// ============================================================
+
+export const parseICalEvents = (icsText = "") => {
+  const text = String(icsText || "");
+  const chunks = text.split("BEGIN:VEVENT").slice(1);
+
+  return chunks
+    .map((chunk) => {
+      const event = {};
+      chunk.split(/\r?\n/).forEach((line) => {
+        const [rawKey, ...valueParts] = line.split(":");
+        if (!rawKey || valueParts.length === 0) return;
+        const key = rawKey.split(";")[0];
+        const value = valueParts.join(":").trim();
+        if (key === "UID") event.uid = value;
+        if (key === "SUMMARY") event.summary = value;
+        if (key === "DESCRIPTION") event.description = value;
+        if (key === "DTSTART") event.start = value.slice(0, 8);
+        if (key === "DTEND") event.end = value.slice(0, 8);
+      });
+      return event;
+    })
+    .filter((event) => event.start && event.end);
+};
+
+const iCalDateToISO = (raw = "") => {
+  if (!raw || raw.length < 8) return "";
+  return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+};
+
+const buildCalendarEventId = (event, propertyId, platform) => {
+  const uidPart = String(event?.uid || "").trim();
+  const startPart = String(event?.start || "").trim();
+  const endPart = String(event?.end || "").trim();
+  const propPart = String(propertyId || "").trim();
+  const platformPart = String(platform || "").trim();
+
+  if (uidPart) {
+    return `CAL-${platformPart}-${propPart}-${uidPart}`
+      .replace(/\s+/g, "-")
+      .toUpperCase();
+  }
+
+  if (startPart || endPart || propPart) {
+    return `CAL-${platformPart}-${propPart}-${startPart}-${endPart}`
+      .replace(/\s+/g, "-")
+      .toUpperCase();
+  }
+
+  return uid("CAL");
+};
+
+export const normalizeCalendarEvent = (event, propertyId, platform = "Blocked") => ({
+  event_id: buildCalendarEventId(event, propertyId, platform),
+  property_id: propertyId || "",
+  platform,
+  title: event.summary || `${platform} event`,
+  checkin_date: iCalDateToISO(event.start),
+  checkout_date: iCalDateToISO(event.end),
+  source_uid: event.uid || "",
+  source_description: event.description || "",
+});
+
+export const detectCalendarConflicts = (bookings = []) => {
+  const rows = bookings.filter(
+    (booking) => booking.property_id && booking.checkin_date && booking.checkout_date
+  );
+  const conflicts = [];
+
+  rows.forEach((a, index) => {
+    rows.slice(index + 1).forEach((b) => {
+      if (a.property_id !== b.property_id) return;
+      const overlaps =
+        new Date(a.checkin_date) < new Date(b.checkout_date) &&
+        new Date(b.checkin_date) < new Date(a.checkout_date);
+
+      if (overlaps) {
+        conflicts.push({
+          type: "overlap",
+          property_id: a.property_id,
+          booking_a: a.booking_id || a.event_id,
+          booking_b: b.booking_id || b.event_id,
+        });
+      }
+    });
+  });
+
+  return conflicts;
+};
+
+export const getCalendarSourceLabel = (platform = "") =>
+  ({
+    Airbnb: "Airbnb iCal",
+    Vrbo: "Vrbo iCal",
+    "Booking.com": "Booking.com iCal",
+    Direct: "Direct",
+    Blocked: "Manual Block",
+  }[platform] || platform || "Unknown");
+
 export const leadStatusChip = (s) =>
   ({
     New: "blue",
