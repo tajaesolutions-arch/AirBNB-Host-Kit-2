@@ -11,6 +11,7 @@ import * as GuestCleaningMaintenanceModule from "./pages/GuestsCleaningMaintenan
 import * as SuppliesRevenueLeadsModule from "./pages/SuppliesRevenuLeads.jsx";
 import * as OwnerTaxMessagesSettingsModule from "./pages/OwnerReportTaxSOPsMessagesSettings.jsx";
 import * as AccountModule from "./pages/Account.jsx";
+import * as SmartToolsModule from "./pages/SmartTools.jsx";
 
 import "./styles.css";
 
@@ -32,6 +33,7 @@ const PAGE_TITLES = {
   messages: "Messages",
   settings: "Settings",
   account: "My Account",
+  "smart-tools": "Smart Tools",
 };
 
 function pickComponent(moduleObject, possibleNames, fallbackLabel) {
@@ -139,6 +141,12 @@ const Account = pickComponent(
   "My Account"
 );
 
+
+const SmartTools = pickComponent(
+  SmartToolsModule,
+  ["SmartTools", "SmartToolsPage"],
+  "Smart Tools"
+);
 
 function LoadingScreen({ label = "Loading your host dashboard…" }) {
   return <div className="loading-screen">{label}</div>;
@@ -257,6 +265,10 @@ function DashboardShell() {
 
       case "settings":
         return <Settings {...shared} />;
+
+      case "smart-tools":
+      case "smartTools":
+        return <SmartTools {...shared} />;
 
       case "account":
       case "my-account":
