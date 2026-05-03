@@ -52,7 +52,9 @@ const parseDateSafe = (value) => {
 
 function formatStayRange(checkin, checkout) {
   const start = parseDateSafe(checkin);
-  const end = parseDateSafe(checkout);
+  const departure = parseDateSafe(checkout);
+  const end = departure ? new Date(departure) : null;
+  if (end) end.setDate(end.getDate() - 1);
   if (!start || !end) return "—";
   const startMonth = start.toLocaleString("en-US", { month: "short" });
   const endMonth = end.toLocaleString("en-US", { month: "short" });
@@ -84,7 +86,6 @@ function getSetupChecklist({ properties, bookings, expenses, supplies, cleaning,
   ];
 }
 
-function MiniBarChart({ data = [] }) { const max = Math.max(1, ...data.map((d) => Math.max(d.revenue || 0, d.expense || 0))); return <div className="dashboard-chart-svg">{data.map((d) => <div key={d.label} className="dashboard-bar"><span className="bar-rev" style={{ height: `${((d.revenue || 0) / max) * 100}%` }} /><span className="bar-exp" style={{ height: `${((d.expense || 0) / max) * 100}%` }} /><small>{d.label}</small></div>)}</div>; }
 function CircularStat({ value = 0, label }) { const pct = Math.max(0, Math.min(100, Math.round(value * 100))); return <div className="dashboard-progress-ring"><div className="ring-inner"><strong>{pct}%</strong><span>{label}</span></div></div>; }
 function HorizontalBarList({ items = [] }) { const max = Math.max(1, ...items.map((i) => i.value || 0)); return <div>{items.map((item) => <div key={item.label} className="hbar-row"><div className="hbar-head"><span>{item.label}</span><strong>{item.formatted}</strong></div><div className="hbar-track"><div className="hbar-fill" style={{ width: `${((item.value || 0) / max) * 100}%` }} /></div></div>)}</div>; }
 
@@ -127,66 +128,67 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
     return <div className="page"><PageHeader title="Welcome to your Host Operations Kit" subtitle="Start with your first property or load sample data." actions={<><button className="btn-secondary" onClick={() => app.restoreSampleData?.()}><Database size={14}/>Restore Demo Data</button><button className="btn-primary" onClick={() => goToPage("settings")}><PlusCircle size={14}/>Add First Property</button></>} /></div>;
   }
 
-  const weekly = [1,2,3,4,5].map((w)=>{ const from=(w-1)*7+1; const to=Math.min(w*7,31); const wb=monthBookings.filter((b)=>{ const d=parseDateSafe(b.checkin_date); return d && d.getDate()>=from && d.getDate()<=to;}); const we=monthExpenses.filter((e)=>{const d=parseDateSafe(e.expense_date); return d && d.getDate()>=from && d.getDate()<=to;}); return {label:`W${w}`,revenue:wb.reduce((s,b)=>s+bookingTotal(b),0),expense:we.reduce((s,e)=>s+Number(e.amount||0),0)};});
+  const getWeekBucket = (dateString) => {
+    if (!dateString) return -1;
+    const normalizedDate = String(dateString).slice(0, 10);
+    const date = parseDateSafe(`${normalizedDate}T00:00:00`);
+    if (!date) return -1;
+    return Math.min(4, Math.floor((date.getDate() - 1) / 7));
+  };
+  const weekly = [
+    { label: "W1", revenue: 0, expenses: 0 },
+    { label: "W2", revenue: 0, expenses: 0 },
+    { label: "W3", revenue: 0, expenses: 0 },
+    { label: "W4", revenue: 0, expenses: 0 },
+    { label: "W5", revenue: 0, expenses: 0 },
+  ];
+  monthBookings.forEach((booking) => {
+    if (!inSelectedMonth(booking?.checkin_date, selectedMonth)) return;
+    const bucketIndex = getWeekBucket(booking?.checkin_date);
+    if (bucketIndex < 0) return;
+    weekly[bucketIndex].revenue += bookingTotal(booking);
+  });
+  monthExpenses.forEach((expense) => {
+    const bucketIndex = getWeekBucket(expense?.expense_date);
+    if (bucketIndex < 0) return;
+    weekly[bucketIndex].expenses += Number(expense?.amount || 0);
+  });
+  const weeklyMax = Math.max(1, ...weekly.map((w) => Math.max(w.revenue, w.expenses)));
+  const hasWeeklyData = weekly.some((w) => w.revenue > 0 || w.expenses > 0);
   const recent = [...monthBookings].sort((a,b)=>(parseDateSafe(b.checkin_date)?.getTime()||0)-(parseDateSafe(a.checkin_date)?.getTime()||0)).slice(0,6);
   const getProp = (id) => properties.find((p) => p.property_id === id)?.property_name || "—";
 
   return <div className="page dashboard-page">
-    <section className="dashboard-page-header"><div className="dashboard-title-block"><h1>Dashboard</h1><p>{selectedMonth} · {selectedPropFilter === "ALL" ? "All Properties" : getProp(selectedPropFilter)}</p></div><div className="dashboard-toolbar"><label className="dashboard-toolbar-control">Property<select value={selectedPropFilter} onChange={(e)=>setPropFilter?.(e.target.value)}><option value="ALL">All</option>{properties.map((p)=><option key={p.property_id} value={p.property_id}>{p.property_name||"Unnamed"}</option>)}</select></label><label className="dashboard-toolbar-control">Month<input type="month" value={selectedMonth} onChange={(e)=>setMonthFilter?.(e.target.value)} /></label><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("bookings")}><PlusCircle size={14}/>Add Booking</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("revenue")}><ReceiptText size={14}/>Add Expense</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("settings")}><Download size={14}/>Backup / Export</button></div></section>
-    <div className="dashboard-kpi-grid">
+    <section className="dashboard-page-header"><div className="dashboard-title-block"><h1 className="page-title">Dashboard</h1><p className="page-subtitle">{selectedMonth} · {selectedPropFilter === "ALL" ? "All Properties" : getProp(selectedPropFilter)}</p></div></section>
+    <section className="dashboard-command-bar"><label className="dashboard-toolbar-control">Property<select value={selectedPropFilter} onChange={(e)=>setPropFilter?.(e.target.value)}><option value="ALL">All</option>{properties.map((p)=><option key={p.property_id} value={p.property_id}>{p.property_name||"Unnamed"}</option>)}</select></label><label className="dashboard-toolbar-control">Month<input type="month" value={selectedMonth} onChange={(e)=>setMonthFilter?.(e.target.value)} /></label><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("bookings")}><PlusCircle size={14}/>Add Booking</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("revenue")}><ReceiptText size={14}/>Add Expense</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("settings")}><Download size={14}/>Backup / Export</button></section>
+    <section className="dashboard-kpi-grid">
       <div className="dashboard-kpi-card"><DollarSign size={16}/><label>Gross Revenue</label><h3>{fmtCurrency(grossRevenue, selectedCurrency)}</h3><small>{monthBookings.length} bookings</small></div>
       <div className="dashboard-kpi-card"><TrendingUp size={16}/><label>Net Profit</label><h3>{fmtCurrency(netProfit, selectedCurrency)}</h3><small>{netProfit>=0?"Profitable":"Negative margin"}</small></div>
       <div className="dashboard-kpi-card"><Calendar size={16}/><label>Occupancy Rate</label><h3>{fmtPct(occupancy)}</h3><small>{bookedNights} nights booked</small></div>
       <div className="dashboard-kpi-card"><Wallet size={16}/><label>Upcoming Check-ins</label><h3>{upcomingCheckins.length}</h3><small>Next 14+ days queue</small></div>
-    </div>
-    <div className="dashboard-main-grid">
+    </section>
+    <section className="dashboard-main-grid">
       <div className="dashboard-left-stack">
-        <div className="dashboard-panel dashboard-chart-card"><h3>Monthly Revenue vs Expenses</h3><MiniBarChart data={weekly} /></div>
+        <div className="dashboard-panel dashboard-chart-card"><h3>Monthly Revenue vs Expenses</h3><div className="dashboard-chart-legend"><span><i className="dot dot-revenue" />Revenue</span><span><i className="dot dot-expenses" />Expenses</span></div>{hasWeeklyData ? <div className="dashboard-chart-svg">{weekly.map((d) => <div key={d.label} className="dashboard-bar"><div className="dashboard-bar-track"><span className="bar-rev" style={{ height: `${(d.revenue / weeklyMax) * 100}%` }} title={`Revenue ${fmtCurrency(d.revenue, selectedCurrency)}`} /><span className="bar-exp" style={{ height: `${(d.expenses / weeklyMax) * 100}%` }} title={`Expenses ${fmtCurrency(d.expenses, selectedCurrency)}`} /></div><small>{d.label}</small><div className="dashboard-bar-totals"><span>{fmtCurrency(d.revenue, selectedCurrency)}</span><span>{fmtCurrency(d.expenses, selectedCurrency)}</span></div></div>)}</div> : <div className="dashboard-chart-empty">No revenue or expense data for this period yet.</div>}</div>
         <div className="dashboard-panel">
           <div className="dashboard-panel-header">
             <h3>Recent Bookings</h3>
             <button className="btn-ghost" onClick={() => goToPage("bookings")}>View All</button>
           </div>
-          <div className="dashboard-panel-body dashboard-table-scroll">
-            <table className="dashboard-bookings-table">
-              <thead>
-                <tr>
-                  <th className="col-guest">Guest</th>
-                  <th className="col-property">Property</th>
-                  <th className="col-platform">Platform</th>
-                  <th className="col-dates">Dates</th>
-                  <th className="col-status">Status</th>
-                  <th className="col-total">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recent.map((b) => (
-                  <tr key={b.booking_id}>
-                    <td className="col-guest">
-                      <div className="dashboard-table-primary">{b.guest_name || "—"}</div>
-                    </td>
-                    <td className="col-property">
-                      <div className="dashboard-table-primary dashboard-property-cell">{getProp(b.property_id)}</div>
-                    </td>
-                    <td className="col-platform">
-                      <div className="dashboard-table-muted">{b.platform || "—"}</div>
-                    </td>
-                    <td className="col-dates">
-                      <span className="dashboard-date-range">{formatStayRange(b.checkin_date, b.checkout_date)}</span>
-                    </td>
-                    <td className="col-status">
-                      <div className="dashboard-status-stack">
-                        <Chip tone={bookingStatusChip(b.booking_status)}>{b.booking_status || "—"}</Chip>
-                        <Chip tone={paymentStatusChip(b.payment_status)}>{b.payment_status || "—"}</Chip>
-                      </div>
-                    </td>
-                    <td className="col-total">
-                      <div className="dashboard-table-primary">{fmtCurrency(bookingTotal(b), selectedCurrency)}</div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="dashboard-panel-body dashboard-bookings-scroll">
+            <div className="dashboard-bookings-list">
+              <div className="dashboard-bookings-header"><div>Guest</div><div>Property</div><div>Platform</div><div>Stay</div><div>Status</div><div>Total</div></div>
+              {recent.map((b) => (
+                <div key={b.booking_id} className="dashboard-booking-row">
+                  <div className="dashboard-booking-guest">{b.guest_name || "—"}</div>
+                  <div className="dashboard-booking-property">{getProp(b.property_id)}</div>
+                  <div className="dashboard-booking-platform">{b.platform || "—"}</div>
+                  <div className="dashboard-booking-date">{formatStayRange(b.checkin_date, b.checkout_date)}</div>
+                  <div className="dashboard-booking-status"><Chip tone={bookingStatusChip(b.booking_status)}>{b.booking_status || "—"}</Chip><Chip tone={paymentStatusChip(b.payment_status)}>{b.payment_status || "—"}</Chip></div>
+                  <div className="dashboard-booking-total">{fmtCurrency(bookingTotal(b), selectedCurrency)}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         <div className="dashboard-panel"><h3>Revenue Breakdown</h3><HorizontalBarList items={[{label:"Booking Revenue",value:grossRevenue,formatted:fmtCurrency(grossRevenue,selectedCurrency)},{label:"Expenses",value:totalExpenses,formatted:fmtCurrency(totalExpenses,selectedCurrency)},{label:"Tax Reserve",value:taxReserve,formatted:fmtCurrency(taxReserve,selectedCurrency)},{label:"Management Fee",value:managementFee,formatted:fmtCurrency(managementFee,selectedCurrency)},{label:"Net Profit",value:Math.max(0,netProfit),formatted:fmtCurrency(netProfit,selectedCurrency)}]} /></div>
@@ -197,6 +199,6 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
         <div className="dashboard-panel"><h3>Operations Alerts</h3><div className="dashboard-alert-card" onClick={()=>goToPage("supplies")}><Package size={14}/>Low stock supplies <strong>{lowStock.length}</strong></div><div className="dashboard-alert-card" onClick={()=>goToPage("cleaning")}><Sparkles size={14}/>Scheduled cleaning <strong>{cleaningDue.length}</strong></div><div className="dashboard-alert-card" onClick={()=>goToPage("maintenance")}><Wrench size={14}/>Open maintenance <strong>{openMaintenance.length}</strong></div><div className="dashboard-alert-card" onClick={()=>goToPage("bookings")}><Bell size={14}/>Unpaid / partial bookings <strong>{unpaidCount}</strong></div></div>
         <div className="dashboard-panel"><h3>Upcoming Activity</h3><div className="dashboard-activity-list">{upcomingCheckins.slice(0,4).map((b)=><div key={b.booking_id}><span>{fmtDateShort(b.checkin_date)} · {b.guest_name||"Guest"}</span><Chip tone={bookingStatusChip(b.booking_status)}>{b.booking_status||"-"}</Chip></div>)}</div></div>
       </div>
-    </div>
+    </section>
   </div>;
 }
