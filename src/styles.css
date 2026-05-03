@@ -3015,3 +3015,107 @@ body.sidebar-collapsed .sidebar .sidebar-item-label,
     transform: translateY(0);
   }
 }
+
+/* Premium polish and accessibility improvements */
+.app-shell {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.page-scroll-frame {
+  width: 100%;
+}
+
+.page > * + * {
+  margin-top: 16px;
+}
+
+.card,
+.metric-card,
+.card-sand,
+.modal {
+  box-shadow: 0 1px 2px rgba(11,37,69,.06), 0 8px 22px rgba(11,37,69,.05);
+}
+
+.table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.topbar {
+  min-height: var(--header-h);
+  height: auto;
+  padding-block: 10px;
+}
+
+.topbar-filters {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(190px, 1.2fr) 150px 120px auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.topbar-account-btn {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.sidebar-nav-item,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.btn-danger,
+.status-filter-btn {
+  min-height: 36px;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.sidebar-nav-item:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1024px) {
+  .page {
+    padding: 22px 18px 52px;
+  }
+
+  .topbar-filters {
+    grid-template-columns: 1fr 150px 110px;
+  }
+
+  .topbar-account-btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar-filters {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .topbar-account-btn {
+    width: fit-content;
+  }
+
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    max-height: 94vh;
+  }
+}

@@ -177,6 +177,8 @@ export default function Sidebar({
               className={`sidebar-nav-item ${active ? "active" : ""}`}
               onClick={() => handleNavigate(item.key)}
               title={collapsed ? item.label : undefined}
+              aria-label={item.label}
+              aria-current={active ? "page" : undefined}
             >
               <Icon size={18} />
               {!collapsed && (
