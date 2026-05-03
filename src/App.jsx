@@ -280,7 +280,6 @@ function DashboardShell() {
             propFilter={propFilter}
             setPropFilter={setPropFilter}
             onMenuClick={() => setMobileSidebarOpen(true)}
-            setSidebarOpen={setMobileSidebarOpen}
             onAccountClick={() => goToPage("account")}
           />
 
