@@ -754,3 +754,12 @@ export const PROPERTY_AREAS = [
   "Garage",
   "Other",
 ];
+
+export const SAMPLE_CALENDAR_FEEDS=[{feed_id:'FEED-001',property_id:'PROP-001',platform:'Airbnb',feed_name:'Sunset Airbnb',feed_url:'',last_synced_at:'2026-05-01T10:00:00Z',sync_status:'Manual',notes:'Paste ICS import used'}];
+export const SAMPLE_QUOTES=[{quote_id:'QTE-001',property_id:'PROP-001',guest_name:'Naomi Blake',checkin_date:'2026-06-20',checkout_date:'2026-06-24',number_of_guests:2,nightly_rate:56000,cleaning_fee:18000,extra_fees:0,discount:5000,deposit_amount:30000,payment_deadline:'2026-06-10',quote_status:'Sent',quote_message:'Sample quote',created_at:'2026-05-02T12:00:00Z'}];
+export const SAMPLE_DAMAGE_DEPOSITS=[{deposit_id:'DEP-001',booking_id:'BK-002',guest_id:'GUEST-002',property_id:'PROP-002',deposit_required:true,deposit_amount:50000,deposit_collected:false,damage_reported:false,refund_status:'Pending',guest_notified:false}];
+export const SAMPLE_PRICING_NOTES=[{note_id:'PRN-001',property_id:'PROP-001',start_date:'2026-06-01',end_date:'2026-06-30',note_type:'High Demand',title:'Summer demand',recommendation:'Increase weekend rates by 12%',suggested_rate:62000,minimum_stay:2,created_at:'2026-05-01T00:00:00Z'}];
+export const SAMPLE_MESSAGE_DRAFTS=[{draft_id:'DRF-001',guest_id:'GUEST-001',booking_id:'BK-001',template_type:'Review request',tone:'Friendly',channel:'WhatsApp',message_body:'Thanks for staying with us in Montego Bay!',created_at:'2026-05-01T00:00:00Z'}];
+export const SAMPLE_REPEAT_CAMPAIGNS=[{campaign_id:'RPC-001',guest_id:'GUEST-006',guest_name:'Tasha Williams',last_stay_date:'2026-04-17',campaign_type:'Direct booking follow-up',status:'Ready',message:'Come back for summer and save 10%.',next_followup_date:'2026-05-20',created_at:'2026-05-02T09:00:00Z'}];
+export const SAMPLE_TAX_PREP_PACKS=[{pack_id:'TXP-2026-04-PROP-001',month:'2026-04',property_id:'PROP-001',gross_revenue:220000,deductible_expenses:68000,management_fees:22000,tax_reserve:30000,owner_payout:100000,accountant_notes:'Verify utility invoices',exported_at:'2026-05-01T08:00:00Z'}];
+export const SAMPLE_PHOTO_PROOFS=[{proof_id:'PRF-001',linked_type:'cleaning',linked_id:'CLN-001',property_id:'PROP-001',proof_title:'Post-clean living room',proof_url:'https://example.com/proof1.jpg',proof_note:'Floors mopped and staged',uploaded_at:'2026-05-01T11:00:00Z'}];

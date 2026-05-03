@@ -46,6 +46,17 @@ const STORAGE_KEYS = {
   leads: "jak_leads",
   calendarEvents: "jak_calendarEvents",
   quotes: "jak_quotes",
+  calendarFeeds: "jak_calendarFeeds",
+  importedCalendarEvents: "jak_importedCalendarEvents",
+  messageDrafts: "jak_messageDrafts",
+  photoProofs: "jak_photoProofs",
+  ownerPortalShares: "jak_ownerPortalShares",
+  damageDeposits: "jak_damageDeposits",
+  alerts: "jak_alerts",
+  pricingNotes: "jak_pricingNotes",
+  repeatCampaigns: "jak_repeatCampaigns",
+  maintenanceApprovals: "jak_maintenanceApprovals",
+  taxPrepPacks: "jak_taxPrepPacks",
   messageHistory: "jak_messageHistory",
   reviewTasks: "jak_reviewTasks",
   settings: "jak_settings",
@@ -271,6 +282,17 @@ export function AppProvider({ children }) {
   const [quotes, setQuotesRaw] = useState(() =>
     normalizeCollection(load(STORAGE_KEYS.quotes, [], []), normalizeQuote)
   );
+  const [calendarFeeds, setCalendarFeedsRaw] = useState(() => load(STORAGE_KEYS.calendarFeeds, [], []));
+  const [importedCalendarEvents, setImportedCalendarEventsRaw] = useState(() => load(STORAGE_KEYS.importedCalendarEvents, [], []));
+  const [messageDrafts, setMessageDraftsRaw] = useState(() => load(STORAGE_KEYS.messageDrafts, [], []));
+  const [photoProofs, setPhotoProofsRaw] = useState(() => load(STORAGE_KEYS.photoProofs, [], []));
+  const [ownerPortalShares, setOwnerPortalSharesRaw] = useState(() => load(STORAGE_KEYS.ownerPortalShares, [], []));
+  const [damageDeposits, setDamageDepositsRaw] = useState(() => load(STORAGE_KEYS.damageDeposits, [], []));
+  const [alerts, setAlertsRaw] = useState(() => load(STORAGE_KEYS.alerts, [], []));
+  const [pricingNotes, setPricingNotesRaw] = useState(() => load(STORAGE_KEYS.pricingNotes, [], []));
+  const [repeatCampaigns, setRepeatCampaignsRaw] = useState(() => load(STORAGE_KEYS.repeatCampaigns, [], []));
+  const [maintenanceApprovals, setMaintenanceApprovalsRaw] = useState(() => load(STORAGE_KEYS.maintenanceApprovals, [], []));
+  const [taxPrepPacks, setTaxPrepPacksRaw] = useState(() => load(STORAGE_KEYS.taxPrepPacks, [], []));
   const [messageHistory, setMessageHistoryRaw] = useState(() =>
     normalizeCollection(load(STORAGE_KEYS.messageHistory, [], []), normalizeMessageHistoryItem)
   );
@@ -307,6 +329,17 @@ export function AppProvider({ children }) {
     (value) => normalizeCollection(value, normalizeCalendarEvent)
   );
   const setQuotes = persist(STORAGE_KEYS.quotes, setQuotesRaw, (value) => normalizeCollection(value, normalizeQuote));
+  const setCalendarFeeds = persist(STORAGE_KEYS.calendarFeeds, setCalendarFeedsRaw);
+  const setImportedCalendarEvents = persist(STORAGE_KEYS.importedCalendarEvents, setImportedCalendarEventsRaw);
+  const setMessageDrafts = persist(STORAGE_KEYS.messageDrafts, setMessageDraftsRaw);
+  const setPhotoProofs = persist(STORAGE_KEYS.photoProofs, setPhotoProofsRaw);
+  const setOwnerPortalShares = persist(STORAGE_KEYS.ownerPortalShares, setOwnerPortalSharesRaw);
+  const setDamageDeposits = persist(STORAGE_KEYS.damageDeposits, setDamageDepositsRaw);
+  const setAlerts = persist(STORAGE_KEYS.alerts, setAlertsRaw);
+  const setPricingNotes = persist(STORAGE_KEYS.pricingNotes, setPricingNotesRaw);
+  const setRepeatCampaigns = persist(STORAGE_KEYS.repeatCampaigns, setRepeatCampaignsRaw);
+  const setMaintenanceApprovals = persist(STORAGE_KEYS.maintenanceApprovals, setMaintenanceApprovalsRaw);
+  const setTaxPrepPacks = persist(STORAGE_KEYS.taxPrepPacks, setTaxPrepPacksRaw);
   const setMessageHistory = persist(
     STORAGE_KEYS.messageHistory,
     setMessageHistoryRaw,
@@ -479,6 +512,7 @@ export function AppProvider({ children }) {
         setMessageHistory,
         reviewTasks,
         setReviewTasks,
+        calendarFeeds, setCalendarFeeds, importedCalendarEvents, setImportedCalendarEvents, messageDrafts, setMessageDrafts, photoProofs, setPhotoProofs, ownerPortalShares, setOwnerPortalShares, damageDeposits, setDamageDeposits, alerts, setAlerts, pricingNotes, setPricingNotes, repeatCampaigns, setRepeatCampaigns, maintenanceApprovals, setMaintenanceApprovals, taxPrepPacks, setTaxPrepPacks,
 
         settings,
         setSettings,

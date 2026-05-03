@@ -15,6 +15,9 @@ import {
   cleaningStatusChip,
   supplyChip,
   normalizeCurrency,
+  getSmartAlerts,
+  calculateHostHealthScore,
+  calculateProfitForecast,
 } from "../utils/helpers.js";
 import {
   DollarSign,
@@ -113,6 +116,10 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
   const checklist = useMemo(() => getSetupChecklist({ properties, bookings, expenses, supplies, cleaning, maintenance, settings, savedProgress: savedSetupProgress }), [properties, bookings, expenses, supplies, cleaning, maintenance, settings, savedSetupProgress]);
   const incompleteSetupItems = checklist.filter((item) => !item.completed);
   const shouldShowSetupChecklist = incompleteSetupItems.length > 0;
+  const smartAlerts = useMemo(() => getSmartAlerts({ bookings: activeBookings, supplies, maintenance, cleaning }), [activeBookings, supplies, maintenance, cleaning]);
+  const health = useMemo(() => calculateHostHealthScore({ bookings: activeBookings, supplies, maintenance, cleaning }), [activeBookings, supplies, maintenance, cleaning]);
+  const forecast = useMemo(() => calculateProfitForecast({ bookings: activeBookings, expenses, month: selectedMonth, settings }), [activeBookings, expenses, selectedMonth, settings]);
+
 
   if (!properties.length) {
     return <div className="page"><PageHeader title="Welcome to your Host Operations Kit" subtitle="Start with your first property or load sample data." actions={<><button className="btn-secondary" onClick={() => app.restoreSampleData?.()}><Database size={14}/>Restore Demo Data</button><button className="btn-primary" onClick={() => goToPage("settings")}><PlusCircle size={14}/>Add First Property</button></>} /></div>;
@@ -166,7 +173,11 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
     {shouldShowSetupChecklist && (
       <section className="dashboard-setup-top">
         <SetupProgressCard checklist={checklist} onGoToPage={goToPage} onMarkComplete={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:true,skipped:false}}; saveSetupProgress(n); return n;})} onMarkSkipped={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:false,skipped:true}}; saveSetupProgress(n); return n;})} />
-      </section>
+  
+      <div className="dashboard-kpi-card"><Bell size={16}/><label>Smart Alerts</label><h3>{smartAlerts.length}</h3><small>Computed ops alerts</small></div>
+      <div className="dashboard-kpi-card"><TrendingUp size={16}/><label>Host Health Score</label><h3>{health.score}</h3><small>{health.status}</small></div>
+      <div className="dashboard-kpi-card"><DollarSign size={16}/><label>Forecast Net</label><h3>{fmtCurrency(forecast.projectedNetProfit, selectedCurrency)}</h3><small>Projected month net</small></div>
+    </section>
     )}
     <section className="dashboard-kpi-grid">
       <div className="dashboard-kpi-card"><DollarSign size={16}/><label>Gross Revenue</label><h3>{fmtCurrency(grossRevenue, selectedCurrency)}</h3><small>{monthBookings.length} bookings</small></div>

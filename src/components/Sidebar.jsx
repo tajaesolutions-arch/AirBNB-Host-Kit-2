@@ -11,6 +11,7 @@ import {
   Calculator,
   ClipboardList,
   Settings,
+  WandSparkles,
   ChevronLeft,
   ChevronRight,
   X,
@@ -78,6 +79,11 @@ const NAV_ITEMS = [
     icon: MessageSquare,
   },
   {
+    key: "smart-tools",
+    label: "Smart Tools",
+    icon: WandSparkles,
+  },
+  {
     key: "settings",
     label: "Settings",
     icon: Settings,
@@ -104,6 +110,7 @@ function isActivePage(currentPage, itemKey) {
     sops: ["sops", "sop", "checklists"],
     messages: ["messages", "templates", "guest-messages"],
     settings: ["settings"],
+    "smart-tools": ["smart-tools"],
   };
 
   return groups[itemKey]?.includes(currentPage) || currentPage === itemKey;
