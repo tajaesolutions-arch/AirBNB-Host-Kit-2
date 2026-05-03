@@ -111,6 +111,8 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
   const cleaningDue = filterByProp(cleaning).filter((c) => ["Scheduled", "In Progress"].includes(c?.cleaning_status));
   const openMaintenance = filterByProp(maintenance).filter((m) => !["Completed", "Cancelled"].includes(m?.status));
   const checklist = useMemo(() => getSetupChecklist({ properties, bookings, expenses, supplies, cleaning, maintenance, settings, savedProgress: savedSetupProgress }), [properties, bookings, expenses, supplies, cleaning, maintenance, settings, savedSetupProgress]);
+  const incompleteSetupItems = checklist.filter((item) => !item.completed);
+  const shouldShowSetupChecklist = incompleteSetupItems.length > 0;
 
   if (!properties.length) {
     return <div className="page"><PageHeader title="Welcome to your Host Operations Kit" subtitle="Start with your first property or load sample data." actions={<><button className="btn-secondary" onClick={() => app.restoreSampleData?.()}><Database size={14}/>Restore Demo Data</button><button className="btn-primary" onClick={() => goToPage("settings")}><PlusCircle size={14}/>Add First Property</button></>} /></div>;
@@ -161,6 +163,11 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
   return <div className="dashboard-page">
     <section className="dashboard-page-header"><div className="dashboard-title-block"><h1 className="page-title">Dashboard</h1><p className="page-subtitle">{selectedMonth} · {selectedPropFilter === "ALL" ? "All Properties" : getProp(selectedPropFilter)}</p></div></section>
     <section className="dashboard-command-bar"><label className="dashboard-toolbar-control">Property<select value={selectedPropFilter} onChange={(e)=>setPropFilter?.(e.target.value)}><option value="ALL">All</option>{properties.map((p)=><option key={p.property_id} value={p.property_id}>{p.property_name||"Unnamed"}</option>)}</select></label><label className="dashboard-toolbar-control">Month<input type="month" value={selectedMonth} onChange={(e)=>setMonthFilter?.(e.target.value)} /></label><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("bookings")}><PlusCircle size={14}/>Add Booking</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("revenue")}><ReceiptText size={14}/>Add Expense</button></section>
+    {shouldShowSetupChecklist && (
+      <section className="dashboard-setup-top">
+        <SetupProgressCard checklist={checklist} onGoToPage={goToPage} onMarkComplete={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:true,skipped:false}}; saveSetupProgress(n); return n;})} onMarkSkipped={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:false,skipped:true}}; saveSetupProgress(n); return n;})} />
+      </section>
+    )}
     <section className="dashboard-kpi-grid">
       <div className="dashboard-kpi-card"><DollarSign size={16}/><label>Gross Revenue</label><h3>{fmtCurrency(grossRevenue, selectedCurrency)}</h3><small>{monthBookings.length} bookings</small></div>
       <div className="dashboard-kpi-card"><TrendingUp size={16}/><label>Net Profit</label><h3>{fmtCurrency(netProfit, selectedCurrency)}</h3><small>{netProfit>=0?"Profitable":"Negative margin"}</small></div>
@@ -176,10 +183,6 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
         <div className="card dashboard-card dashboard-alert-card"><h3 className="section-title">Operations Alerts</h3><div className="dashboard-alert-list"><div className="dashboard-alert-row" onClick={()=>goToPage("supplies")}><Package size={14}/><span className="dashboard-alert-label">Low stock supplies</span><strong className="dashboard-alert-count">{lowStock.length}</strong></div><div className="dashboard-alert-row" onClick={()=>goToPage("cleaning")}><Sparkles size={14}/><span className="dashboard-alert-label">Scheduled cleaning</span><strong className="dashboard-alert-count">{cleaningDue.length}</strong></div><div className="dashboard-alert-row" onClick={()=>goToPage("maintenance")}><Wrench size={14}/><span className="dashboard-alert-label">Open maintenance</span><strong className="dashboard-alert-count">{openMaintenance.length}</strong></div><div className="dashboard-alert-row" onClick={()=>goToPage("bookings")}><Bell size={14}/><span className="dashboard-alert-label">Unpaid / partial bookings</span><strong className="dashboard-alert-count">{unpaidCount}</strong></div></div></div>
         <div className="card dashboard-card dashboard-activity-card"><h3 className="section-title">Upcoming Activity</h3><div className="dashboard-activity-list">{upcomingCheckins.slice(0,4).map((b)=><div key={b.booking_id} className="dashboard-activity-row"><span className="dashboard-activity-text">{fmtDateShort(b.checkin_date)} · {b.guest_name||"Guest"}</span><Chip tone={bookingStatusChip(b.booking_status)}>{b.booking_status||"-"}</Chip></div>)}</div></div>
       </div>
-    </section>
-
-    <section className="dashboard-full-section">
-      <SetupProgressCard checklist={checklist} onGoToPage={goToPage} onMarkComplete={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:true,skipped:false}}; saveSetupProgress(n); return n;})} onMarkSkipped={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:false,skipped:true}}; saveSetupProgress(n); return n;})} />
     </section>
 
     <section className="dashboard-full-section">
