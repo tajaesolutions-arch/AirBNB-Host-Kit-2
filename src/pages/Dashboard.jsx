@@ -75,7 +75,7 @@ function CircularStat({ value = 0, label }) { const pct = Math.max(0, Math.min(1
 function HorizontalBarList({ items = [] }) {
   const max = Math.max(1, ...items.map((i) => i.value || 0));
   const clampPercent = (value) => Math.max(0, Math.min(100, value));
-  return <div>{items.map((item) => {
+  return <div className="revenue-breakdown-list">{items.map((item) => {
     const percent = clampPercent(((item.value || 0) / max) * 100);
     return <div key={item.label} className="revenue-breakdown-row"><div className="revenue-breakdown-topline"><span className="revenue-breakdown-label">{item.label}</span><strong className="revenue-breakdown-value">{item.formatted}</strong></div><div className="revenue-breakdown-track"><div className="revenue-breakdown-fill" style={{ width: `${percent}%` }} /></div></div>;
   })}</div>;
@@ -162,7 +162,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
   const recentBookings = [...(nonCancelledRecent.length ? nonCancelledRecent : cancelledRecent)].sort(compareRecentBookings).slice(0, 3);
   const platformTone = (platform) => ["Direct", "WhatsApp", "Instagram", "Referral"].includes(platform) ? "teal" : "blue";
 
-  return <div className="page dashboard-page">
+  return <div className="dashboard-page">
     <section className="dashboard-page-header"><div className="dashboard-title-block"><h1 className="page-title">Dashboard</h1><p className="page-subtitle">{selectedMonth} · {selectedPropFilter === "ALL" ? "All Properties" : getProp(selectedPropFilter)}</p></div></section>
     <section className="dashboard-command-bar"><label className="dashboard-toolbar-control">Property<select value={selectedPropFilter} onChange={(e)=>setPropFilter?.(e.target.value)}><option value="ALL">All</option>{properties.map((p)=><option key={p.property_id} value={p.property_id}>{p.property_name||"Unnamed"}</option>)}</select></label><label className="dashboard-toolbar-control">Month<input type="month" value={selectedMonth} onChange={(e)=>setMonthFilter?.(e.target.value)} /></label><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("bookings")}><PlusCircle size={14}/>Add Booking</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("revenue")}><ReceiptText size={14}/>Add Expense</button></section>
     <section className="dashboard-kpi-grid">
@@ -171,20 +171,27 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
       <div className="dashboard-kpi-card"><Calendar size={16}/><label>Occupancy Rate</label><h3>{fmtPct(occupancy)}</h3><small>{bookedNights} nights booked</small></div>
       <div className="dashboard-kpi-card"><Wallet size={16}/><label>Upcoming Check-ins</label><h3>{upcomingCheckins.length}</h3><small>Next 14+ days queue</small></div>
     </section>
-    <section className="dashboard-main-grid">
-      <div className="dashboard-panel dashboard-chart-card"><h3>Monthly Revenue vs Expenses</h3><div className="dashboard-chart-legend"><span><i className="dot dot-revenue" />Revenue</span><span><i className="dot dot-expenses" />Expenses</span></div>{hasWeeklyData ? <div className="dashboard-chart-svg">{weekly.map((d) => <div key={d.label} className="dashboard-bar"><div className="dashboard-bar-track"><span className="bar-rev" style={{ height: `${(d.revenue / weeklyMax) * 100}%` }} title={`Revenue ${fmtCurrency(d.revenue, selectedCurrency)}`} /><span className="bar-exp" style={{ height: `${(d.expenses / weeklyMax) * 100}%` }} title={`Expenses ${fmtCurrency(d.expenses, selectedCurrency)}`} /></div><small>{d.label}</small><div className="dashboard-bar-totals"><span>{fmtCurrency(d.revenue, selectedCurrency)}</span><span>{fmtCurrency(d.expenses, selectedCurrency)}</span></div></div>)}</div> : <div className="dashboard-chart-empty">No revenue or expense data for this period yet.</div>}</div>
-      <div className="dashboard-bento-grid">
-        <div className="dashboard-panel bento-card dashboard-revenue-breakdown dashboard-compact-card bento-span-5"><h3>Revenue Breakdown</h3><HorizontalBarList items={[{label:"Booking Revenue",value:grossRevenue,formatted:fmtCurrency(grossRevenue,selectedCurrency)},{label:"Expenses",value:totalExpenses,formatted:fmtCurrency(totalExpenses,selectedCurrency)},{label:"Tax Reserve",value:taxReserve,formatted:fmtCurrency(taxReserve,selectedCurrency)},{label:"Management Fee",value:managementFee,formatted:fmtCurrency(managementFee,selectedCurrency)},{label:"Net Profit",value:Math.max(0,netProfit),formatted:fmtCurrency(netProfit,selectedCurrency)}]} /></div>
-        <div className="dashboard-panel bento-card dashboard-alert-card bento-span-3"><h3>Operations Alerts</h3><div className="dashboard-alert-list"><div className="dashboard-alert-item" onClick={()=>goToPage("supplies")}><Package size={14}/>Low stock supplies <strong>{lowStock.length}</strong></div><div className="dashboard-alert-item" onClick={()=>goToPage("cleaning")}><Sparkles size={14}/>Scheduled cleaning <strong>{cleaningDue.length}</strong></div><div className="dashboard-alert-item" onClick={()=>goToPage("maintenance")}><Wrench size={14}/>Open maintenance <strong>{openMaintenance.length}</strong></div><div className="dashboard-alert-item" onClick={()=>goToPage("bookings")}><Bell size={14}/>Unpaid / partial bookings <strong>{unpaidCount}</strong></div></div></div>
-        <div className="dashboard-panel bento-card dashboard-activity-card bento-span-4"><h3>Upcoming Activity</h3><div className="dashboard-activity-list">{upcomingCheckins.slice(0,4).map((b)=><div key={b.booking_id}><span>{fmtDateShort(b.checkin_date)} · {b.guest_name||"Guest"}</span><Chip tone={bookingStatusChip(b.booking_status)}>{b.booking_status||"-"}</Chip></div>)}</div></div>
+    <section className="dashboard-primary-grid">
+      <div className="dashboard-chart-column">
+        <div className="dashboard-panel dashboard-chart-card"><h3>Monthly Revenue vs Expenses</h3><div className="dashboard-chart-legend"><span><i className="dot dot-revenue" />Revenue</span><span><i className="dot dot-expenses" />Expenses</span></div>{hasWeeklyData ? <div className="dashboard-chart-svg">{weekly.map((d) => <div key={d.label} className="dashboard-bar"><div className="dashboard-bar-track"><span className="bar-rev" style={{ height: `${(d.revenue / weeklyMax) * 100}%` }} title={`Revenue ${fmtCurrency(d.revenue, selectedCurrency)}`} /><span className="bar-exp" style={{ height: `${(d.expenses / weeklyMax) * 100}%` }} title={`Expenses ${fmtCurrency(d.expenses, selectedCurrency)}`} /></div><small>{d.label}</small><div className="dashboard-bar-totals"><span>{fmtCurrency(d.revenue, selectedCurrency)}</span><span>{fmtCurrency(d.expenses, selectedCurrency)}</span></div></div>)}</div> : <div className="dashboard-chart-empty">No revenue or expense data for this period yet.</div>}</div>
       </div>
-      <div className="dashboard-side-grid">
-        <SetupProgressCard checklist={checklist} onGoToPage={goToPage} onMarkComplete={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:true,skipped:false}}; saveSetupProgress(n); return n;})} onMarkSkipped={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:false,skipped:true}}; saveSetupProgress(n); return n;})} />
-        <div className="dashboard-panel"><h3>Guest / Direct Snapshot</h3><p>Total guests: <strong>{guests.length}</strong></p><p>Direct booking %: <strong>{fmtPct(monthBookings.length ? monthBookings.filter((b)=>isDirectPlatform(b.platform)).length / monthBookings.length : 0)}</strong></p><p>Direct leads: <strong>{leads.filter((l)=>isDirectPlatform(l?.source || "")).length}</strong></p><CircularStat value={occupancy} label="Occupancy" /></div>
+      <div className="dashboard-side-column">
+        <div className="card dashboard-card dashboard-revenue-card"><h3 className="section-title">Revenue Breakdown</h3><HorizontalBarList items={[{label:"Booking Revenue",value:grossRevenue,formatted:fmtCurrency(grossRevenue,selectedCurrency)},{label:"Expenses",value:totalExpenses,formatted:fmtCurrency(totalExpenses,selectedCurrency)},{label:"Tax Reserve",value:taxReserve,formatted:fmtCurrency(taxReserve,selectedCurrency)},{label:"Management Fee",value:managementFee,formatted:fmtCurrency(managementFee,selectedCurrency)},{label:"Net Profit",value:Math.max(0,netProfit),formatted:fmtCurrency(netProfit,selectedCurrency)}]} /></div>
+        <div className="card dashboard-card dashboard-alert-card"><h3 className="section-title">Operations Alerts</h3><div className="dashboard-alert-list"><div className="dashboard-alert-row" onClick={()=>goToPage("supplies")}><Package size={14}/><span className="dashboard-alert-label">Low stock supplies</span><strong className="dashboard-alert-count">{lowStock.length}</strong></div><div className="dashboard-alert-row" onClick={()=>goToPage("cleaning")}><Sparkles size={14}/><span className="dashboard-alert-label">Scheduled cleaning</span><strong className="dashboard-alert-count">{cleaningDue.length}</strong></div><div className="dashboard-alert-row" onClick={()=>goToPage("maintenance")}><Wrench size={14}/><span className="dashboard-alert-label">Open maintenance</span><strong className="dashboard-alert-count">{openMaintenance.length}</strong></div><div className="dashboard-alert-row" onClick={()=>goToPage("bookings")}><Bell size={14}/><span className="dashboard-alert-label">Unpaid / partial bookings</span><strong className="dashboard-alert-count">{unpaidCount}</strong></div></div></div>
+        <div className="card dashboard-card dashboard-activity-card"><h3 className="section-title">Upcoming Activity</h3><div className="dashboard-activity-list">{upcomingCheckins.slice(0,4).map((b)=><div key={b.booking_id} className="dashboard-activity-row"><span className="dashboard-activity-text">{fmtDateShort(b.checkin_date)} · {b.guest_name||"Guest"}</span><Chip tone={bookingStatusChip(b.booking_status)}>{b.booking_status||"-"}</Chip></div>)}</div></div>
       </div>
     </section>
 
-    <section className="dashboard-table-card dashboard-recent-bookings-card bento-card bento-span-12">
+    <section className="dashboard-full-section">
+      <SetupProgressCard checklist={checklist} onGoToPage={goToPage} onMarkComplete={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:true,skipped:false}}; saveSetupProgress(n); return n;})} onMarkSkipped={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:false,skipped:true}}; saveSetupProgress(n); return n;})} />
+    </section>
+
+    <section className="dashboard-full-section">
+      <div className="dashboard-panel dashboard-card"><h3>Guest / Direct Snapshot</h3><p>Total guests: <strong>{guests.length}</strong></p><p>Direct booking %: <strong>{fmtPct(monthBookings.length ? monthBookings.filter((b)=>isDirectPlatform(b.platform)).length / monthBookings.length : 0)}</strong></p><p>Direct leads: <strong>{leads.filter((l)=>isDirectPlatform(l?.source || "")).length}</strong></p><CircularStat value={occupancy} label="Occupancy" /></div>
+    </section>
+
+    <section className="dashboard-full-section">
+      <div className="dashboard-table-card dashboard-recent-bookings-card">
       <div className="dashboard-panel-header">
         <h3>Recent Bookings</h3>
         <button className="btn-ghost" onClick={() => goToPage("bookings")}>View All</button>
@@ -217,6 +224,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </section>
 
