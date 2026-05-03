@@ -3738,7 +3738,6 @@ body { background: var(--app-bg); }
 .dashboard-activity-row .chip { flex-shrink: 0; }
 .dashboard-setup-card .setup-head{display:flex;justify-content:space-between;align-items:center}.setup-bar{height:7px;background:#f2eee6;border-radius:999px;margin:8px 0 10px}.setup-fill{height:100%;background:var(--teal);border-radius:999px}
 .setup-item{display:grid;grid-template-columns:18px 1fr auto;gap:8px;padding:8px 0;border-bottom:1px solid var(--line,#ECE4D4);align-items:center}
-.dashboard-progress-ring{width:120px;height:120px;border-radius:999px;background:conic-gradient(var(--teal) 0 70%, #eee 70%);display:grid;place-items:center;margin-top:8px}.ring-inner{width:88px;height:88px;border-radius:999px;background:#fff;display:grid;place-items:center;text-align:center}.ring-inner span{font-size:11px;color:var(--muted)}
 .panel-head{display:flex;justify-content:space-between;align-items:center}
 @media (max-width: 1280px) {
   .dashboard-primary-grid { grid-template-columns: 1fr; }
