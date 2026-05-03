@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
-import { MetricCard, Chip, PageHeader } from "../components/index.jsx";
+import { MetricCard, Chip } from "../components/index.jsx";
 import {
   bookingTotal,
   calcNights,
@@ -15,6 +15,9 @@ import {
   paymentStatusChip,
   cleaningStatusChip,
   supplyChip,
+  SUPPORTED_CURRENCIES,
+  CURRENCY_DISPLAY_NAMES,
+  normalizeCurrency,
 } from "../utils/helpers.js";
 import {
   DollarSign,
@@ -511,7 +514,7 @@ function EmptyCard({ title, body, buttonLabel, onClick }) {
   );
 }
 
-export default function Dashboard({ setPage, monthFilter, propFilter }) {
+export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFilter, setPropFilter }) {
   const {
     bookings: rawBookings,
     expenses: rawExpenses,
@@ -521,6 +524,7 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
     properties: rawProperties,
     settings: rawSettings,
     restoreSampleData,
+    setSettings,
   } = useApp();
 
   const bookings = safeArray(rawBookings);
@@ -812,39 +816,84 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
 
   return (
     <div className="page">
-      <PageHeader
-        title="Host Dashboard"
-        subtitle={`Snapshot for ${
-          selectedPropFilter === "ALL"
-            ? "all properties"
-            : getProp(selectedPropFilter)?.property_name || ""
-        } — ${selectedMonth}`}
-        actions={
-          <>
-            <button
-              className="btn-secondary"
-              onClick={() => goToPage("settings")}
+      <div className="dashboard-hero">
+        <div className="dashboard-hero-copy">
+          <h1 className="page-title">Host Dashboard</h1>
+          <p className="page-subtitle">{`Snapshot for ${
+            selectedPropFilter === "ALL"
+              ? "all properties"
+              : getProp(selectedPropFilter)?.property_name || ""
+          } — ${selectedMonth}`}</p>
+        </div>
+
+        <div className="dashboard-toolbar">
+          <div className="dashboard-mini-filters">
+            <label className="dashboard-mini-filter-group">
+              <span>Property</span>
+              <select
+                className="dashboard-mini-filter"
+                value={selectedPropFilter}
+              onChange={(e) => setPropFilter?.(e.target.value)}
+              aria-label="Property filter"
             >
+              <option value="ALL">All Properties</option>
+              {properties.map((property) => (
+                <option key={property.property_id} value={property.property_id}>
+                  {property.property_name}
+                </option>
+              ))}
+            </select>
+            </label>
+
+            <label className="dashboard-mini-filter-group">
+              <span>Month</span>
+              <input
+                className="dashboard-mini-filter"
+                type="month"
+              value={selectedMonth}
+              onChange={(e) => setMonthFilter?.(e.target.value)}
+              aria-label="Month filter"
+            />
+            </label>
+
+            <label className="dashboard-mini-filter-group">
+              <span>Currency</span>
+              <select
+                className="dashboard-mini-filter"
+                value={normalizeCurrency(settings.default_currency || "JMD")}
+              onChange={(e) =>
+                setSettings?.((previous) => ({
+                  ...(previous || {}),
+                  default_currency: normalizeCurrency(e.target.value),
+                }))
+              }
+              aria-label="Currency filter"
+            >
+              {SUPPORTED_CURRENCIES.map((currency) => (
+                <option key={currency} value={currency}>
+                  {CURRENCY_DISPLAY_NAMES[currency] || currency}
+                </option>
+              ))}
+            </select>
+            </label>
+          </div>
+
+          <div className="dashboard-actions">
+            <button className="btn-secondary" onClick={() => goToPage("settings")}>
               <Settings size={14} />
               Setup
             </button>
 
-            <button
-              className="btn-secondary"
-              onClick={() => goToPage("bookings")}
-            >
+            <button className="btn-secondary" onClick={() => goToPage("bookings")}>
               + Add Booking
             </button>
 
-            <button
-              className="btn-primary"
-              onClick={() => goToPage("revenue")}
-            >
+            <button className="btn-primary" onClick={() => goToPage("revenue")}>
               + Add Expense
             </button>
-          </>
-        }
-      />
+          </div>
+        </div>
+      </div>
 
       <SetupProgressCard
         checklist={setupChecklist}
