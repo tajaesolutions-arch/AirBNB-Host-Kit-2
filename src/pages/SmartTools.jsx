@@ -1,13 +1,22 @@
 import { PageHeader } from "../components/index.jsx";
-import { CalendarSync, MessageSquare, FileText, Shield, BadgeDollarSign, Repeat, Calculator, WandSparkles } from "lucide-react";
+import {
+  CalendarDays,
+  MessageSquare,
+  FileText,
+  Shield,
+  DollarSign,
+  Repeat,
+  Calculator,
+  Sparkles,
+} from "lucide-react";
 
 const TOOLS = [
-  { title: "Calendar Sync", desc: "iCal multi-channel sync for booking calendar.", page: "bookings", icon: CalendarSync },
-  { title: "Quote Generator", desc: "Generate direct booking quotes from leads.", page: "leads", icon: BadgeDollarSign },
+  { title: "Calendar Sync", desc: "iCal multi-channel sync for booking calendar.", page: "bookings", icon: CalendarDays },
+  { title: "Quote Generator", desc: "Generate direct booking quotes from leads.", page: "leads", icon: DollarSign },
   { title: "AI Message Assistant", desc: "Compose AI-style guest replies and templates.", page: "messages", icon: MessageSquare },
   { title: "Owner Portal", desc: "Shareable owner report and monthly summaries.", page: "owner", icon: FileText },
   { title: "Damage Deposits", desc: "Track damage/security deposits and release status.", page: "bookings", icon: Shield },
-  { title: "Pricing Notes", desc: "Dynamic pricing notes tied to calendar periods.", page: "bookings", icon: WandSparkles },
+  { title: "Pricing Notes", desc: "Dynamic pricing notes tied to calendar periods.", page: "bookings", icon: Sparkles },
   { title: "Repeat Campaigns", desc: "Repeat guest campaigns and direct follow-up queue.", page: "guests", icon: Repeat },
   { title: "Tax Prep Pack", desc: "Tax/GCT preparation pack and exports.", page: "tax", icon: Calculator },
 ];
