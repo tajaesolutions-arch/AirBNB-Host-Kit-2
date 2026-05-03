@@ -3866,3 +3866,6 @@ body { background: var(--app-bg); }
     grid-template-columns: 1fr;
   }
 }
+
+.smart-tool-status { padding: 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--sand-soft); color: var(--navy); margin-bottom: 10px; }
+.smart-tool-empty-state { padding: 16px; border: 1px dashed var(--line-strong); color: var(--muted); border-radius: var(--radius-sm); background: var(--paper); }
