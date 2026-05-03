@@ -484,6 +484,10 @@ export function Guests({ propFilter }) {
   };
 
   const hasGuests = guests.length > 0;
+  const repeatGuests = enriched.filter((guest) => Number(guest.total_bookings || 0) > 1).length;
+  const reviewsLeft = enriched.filter((guest) => guest.review_left === true).length;
+  const todayIso = todayISO();
+  const followUpsDue = enriched.filter((guest) => guest.next_followup_date && guest.next_followup_date <= todayIso).length;
 
   return (
     <div className="page">
@@ -523,6 +527,15 @@ export function Guests({ propFilter }) {
           buttonLabel="Add First Guest"
           onClick={() => setEditing(empty)}
         />
+      )}
+
+      {hasGuests && (
+        <div className="page-kpi-grid">
+          <div className="metric-card"><div className="metric-label">Total Guests</div><div className="metric-value">{enriched.length}</div><div className="metric-sub">Visible guest records</div></div>
+          <div className="metric-card"><div className="metric-label">Repeat Guests</div><div className="metric-value">{repeatGuests}</div><div className="metric-sub">More than one booking</div></div>
+          <div className="metric-card"><div className="metric-label">Reviews Left</div><div className="metric-value">{reviewsLeft}</div><div className="metric-sub">Review flag marked true</div></div>
+          <div className="metric-card"><div className="metric-label">Follow-ups Due</div><div className="metric-value">{followUpsDue}</div><div className="metric-sub">Due today or earlier</div></div>
+        </div>
       )}
 
       {hasGuests && (
@@ -938,6 +951,9 @@ export function Cleaning({ propFilter, setPage }) {
     "Issue Found": "red",
     Cancelled: "gray",
   };
+  const completedCleaning = filtered.filter((task) => task.cleaning_status === "Completed").length;
+  const issueAttention = filtered.filter((task) => task.cleaning_status === "Issue Found" || task.damage_check !== "Checked" || task.linen_status !== "Checked").length;
+  const cleaningCost = filtered.reduce((sum, task) => sum + toNumber(task.cleaning_cost), 0);
 
   return (
     <div className="page">
@@ -978,6 +994,15 @@ export function Cleaning({ propFilter, setPage }) {
               buttonLabel="Add First Cleaning Task"
               onClick={startNewTask}
             />
+          )}
+
+          {hasCleaningTasks && (
+            <div className="page-kpi-grid">
+              <div className="metric-card"><div className="metric-label">Scheduled Cleanings</div><div className="metric-value">{filtered.length}</div><div className="metric-sub">Visible cleaning tasks</div></div>
+              <div className="metric-card"><div className="metric-label">Completed Cleanings</div><div className="metric-value">{completedCleaning}</div><div className="metric-sub">Marked completed</div></div>
+              <div className="metric-card"><div className="metric-label">Issue Found / Attention</div><div className="metric-value">{issueAttention}</div><div className="metric-sub">Issues or pending checks</div></div>
+              <div className="metric-card"><div className="metric-label">Cleaning Cost</div><div className="metric-value">{fmtCurrency(cleaningCost, settings.default_currency || "JMD")}</div><div className="metric-sub">From visible tasks</div></div>
+            </div>
           )}
 
           {hasCleaningTasks && (
@@ -1448,6 +1473,11 @@ export function Maintenance({ propFilter, setPage }) {
     Completed: "green",
     Cancelled: "gray",
   };
+  const openIssues = filtered.filter((issue) => !["Completed", "Cancelled"].includes(issue.status)).length;
+  const highPriority = filtered.filter((issue) => ["High", "Urgent"].includes(issue.priority)).length;
+  const estimatedCost = filtered.reduce((sum, issue) => sum + toNumber(issue.estimated_cost), 0);
+  const month = new Date().toISOString().slice(0, 7);
+  const completedThisMonth = filtered.filter((issue) => issue.status === "Completed" && String(issue.completion_date || "").slice(0, 7) === month).length;
 
   return (
     <div className="page">
@@ -1504,6 +1534,15 @@ export function Maintenance({ propFilter, setPage }) {
               buttonLabel="Add First Issue"
               onClick={startNewIssue}
             />
+          )}
+
+          {hasIssues && (
+            <div className="page-kpi-grid">
+              <div className="metric-card"><div className="metric-label">Open Issues</div><div className="metric-value">{openIssues}</div><div className="metric-sub">Not completed/cancelled</div></div>
+              <div className="metric-card"><div className="metric-label">High Priority</div><div className="metric-value">{highPriority}</div><div className="metric-sub">High + urgent items</div></div>
+              <div className="metric-card"><div className="metric-label">Estimated Cost</div><div className="metric-value">{fmtCurrency(estimatedCost, settings.default_currency || "JMD")}</div><div className="metric-sub">Visible issue estimates</div></div>
+              <div className="metric-card"><div className="metric-label">Completed This Month</div><div className="metric-value">{completedThisMonth}</div><div className="metric-sub">Current month completions</div></div>
+            </div>
           )}
 
           {hasIssues && (

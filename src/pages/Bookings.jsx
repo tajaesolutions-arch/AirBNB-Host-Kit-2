@@ -17,6 +17,7 @@ import {
   downloadCSV,
   bookingStatusChip,
   paymentStatusChip,
+  inSelectedMonth,
 } from "../utils/helpers.js";
 import { PLATFORMS } from "../data/sampleData.js";
 import {
@@ -604,6 +605,7 @@ export default function Bookings({ monthFilter, propFilter, setPage }) {
   const [saveNotice, setSaveNotice] = useState("");
 
   const cur = settings.default_currency || "JMD";
+  const selectedMonth = monthFilter || new Date().toISOString().slice(0, 7);
   const selectedPropFilter = propFilter || "ALL";
 
   const hasProperties = properties.length > 0;
@@ -788,6 +790,22 @@ export default function Bookings({ monthFilter, propFilter, setPage }) {
       sum + calcNights(booking.checkin_date, booking.checkout_date),
     0
   );
+  const filteredByPropMonth = (selectedPropFilter === "ALL"
+    ? bookings
+    : bookings.filter((booking) => booking.property_id === selectedPropFilter)
+  ).filter(
+    (booking) =>
+      inSelectedMonth(booking.checkin_date, selectedMonth) ||
+      inSelectedMonth(booking.checkout_date, selectedMonth)
+  );
+  const confirmedActive = filteredByPropMonth.filter((booking) => booking.booking_status !== "Cancelled");
+  const monthlyRevenue = confirmedActive.reduce((sum, booking) => sum + bookingTotal(booking), 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcomingCheckins = confirmedActive.filter((booking) => {
+    const checkin = booking?.checkin_date ? new Date(booking.checkin_date) : null;
+    return checkin && !Number.isNaN(checkin.getTime()) && checkin >= today;
+  }).length;
 
   return (
     <div className="page">
@@ -841,38 +859,11 @@ export default function Bookings({ monthFilter, propFilter, setPage }) {
           {!hasBookings && <EmptyBookingsState onAddBooking={startNewBooking} />}
 
           {hasBookings && (
-            <div className="metric-grid" style={{ marginBottom: 18 }}>
-              <div className="metric-card teal">
-                <div className="metric-label">Filtered Revenue</div>
-                <div className="metric-value">
-                  {fmtCurrency(totalFilteredRevenue, cur)}
-                </div>
-                <div className="metric-sub">
-                  {filtered.length} booking{filtered.length === 1 ? "" : "s"} shown
-                </div>
-              </div>
-
-              <div className="metric-card sand">
-                <div className="metric-label">Filtered Nights</div>
-                <div className="metric-value">{totalFilteredNights}</div>
-                <div className="metric-sub">Nights from current filters</div>
-              </div>
-
-              <div className="metric-card sand">
-                <div className="metric-label">All Bookings</div>
-                <div className="metric-value">{bookings.length}</div>
-                <div className="metric-sub">Total booking records</div>
-              </div>
-
-              <div className="metric-card amber">
-                <div className="metric-label">Selected Status</div>
-                <div className="metric-value" style={{ fontSize: 24 }}>
-                  {statusFilter === "ALL" ? "All" : statusFilter}
-                </div>
-                <div className="metric-sub">
-                  Current booking status filter
-                </div>
-              </div>
+            <div className="page-kpi-grid">
+              <div className="metric-card"><div className="metric-label">Total Bookings</div><div className="metric-value">{filteredByPropMonth.length}</div><div className="metric-sub">Property + month filtered</div></div>
+              <div className="metric-card"><div className="metric-label">Confirmed / Active</div><div className="metric-value">{confirmedActive.length}</div><div className="metric-sub">Excludes cancelled</div></div>
+              <div className="metric-card"><div className="metric-label">Monthly Booking Revenue</div><div className="metric-value">{fmtCurrency(monthlyRevenue, cur)}</div><div className="metric-sub">{selectedMonth} non-cancelled</div></div>
+              <div className="metric-card"><div className="metric-label">Upcoming Check-ins</div><div className="metric-value">{upcomingCheckins}</div><div className="metric-sub">Future confirmed arrivals</div></div>
             </div>
           )}
 

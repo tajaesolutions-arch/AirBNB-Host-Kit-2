@@ -447,6 +447,10 @@ export function Supplies({ propFilter }) {
       supplyStatus(supply.current_quantity, supply.reorder_level) ===
       "Out of Stock"
   ).length;
+  const inventoryValue = filtered.reduce(
+    (sum, supply) => sum + toNumber(supply.current_quantity) * toNumber(supply.unit_cost),
+    0
+  );
 
   return (
     <div className="page">
@@ -490,7 +494,7 @@ export function Supplies({ propFilter }) {
 
       {hasSupplies && (
         <>
-          <div className="metric-grid" style={{ marginBottom: 18 }}>
+          <div className="page-kpi-grid">
             <div className="metric-card sand">
               <div className="metric-label">Tracked Items</div>
               <div className="metric-value">{supplies.length}</div>
@@ -510,9 +514,9 @@ export function Supplies({ propFilter }) {
             </div>
 
             <div className="metric-card teal">
-              <div className="metric-label">Visible Items</div>
-              <div className="metric-value">{filtered.length}</div>
-              <div className="metric-sub">Based on current filters</div>
+              <div className="metric-label">Inventory Value</div>
+              <div className="metric-value">{fmtCurrency(inventoryValue, cur)}</div>
+              <div className="metric-sub">Visible quantity × unit cost</div>
             </div>
           </div>
 
@@ -943,7 +947,7 @@ export function Revenue({ monthFilter, propFilter }) {
         />
       )}
 
-      <div className="metric-grid" style={{ marginBottom: 22 }}>
+      <div className="page-kpi-grid">
         <div className="metric-card navy">
           <div className="metric-label">Gross Revenue</div>
           <div className="metric-value num">{fmtCurrency(grossRevenue, cur)}</div>
@@ -951,21 +955,21 @@ export function Revenue({ monthFilter, propFilter }) {
         </div>
 
         <div className="metric-card sand">
-          <div className="metric-label">Total Expenses</div>
+          <div className="metric-label">Expenses</div>
           <div className="metric-value num">{fmtCurrency(totalExpenses, cur)}</div>
           <div className="metric-sub">{monthExpenses.length} entries</div>
-        </div>
-
-        <div className="metric-card sand">
-          <div className="metric-label">Direct Revenue</div>
-          <div className="metric-value num">{fmtCurrency(directRevenue, cur)}</div>
-          <div className="metric-sub">Direct, WhatsApp, IG, referral</div>
         </div>
 
         <div className={`metric-card ${netProfit >= 0 ? "teal" : "red"}`}>
           <div className="metric-label">Net Profit</div>
           <div className="metric-value num">{fmtCurrency(netProfit, cur)}</div>
-          <div className="metric-sub">After fees, expenses, and reserves</div>
+          <div className="metric-sub">After fees, expenses, and reserve</div>
+        </div>
+
+        <div className="metric-card sand">
+          <div className="metric-label">Tax Reserve</div>
+          <div className="metric-value num">{fmtCurrency(taxReserve, cur)}</div>
+          <div className="metric-sub">{fmtPct(settings.tax_reserve_percentage || 0)} planning reserve</div>
         </div>
       </div>
 
@@ -1435,7 +1439,7 @@ export function Leads({ propFilter }) {
 
       {hasLeads && (
         <>
-          <div className="metric-grid" style={{ marginBottom: 18 }}>
+          <div className="page-kpi-grid">
             <div className="metric-card sand">
               <div className="metric-label">Total Leads</div>
               <div className="metric-value">{leads.length}</div>
@@ -1443,15 +1447,15 @@ export function Leads({ propFilter }) {
             </div>
 
             <div className="metric-card teal">
-              <div className="metric-label">Quotes Sent</div>
-              <div className="metric-value">{quoteSentCount}</div>
-              <div className="metric-sub">Leads that received pricing</div>
+              <div className="metric-label">New Leads</div>
+              <div className="metric-value">{filtered.filter((lead) => lead.status === "New").length}</div>
+              <div className="metric-sub">Fresh enquiries</div>
             </div>
 
             <div className="metric-card amber">
-              <div className="metric-label">Follow-up Needed</div>
-              <div className="metric-value">{followUpCount}</div>
-              <div className="metric-sub">Active leads to work</div>
+              <div className="metric-label">Quotes Sent / Follow Up</div>
+              <div className="metric-value">{quoteSentCount + followUpCount}</div>
+              <div className="metric-sub">Pipeline in progress</div>
             </div>
 
             <div className="metric-card green">
