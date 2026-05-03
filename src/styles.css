@@ -3166,3 +3166,95 @@ body { background: var(--app-bg); }
   .sidebar { display: none; }
   .sidebar.sidebar-mobile.is-mobile { display: flex; position: fixed; z-index: 130; width: 280px; }
 }
+
+/* Final desktop topbar layout cleanup */
+.topbar {
+  width: 100%;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  padding: 0 24px;
+}
+
+.topbar-desktop {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.topbar-page-context {
+  min-width: 0;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-page-title {
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.topbar-desktop-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.topbar-desktop-filters {
+  padding: 0;
+  border-top: 0;
+}
+
+.topbar-control { height: 34px; min-width: 0; flex: 0 0 auto; }
+.topbar-property-select { min-width: 180px; max-width: 260px; }
+.topbar-month-input { min-width: 140px; }
+.topbar-currency-select { min-width: 100px; }
+.topbar-currency-pill { white-space: nowrap; flex: 0 0 auto; }
+
+@media (min-width: 1024px) {
+  .topbar-desktop-controls { flex-wrap: nowrap; }
+}
+
+@media (max-width: 1023px) and (min-width: 769px) {
+  .topbar { padding: 0 16px; }
+  .topbar-desktop {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: 10px;
+    padding: 12px 0;
+  }
+  .topbar-desktop-controls {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (min-width: 1024px) {
+  .topbar-desktop {
+    flex-wrap: nowrap;
+  }
+  .topbar-desktop-controls {
+    overflow: visible;
+  }
+}
+
+@media (min-width: 769px) {
+  .desktop-top-header { display: none !important; }
+  .topbar-account-btn { display: none !important; }
+}
+
+@media (max-width: 768px) {
+  .topbar { min-height: initial; display: block; padding: 0; }
+  .topbar-desktop { display: none !important; }
+}
