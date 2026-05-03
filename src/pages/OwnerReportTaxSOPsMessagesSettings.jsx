@@ -1223,6 +1223,7 @@ function BackupDataCard() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
+      localStorage.setItem("jak_backup_exported_at", new Date().toISOString());
 
       setBackupMessage(
         "Backup exported successfully. Keep the file somewhere safe."

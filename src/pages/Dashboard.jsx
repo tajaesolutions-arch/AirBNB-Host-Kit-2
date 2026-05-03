@@ -50,7 +50,30 @@ function safeArray(value) {
 function loadSetupProgress() {
   try {
     const raw = localStorage.getItem(SETUP_PROGRESS_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const parsed = raw ? JSON.parse(raw) : {};
+    const source =
+      parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? parsed
+        : {};
+
+    const normalizeEntry = (value) => {
+      if (value === true) return { done: true, skipped: false };
+      if (value && typeof value === "object") {
+        return {
+          done: value.done === true,
+          skipped: value.skipped === true,
+        };
+      }
+      return { done: false, skipped: false };
+    };
+
+    return {
+      businessInfo: normalizeEntry(source.businessInfo),
+      team: normalizeEntry(source.team),
+      operations: normalizeEntry(source.operations),
+      fees: normalizeEntry(source.fees ?? source.reviewedFees),
+      backup: normalizeEntry(source.backup ?? source.backupExported),
+    };
   } catch {
     return {};
   }
@@ -65,6 +88,11 @@ function saveSetupProgress(nextProgress) {
   } catch {
     // Keep dashboard usable if browser storage is blocked.
   }
+}
+
+function isProgressComplete(savedProgress, key) {
+  const entry = savedProgress?.[key];
+  return entry?.done === true || entry?.skipped === true;
 }
 
 function getSetupChecklist({
@@ -91,14 +119,16 @@ function getSetupChecklist({
     Number(settings.platform_fee_percentage || 0) > 0 ||
     Number(settings.management_fee_percentage || 0) > 0 ||
     Number(settings.tax_reserve_percentage || 0) > 0 ||
-    savedProgress.reviewedFees === true;
+    isProgressComplete(savedProgress, "fees");
 
   return [
     {
       id: "businessInfo",
       title: "Add business / host information",
       body: "Add your business name, host phone, email, and default currency.",
-      completed: hasBusinessInfo || savedProgress.businessInfo === true,
+      completed:
+        hasBusinessInfo ||
+        isProgressComplete(savedProgress, "businessInfo"),
       page: "settings",
       action: "Open Settings",
     },
@@ -117,7 +147,7 @@ function getSetupChecklist({
       completed:
         cleaners.length > 0 ||
         vendors.length > 0 ||
-        savedProgress.team === true,
+        isProgressComplete(savedProgress, "team"),
       page: "settings",
       action: "Manage Team",
     },
@@ -152,7 +182,7 @@ function getSetupChecklist({
       completed:
         cleaning.length > 0 ||
         maintenance.length > 0 ||
-        savedProgress.operations === true,
+        isProgressComplete(savedProgress, "operations"),
       page: "cleaning",
       action: "Open Operations",
     },
@@ -170,7 +200,7 @@ function getSetupChecklist({
       title: "Export your first backup",
       body: "Download a backup file so customer data is protected before testing resets or imports.",
       completed:
-        savedProgress.backupExported === true ||
+        isProgressComplete(savedProgress, "backup") ||
         Boolean(localStorage.getItem("jak_backup_exported_at")),
       page: "settings",
       action: "Open Backup Tools",
@@ -183,6 +213,7 @@ function SetupProgressCard({
   checklist,
   onGoToPage,
   onMarkComplete,
+  onMarkSkipped,
   compact = false,
 }) {
   const [isOpen, setIsOpen] = useState(() => {
@@ -236,7 +267,11 @@ function SetupProgressCard({
 
         <div className="setup-progress-actions">
           <Chip tone={percent === 100 ? "green" : "teal"}>
-            {completedCount}/{totalCount} Complete
+            {percent === 100
+              ? "Setup complete"
+              : `${totalCount - completedCount} item${
+                  totalCount - completedCount === 1 ? "" : "s"
+                } left`}
           </Chip>
 
           <button
@@ -287,13 +322,22 @@ function SetupProgressCard({
 
               <div className="setup-checklist-actions">
                 {!item.completed && item.canManuallyComplete && (
-                  <button
-                    type="button"
-                    className="btn-ghost setup-mini-btn"
-                    onClick={() => onMarkComplete(item.id)}
-                  >
-                    Done
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="btn-ghost setup-mini-btn"
+                      onClick={() => onMarkSkipped(item.id)}
+                    >
+                      Skip
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost setup-mini-btn"
+                      onClick={() => onMarkComplete(item.id)}
+                    >
+                      Done
+                    </button>
+                  </>
                 )}
 
                 <button
@@ -322,6 +366,7 @@ function EmptyDashboardSetup({
   restoreSampleData,
   checklist,
   onMarkComplete,
+  onMarkSkipped,
 }) {
   const handleRestoreDemo = () => {
     const confirmed = window.confirm(
@@ -482,6 +527,7 @@ function EmptyDashboardSetup({
         checklist={checklist}
         onGoToPage={setPage}
         onMarkComplete={onMarkComplete}
+        onMarkSkipped={onMarkSkipped}
       />
     </div>
   );
@@ -557,7 +603,15 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
 
   const markSetupComplete = (id) => {
     setSavedSetupProgress((previous) => {
-      const next = { ...previous, [id]: true };
+      const next = { ...previous, [id]: { done: true, skipped: false } };
+      saveSetupProgress(next);
+      return next;
+    });
+  };
+
+  const markSetupSkipped = (id) => {
+    setSavedSetupProgress((previous) => {
+      const next = { ...previous, [id]: { done: false, skipped: true } };
       saveSetupProgress(next);
       return next;
     });
@@ -596,6 +650,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
         restoreSampleData={restoreSampleData}
         checklist={setupChecklist}
         onMarkComplete={markSetupComplete}
+        onMarkSkipped={markSetupSkipped}
       />
     );
   }
@@ -885,6 +940,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
           checklist={setupChecklist}
           onGoToPage={goToPage}
           onMarkComplete={markSetupComplete}
+          onMarkSkipped={markSetupSkipped}
           compact
         />
       </div>
