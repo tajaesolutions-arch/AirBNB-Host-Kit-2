@@ -3419,3 +3419,152 @@ body { background: var(--app-bg); }
     flex: 1;
   }
 }
+
+
+/* Premium dashboard + minimal shell topbar cleanup */
+.topbar {
+  min-height: var(--header-h);
+  padding: 0 20px;
+}
+
+.topbar-shell-only {
+  justify-content: flex-start;
+  gap: 0;
+}
+
+.topbar-page-context,
+.topbar-page-title,
+.mobile-page-bar {
+  display: none !important;
+}
+
+.page-shell-title {
+  margin: 0;
+}
+
+.dashboard-section-spacing {
+  margin-bottom: 14px;
+}
+
+.dashboard-hero {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(380px, auto);
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 8px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.dashboard-hero-copy {
+  max-width: 640px;
+}
+
+.dashboard-toolbar-card {
+  border: 1px solid #e6ebf2;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  padding: 10px;
+}
+
+.dashboard-toolbar {
+  margin-left: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.dashboard-mini-filters {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.dashboard-mini-filter-group {
+  padding: 4px 8px;
+  min-height: 36px;
+}
+
+.dashboard-mini-filter {
+  height: 28px;
+}
+
+.dashboard-actions {
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.setup-progress-card {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-toolbar-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    padding: 0;
+  }
+
+  .dashboard-actions {
+    justify-content: flex-start;
+  }
+}
+
+
+/* Focused polish pass: dashboard header + toolbar balance */
+.dashboard-section-spacing {
+  margin-bottom: 12px;
+}
+
+.dashboard-hero {
+  align-items: end;
+  gap: 12px 16px;
+}
+
+.dashboard-toolbar-card {
+  width: min(100%, 820px);
+  margin-left: auto;
+  padding: 10px 12px;
+}
+
+.dashboard-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 8px 10px;
+}
+
+.dashboard-mini-filters {
+  align-items: center;
+}
+
+.dashboard-actions .btn-secondary,
+.dashboard-actions .btn-primary {
+  height: 32px;
+  padding: 0 11px;
+}
+
+.setup-progress-card {
+  margin-top: 0;
+}
+
+@media (max-width: 1120px) {
+  .dashboard-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-actions {
+    justify-content: flex-start;
+  }
+}

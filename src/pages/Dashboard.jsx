@@ -816,7 +816,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
 
   return (
     <div className="page">
-      <div className="dashboard-hero">
+      <div className="dashboard-hero dashboard-section-spacing">
         <div className="dashboard-hero-copy">
           <h1 className="page-title">Host Dashboard</h1>
           <p className="page-subtitle">{`Snapshot for ${
@@ -826,81 +826,85 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
           } — ${selectedMonth}`}</p>
         </div>
 
-        <div className="dashboard-toolbar">
-          <div className="dashboard-mini-filters">
-            <label className="dashboard-mini-filter-group">
-              <span>Property</span>
-              <select
-                className="dashboard-mini-filter"
-                value={selectedPropFilter}
-              onChange={(e) => setPropFilter?.(e.target.value)}
-              aria-label="Property filter"
-            >
-              <option value="ALL">All Properties</option>
-              {properties.map((property) => (
-                <option key={property.property_id} value={property.property_id}>
-                  {property.property_name}
-                </option>
-              ))}
-            </select>
-            </label>
+        <div className="dashboard-toolbar-card">
+          <div className="dashboard-toolbar">
+            <div className="dashboard-mini-filters">
+              <label className="dashboard-mini-filter-group">
+                <span>Property</span>
+                <select
+                  className="dashboard-mini-filter"
+                  value={selectedPropFilter}
+                  onChange={(e) => setPropFilter?.(e.target.value)}
+                  aria-label="Property filter"
+                >
+                  <option value="ALL">All Properties</option>
+                  {properties.map((property) => (
+                    <option key={property.property_id} value={property.property_id}>
+                      {property.property_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            <label className="dashboard-mini-filter-group">
-              <span>Month</span>
-              <input
-                className="dashboard-mini-filter"
-                type="month"
-              value={selectedMonth}
-              onChange={(e) => setMonthFilter?.(e.target.value)}
-              aria-label="Month filter"
-            />
-            </label>
+              <label className="dashboard-mini-filter-group">
+                <span>Month</span>
+                <input
+                  className="dashboard-mini-filter"
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setMonthFilter?.(e.target.value)}
+                  aria-label="Month filter"
+                />
+              </label>
 
-            <label className="dashboard-mini-filter-group">
-              <span>Currency</span>
-              <select
-                className="dashboard-mini-filter"
-                value={normalizeCurrency(settings.default_currency || "JMD")}
-              onChange={(e) =>
-                setSettings?.((previous) => ({
-                  ...(previous || {}),
-                  default_currency: normalizeCurrency(e.target.value),
-                }))
-              }
-              aria-label="Currency filter"
-            >
-              {SUPPORTED_CURRENCIES.map((currency) => (
-                <option key={currency} value={currency}>
-                  {CURRENCY_DISPLAY_NAMES[currency] || currency}
-                </option>
-              ))}
-            </select>
-            </label>
-          </div>
+              <label className="dashboard-mini-filter-group">
+                <span>Currency</span>
+                <select
+                  className="dashboard-mini-filter"
+                  value={normalizeCurrency(settings.default_currency || "JMD")}
+                  onChange={(e) =>
+                    setSettings?.((previous) => ({
+                      ...(previous || {}),
+                      default_currency: normalizeCurrency(e.target.value),
+                    }))
+                  }
+                  aria-label="Currency filter"
+                >
+                  {SUPPORTED_CURRENCIES.map((currency) => (
+                    <option key={currency} value={currency}>
+                      {CURRENCY_DISPLAY_NAMES[currency] || currency}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
 
-          <div className="dashboard-actions">
-            <button className="btn-secondary" onClick={() => goToPage("settings")}>
-              <Settings size={14} />
-              Setup
-            </button>
+            <div className="dashboard-actions">
+              <button className="btn-secondary" onClick={() => goToPage("settings")}>
+                <Settings size={14} />
+                Setup
+              </button>
 
-            <button className="btn-secondary" onClick={() => goToPage("bookings")}>
-              + Add Booking
-            </button>
+              <button className="btn-secondary" onClick={() => goToPage("bookings")}>
+                + Add Booking
+              </button>
 
-            <button className="btn-primary" onClick={() => goToPage("revenue")}>
-              + Add Expense
-            </button>
+              <button className="btn-primary" onClick={() => goToPage("revenue")}>
+                + Add Expense
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <SetupProgressCard
-        checklist={setupChecklist}
-        onGoToPage={goToPage}
-        onMarkComplete={markSetupComplete}
-        compact
-      />
+      <div className="dashboard-section-spacing">
+        <SetupProgressCard
+          checklist={setupChecklist}
+          onGoToPage={goToPage}
+          onMarkComplete={markSetupComplete}
+          compact
+        />
+      </div>
 
       {(hasNoBookings || hasNoExpenses || hasNoSupplies || hasNoMaintenance) && (
         <div className="card-sand" style={{ padding: 18, marginBottom: 22 }}>

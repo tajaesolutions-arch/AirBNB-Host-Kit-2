@@ -1,20 +1,17 @@
 import { Menu, PanelLeft } from "lucide-react";
 
-export default function TopBar({ onMenuClick, pageTitle = "Dashboard", onToggleSidebar }) {
+export default function TopBar({ onMenuClick, onToggleSidebar }) {
   return (
-    <header className="topbar">
-      <div className="topbar-desktop">
-        <div className="topbar-page-context">
-          <button
-            type="button"
-            className="topbar-menu-btn desktop-collapse-btn"
-            onClick={onToggleSidebar}
-            aria-label="Toggle sidebar"
-          >
-            <PanelLeft size={16} />
-          </button>
-          <h1 className="topbar-page-title">{pageTitle}</h1>
-        </div>
+    <header className="topbar" role="banner">
+      <div className="topbar-desktop topbar-shell-only">
+        <button
+          type="button"
+          className="topbar-menu-btn desktop-collapse-btn"
+          onClick={onToggleSidebar}
+          aria-label="Toggle sidebar"
+        >
+          <PanelLeft size={16} />
+        </button>
       </div>
 
       <div className="mobile-app-header">
@@ -22,9 +19,6 @@ export default function TopBar({ onMenuClick, pageTitle = "Dashboard", onToggleS
           <Menu size={18} />
         </button>
         <div className="mobile-brand">Host Kit</div>
-      </div>
-      <div className="mobile-page-bar">
-        <div className="mobile-page-title">{pageTitle}</div>
       </div>
     </header>
   );

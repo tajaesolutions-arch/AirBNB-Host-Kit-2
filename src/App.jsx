@@ -322,7 +322,6 @@ function DashboardShell() {
           <TopBar
             onMenuClick={() => setMobileSidebarOpen(true)}
             onToggleSidebar={toggleSidebarCollapsed}
-            pageTitle={PAGE_TITLES[page] || "Dashboard"}
           />
 
           <div className="page-scroll-frame"><SafePage pageName={page}>{() => renderPage()}</SafePage></div>
