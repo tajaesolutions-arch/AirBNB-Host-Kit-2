@@ -3656,7 +3656,11 @@ body { background: var(--app-bg); }
 .dashboard-action-pill-primary:hover { background: var(--navy-soft); }
 
 .dashboard-setup-card { padding: 14px; }
-.dashboard-setup-top { margin-bottom: 8px; }
+.dashboard-setup-top { width: 100%; margin-bottom: 18px; min-width: 0; }
+.dashboard-setup-top .card,
+.dashboard-setup-top .dashboard-panel { width: 100%; min-width: 0; }
+.dashboard-setup-top .section-title { margin-bottom: 6px; }
+.dashboard-setup-top + .dashboard-kpi-grid { margin-top: 0; }
 .dashboard-setup-title-row { margin-bottom: 4px; }
 .dashboard-setup-progress { margin-top: 8px; }
 .dashboard-setup-progress-fill { background: linear-gradient(90deg, var(--teal), #53c8ba); }
