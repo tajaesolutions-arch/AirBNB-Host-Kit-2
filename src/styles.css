@@ -3261,11 +3261,11 @@ body { background: var(--app-bg); }
 
 /* Simplified global topbar + dashboard-owned filters */
 .topbar {
-  min-height: var(--header-h);
-  height: var(--header-h);
-  padding: 0 18px;
-  display: flex;
-  align-items: center;
+  min-height: var(--header-h) !important;
+  height: var(--header-h) !important;
+  padding: 0 18px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .simple-topbar {
@@ -3279,6 +3279,10 @@ body { background: var(--app-bg); }
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.topbar-desktop-controls {
+  display: none !important;
 }
 
 .topbar-page-title {
@@ -3328,10 +3332,10 @@ body { background: var(--app-bg); }
 
 @media (max-width: 900px) {
   .topbar {
-    padding: 0;
-    height: auto;
-    min-height: 0;
-    display: block;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    display: block !important;
   }
 
   .topbar-desktop {
