@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 
 const SETUP_PROGRESS_STORAGE_KEY = "jak_dashboard_setup_progress";
-const SETUP_CHECKLIST_OPEN_STORAGE_KEY = "jak_setup_checklist_open";
+const SETUP_EXPANDED_STORAGE_KEY = "jak_dashboard_setup_expanded";
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -58,6 +58,27 @@ function saveSetupProgress(nextProgress) {
       SETUP_PROGRESS_STORAGE_KEY,
       JSON.stringify(nextProgress)
     );
+  } catch {
+    // Keep dashboard usable if browser storage is blocked.
+  }
+}
+
+
+function loadSetupExpandedPreference() {
+  try {
+    const raw = localStorage.getItem(SETUP_EXPANDED_STORAGE_KEY);
+
+    if (raw === null) return false;
+
+    return raw === "true";
+  } catch {
+    return false;
+  }
+}
+
+function saveSetupExpandedPreference(isExpanded) {
+  try {
+    localStorage.setItem(SETUP_EXPANDED_STORAGE_KEY, String(Boolean(isExpanded)));
   } catch {
     // Keep dashboard usable if browser storage is blocked.
   }
@@ -180,20 +201,9 @@ function SetupProgressCard({
   onGoToPage,
   onMarkComplete,
   compact = false,
+  expanded = true,
+  onToggleExpanded,
 }) {
-  const [isOpen, setIsOpen] = useState(() => {
-    try {
-      const savedValue = localStorage.getItem(SETUP_CHECKLIST_OPEN_STORAGE_KEY);
-
-      if (savedValue === "true") return true;
-      if (savedValue === "false") return false;
-
-      return !compact;
-    } catch {
-      return !compact;
-    }
-  });
-
   const completedCount = checklist.filter((item) => item.completed).length;
   const totalCount = checklist.length;
   const percent =
@@ -230,46 +240,66 @@ function SetupProgressCard({
           </p>
         </div>
 
-        <div className="setup-progress-actions">
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <button
+            className="btn-ghost"
+            style={{ fontSize: 12 }}
+            onClick={() => onToggleExpanded?.()}
+            type="button"
+          >
+            {expanded ? "Hide Checklist" : "Show Checklist"}
+          </button>
+
           <Chip tone={percent === 100 ? "green" : "teal"}>
             {completedCount}/{totalCount} Complete
           </Chip>
-
-          <button
-            type="button"
-            className="btn-ghost setup-toggle-btn"
-            onClick={toggleChecklist}
-            aria-expanded={isOpen}
-            aria-controls="setup-checklist-content"
-          >
-            {isOpen ? "Collapse" : "Expand"}
-          </button>
         </div>
       </div>
 
-      <div className="setup-progress-bar">
+      {percent === 100 && (
+        <div
+          className="setup-complete-banner"
+          role="status"
+          aria-live="polite"
+        >
+          🎉 Setup Complete! Your host workspace is fully configured.
+        </div>
+      )}
+
+      <div
+        style={{
+          width: "100%",
+          height: 10,
+          borderRadius: 999,
+          background: "var(--sand-soft)",
+          border: "1px solid var(--line)",
+          overflow: "hidden",
+          marginBottom: 16,
+        }}
+      >
         <div
           className="setup-progress-bar-fill"
           style={{ width: `${percent}%` }}
         />
       </div>
 
-      {isOpen && (
-        <div id="setup-checklist-content" className="setup-checklist-grid">
-          {checklist.map((item) => (
-            <div
-              key={item.id}
-              className={`setup-checklist-item ${
-                item.completed ? "completed" : ""
-              }`}
-            >
-              <div className="setup-checklist-icon">
-                {item.completed ? (
-                  <CheckCircle2 size={18} color="var(--teal)" />
-                ) : (
-                  <Circle size={18} color="var(--muted)" />
-                )}
-              </div>
+      {expanded && (
+        <div style={{ display: "grid", gap: 10 }}>
+        {checklist.map((item) => (
+          <div
+            key={item.id}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "auto 1fr auto",
+              gap: 12,
+              alignItems: "center",
+              padding: "12px 14px",
+              border: "1px solid var(--line)",
+              borderRadius: "var(--radius-sm)",
+              background: item.completed ? "var(--teal-soft)" : "var(--sand-soft)",
+            }}
+          >
+            {item.completed ? <CheckCircle2 size={18} color="var(--teal)" /> : <Circle size={18} color="var(--muted)" />}
 
               <div className="setup-checklist-body">
                 <div className="setup-checklist-title">{item.title}</div>
@@ -306,7 +336,8 @@ function SetupProgressCard({
                 </button>
               </div>
             </div>
-          ))}
+          </div>
+        ))}
         </div>
       )}
     </div>
@@ -318,6 +349,8 @@ function EmptyDashboardSetup({
   restoreSampleData,
   checklist,
   onMarkComplete,
+  setupExpanded,
+  onToggleSetupExpanded,
 }) {
   const handleRestoreDemo = () => {
     const confirmed = window.confirm(
@@ -478,6 +511,8 @@ function EmptyDashboardSetup({
         checklist={checklist}
         onGoToPage={setPage}
         onMarkComplete={onMarkComplete}
+        expanded={setupExpanded}
+        onToggleExpanded={toggleSetupExpanded}
       />
     </div>
   );
@@ -531,9 +566,8 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
   const properties = safeArray(rawProperties);
   const settings = rawSettings || {};
 
-  const [savedSetupProgress, setSavedSetupProgress] = useState(() =>
-    loadSetupProgress()
-  );
+  const [savedSetupProgress, setSavedSetupProgress] = useState(() => loadSetupProgress());
+  const [setupExpanded, setSetupExpanded] = useState(() => loadSetupExpandedPreference());
 
   const cur = settings.default_currency || "JMD";
 
@@ -541,6 +575,14 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
     if (typeof setPage === "function") {
       setPage(nextPage);
     }
+  };
+
+  const toggleSetupExpanded = () => {
+    setSetupExpanded((previous) => {
+      const next = !previous;
+      saveSetupExpandedPreference(next);
+      return next;
+    });
   };
 
   const markSetupComplete = (id) => {
@@ -584,6 +626,8 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
         restoreSampleData={restoreSampleData}
         checklist={setupChecklist}
         onMarkComplete={markSetupComplete}
+        setupExpanded={setupExpanded}
+        onToggleSetupExpanded={toggleSetupExpanded}
       />
     );
   }
@@ -851,6 +895,8 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
         onGoToPage={goToPage}
         onMarkComplete={markSetupComplete}
         compact
+        expanded={setupExpanded}
+        onToggleExpanded={toggleSetupExpanded}
       />
 
       {(hasNoBookings || hasNoExpenses || hasNoSupplies || hasNoMaintenance) && (
@@ -1281,6 +1327,7 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
             Open Cleaning Schedule
             <ArrowRight size={14} />
           </button>
+        </div>
         </div>
       )}
     </div>
