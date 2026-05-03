@@ -47,11 +47,11 @@ export default function TopBar({
             value={propFilter}
             onChange={(event) => setPropFilter(event.target.value)}
           >
-            <option value="all">All Properties</option>
+            <option value="ALL">All Properties</option>
 
             {properties?.map((property) => (
-              <option key={property.id} value={property.id}>
-                {property.name}
+              <option key={property.property_id} value={property.property_id}>
+                {property.property_name}
               </option>
             ))}
           </select>
