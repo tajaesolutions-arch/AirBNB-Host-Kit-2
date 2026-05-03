@@ -48,6 +48,16 @@ const STORAGE_KEYS = {
   quotes: "jak_quotes",
   messageHistory: "jak_messageHistory",
   reviewTasks: "jak_reviewTasks",
+  messageDrafts: "jak_messageDrafts",
+  calendarFeeds: "jak_calendarFeeds",
+  importedCalendarEvents: "jak_importedCalendarEvents",
+  photoProofs: "jak_photoProofs",
+  ownerPortalShares: "jak_ownerPortalShares",
+  damageDeposits: "jak_damageDeposits",
+  pricingNotes: "jak_pricingNotes",
+  repeatCampaigns: "jak_repeatCampaigns",
+  taxPrepPacks: "jak_taxPrepPacks",
+  maintenanceApprovals: "jak_maintenanceApprovals",
   settings: "jak_settings",
 };
 
@@ -227,6 +237,16 @@ const normalizeImportedBackup = (payload) => {
     quotes: normalizeCollection(source.quotes, normalizeQuote),
     messageHistory: normalizeCollection(source.messageHistory, normalizeMessageHistoryItem),
     reviewTasks: normalizeCollection(source.reviewTasks, normalizeReviewTask),
+    messageDrafts: safeArray(source.messageDrafts),
+    calendarFeeds: safeArray(source.calendarFeeds),
+    importedCalendarEvents: safeArray(source.importedCalendarEvents),
+    photoProofs: safeArray(source.photoProofs),
+    ownerPortalShares: safeArray(source.ownerPortalShares),
+    damageDeposits: safeArray(source.damageDeposits),
+    pricingNotes: safeArray(source.pricingNotes),
+    repeatCampaigns: safeArray(source.repeatCampaigns),
+    taxPrepPacks: safeArray(source.taxPrepPacks),
+    maintenanceApprovals: safeArray(source.maintenanceApprovals),
     settings: normalizeSettings(safeSettings(source.settings)),
   };
 };
@@ -278,6 +298,17 @@ export function AppProvider({ children }) {
     normalizeCollection(load(STORAGE_KEYS.reviewTasks, [], []), normalizeReviewTask)
   );
 
+  const [messageDrafts, setMessageDraftsRaw] = useState(() => load(STORAGE_KEYS.messageDrafts, [], []));
+  const [calendarFeeds, setCalendarFeedsRaw] = useState(() => load(STORAGE_KEYS.calendarFeeds, [], []));
+  const [importedCalendarEvents, setImportedCalendarEventsRaw] = useState(() => load(STORAGE_KEYS.importedCalendarEvents, [], []));
+  const [photoProofs, setPhotoProofsRaw] = useState(() => load(STORAGE_KEYS.photoProofs, [], []));
+  const [ownerPortalShares, setOwnerPortalSharesRaw] = useState(() => load(STORAGE_KEYS.ownerPortalShares, [], []));
+  const [damageDeposits, setDamageDepositsRaw] = useState(() => load(STORAGE_KEYS.damageDeposits, [], []));
+  const [pricingNotes, setPricingNotesRaw] = useState(() => load(STORAGE_KEYS.pricingNotes, [], []));
+  const [repeatCampaigns, setRepeatCampaignsRaw] = useState(() => load(STORAGE_KEYS.repeatCampaigns, [], []));
+  const [taxPrepPacks, setTaxPrepPacksRaw] = useState(() => load(STORAGE_KEYS.taxPrepPacks, [], []));
+  const [maintenanceApprovals, setMaintenanceApprovalsRaw] = useState(() => load(STORAGE_KEYS.maintenanceApprovals, [], []));
+
   const persist = (key, setter, normalizer = null) => (valueOrUpdater) => {
     setter((previousValue) => {
       const rawNextValue =
@@ -317,6 +348,16 @@ export function AppProvider({ children }) {
     setReviewTasksRaw,
     (value) => normalizeCollection(value, normalizeReviewTask)
   );
+  const setMessageDrafts = persist(STORAGE_KEYS.messageDrafts, setMessageDraftsRaw, (value) => safeArray(value));
+  const setCalendarFeeds = persist(STORAGE_KEYS.calendarFeeds, setCalendarFeedsRaw, (value) => safeArray(value));
+  const setImportedCalendarEvents = persist(STORAGE_KEYS.importedCalendarEvents, setImportedCalendarEventsRaw, (value) => safeArray(value));
+  const setPhotoProofs = persist(STORAGE_KEYS.photoProofs, setPhotoProofsRaw, (value) => safeArray(value));
+  const setOwnerPortalShares = persist(STORAGE_KEYS.ownerPortalShares, setOwnerPortalSharesRaw, (value) => safeArray(value));
+  const setDamageDeposits = persist(STORAGE_KEYS.damageDeposits, setDamageDepositsRaw, (value) => safeArray(value));
+  const setPricingNotes = persist(STORAGE_KEYS.pricingNotes, setPricingNotesRaw, (value) => safeArray(value));
+  const setRepeatCampaigns = persist(STORAGE_KEYS.repeatCampaigns, setRepeatCampaignsRaw, (value) => safeArray(value));
+  const setTaxPrepPacks = persist(STORAGE_KEYS.taxPrepPacks, setTaxPrepPacksRaw, (value) => safeArray(value));
+  const setMaintenanceApprovals = persist(STORAGE_KEYS.maintenanceApprovals, setMaintenanceApprovalsRaw, (value) => safeArray(value));
   const setSettings = persist(
     STORAGE_KEYS.settings,
     setSettingsRaw,
@@ -340,6 +381,16 @@ export function AppProvider({ children }) {
     setQuotesRaw([]);
     setMessageHistoryRaw([]);
     setReviewTasksRaw([]);
+    setMessageDraftsRaw([]);
+    setCalendarFeedsRaw([]);
+    setImportedCalendarEventsRaw([]);
+    setPhotoProofsRaw([]);
+    setOwnerPortalSharesRaw([]);
+    setDamageDepositsRaw([]);
+    setPricingNotesRaw([]);
+    setRepeatCampaignsRaw([]);
+    setTaxPrepPacksRaw([]);
+    setMaintenanceApprovalsRaw([]);
     setSettingsRaw(clone(BLANK_SETTINGS));
   };
 
@@ -360,6 +411,16 @@ export function AppProvider({ children }) {
     setQuotes([]);
     setMessageHistory([]);
     setReviewTasks([]);
+    setMessageDrafts([]);
+    setCalendarFeeds([]);
+    setImportedCalendarEvents([]);
+    setPhotoProofs([]);
+    setOwnerPortalShares([]);
+    setDamageDeposits([]);
+    setPricingNotes([]);
+    setRepeatCampaigns([]);
+    setTaxPrepPacks([]);
+    setMaintenanceApprovals([]);
     setSettings(DEFAULT_SETTINGS);
   };
 
@@ -392,6 +453,16 @@ export function AppProvider({ children }) {
         quotes: clone(quotes),
         messageHistory: clone(messageHistory),
         reviewTasks: clone(reviewTasks),
+        messageDrafts: clone(messageDrafts),
+        calendarFeeds: clone(calendarFeeds),
+        importedCalendarEvents: clone(importedCalendarEvents),
+        photoProofs: clone(photoProofs),
+        ownerPortalShares: clone(ownerPortalShares),
+        damageDeposits: clone(damageDeposits),
+        pricingNotes: clone(pricingNotes),
+        repeatCampaigns: clone(repeatCampaigns),
+        taxPrepPacks: clone(taxPrepPacks),
+        maintenanceApprovals: clone(maintenanceApprovals),
         settings: clone(settings),
       },
     };
@@ -420,6 +491,16 @@ export function AppProvider({ children }) {
     save(STORAGE_KEYS.quotes, nextData.quotes);
     save(STORAGE_KEYS.messageHistory, nextData.messageHistory);
     save(STORAGE_KEYS.reviewTasks, nextData.reviewTasks);
+    save(STORAGE_KEYS.maintenanceApprovals, nextData.maintenanceApprovals);
+    save(STORAGE_KEYS.taxPrepPacks, nextData.taxPrepPacks);
+    save(STORAGE_KEYS.repeatCampaigns, nextData.repeatCampaigns);
+    save(STORAGE_KEYS.pricingNotes, nextData.pricingNotes);
+    save(STORAGE_KEYS.damageDeposits, nextData.damageDeposits);
+    save(STORAGE_KEYS.ownerPortalShares, nextData.ownerPortalShares);
+    save(STORAGE_KEYS.photoProofs, nextData.photoProofs);
+    save(STORAGE_KEYS.importedCalendarEvents, nextData.importedCalendarEvents);
+    save(STORAGE_KEYS.calendarFeeds, nextData.calendarFeeds);
+    save(STORAGE_KEYS.messageDrafts, nextData.messageDrafts);
     save(STORAGE_KEYS.settings, nextData.settings);
     save(SETUP_PROGRESS_STORAGE_KEY, normalizedSetupProgress);
     save(BACKUP_EXPORTED_AT_STORAGE_KEY, String(backupExportedAt || ""));
@@ -438,6 +519,16 @@ export function AppProvider({ children }) {
     setQuotesRaw(nextData.quotes);
     setMessageHistoryRaw(nextData.messageHistory);
     setReviewTasksRaw(nextData.reviewTasks);
+    setMaintenanceApprovalsRaw(nextData.maintenanceApprovals);
+    setTaxPrepPacksRaw(nextData.taxPrepPacks);
+    setRepeatCampaignsRaw(nextData.repeatCampaigns);
+    setPricingNotesRaw(nextData.pricingNotes);
+    setDamageDepositsRaw(nextData.damageDeposits);
+    setOwnerPortalSharesRaw(nextData.ownerPortalShares);
+    setPhotoProofsRaw(nextData.photoProofs);
+    setImportedCalendarEventsRaw(nextData.importedCalendarEvents);
+    setCalendarFeedsRaw(nextData.calendarFeeds);
+    setMessageDraftsRaw(nextData.messageDrafts);
     setSettingsRaw(nextData.settings);
 
     return nextData;
@@ -479,6 +570,26 @@ export function AppProvider({ children }) {
         setMessageHistory,
         reviewTasks,
         setReviewTasks,
+        messageDrafts,
+        setMessageDrafts,
+        calendarFeeds,
+        setCalendarFeeds,
+        importedCalendarEvents,
+        setImportedCalendarEvents,
+        photoProofs,
+        setPhotoProofs,
+        ownerPortalShares,
+        setOwnerPortalShares,
+        damageDeposits,
+        setDamageDeposits,
+        pricingNotes,
+        setPricingNotes,
+        repeatCampaigns,
+        setRepeatCampaigns,
+        taxPrepPacks,
+        setTaxPrepPacks,
+        maintenanceApprovals,
+        setMaintenanceApprovals,
 
         settings,
         setSettings,
