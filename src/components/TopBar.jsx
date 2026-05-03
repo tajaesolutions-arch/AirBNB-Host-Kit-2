@@ -1,4 +1,4 @@
-import { Menu, UserCircle, SlidersHorizontal, MoreHorizontal } from "lucide-react";
+import { Menu, UserCircle, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
 import {
@@ -124,20 +124,9 @@ export default function TopBar({
         </button>
       </div>
 
-      <button
-        type="button"
-        className="mobile-filter-toggle"
-        onClick={() => setMobileFiltersOpen((previousValue) => !previousValue)}
-        aria-expanded={mobileFiltersOpen}
-        aria-controls="mobile-filter-panel"
-      >
-        <SlidersHorizontal size={16} />
-        <span>Filters</span>
-      </button>
-
       <div
         id="mobile-filter-panel"
-        className={`topbar-mobile-filters ${mobileFiltersOpen ? "open" : ""}`}
+        className={`mobile-filter-menu ${mobileFiltersOpen ? "open" : ""}`}
       >
         <div className="mobile-filter-grid">
           <div className="topbar-filter-group">
