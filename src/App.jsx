@@ -16,6 +16,24 @@ import "./styles.css";
 
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 
+
+const PAGE_TITLES = {
+  dashboard: "Dashboard",
+  bookings: "Booking Calendar",
+  guests: "Guest CRM",
+  cleaning: "Cleaning Schedule",
+  maintenance: "Maintenance",
+  supplies: "Supplies",
+  revenue: "Revenue & Profit",
+  leads: "Direct Leads",
+  owner: "Owner Report",
+  tax: "Tax Reserve",
+  sops: "SOPs",
+  messages: "Messages",
+  settings: "Settings",
+  account: "My Account",
+};
+
 function pickComponent(moduleObject, possibleNames, fallbackLabel) {
   for (const name of possibleNames) {
     if (moduleObject?.[name]) return moduleObject[name];
@@ -280,8 +298,8 @@ function DashboardShell() {
             propFilter={propFilter}
             setPropFilter={setPropFilter}
             onMenuClick={() => setMobileSidebarOpen(true)}
-            setSidebarOpen={setMobileSidebarOpen}
-            onAccountClick={() => goToPage("account")}
+            pageTitle={PAGE_TITLES[page] || "Dashboard"}
+            onAccountClick={() => setPage("account")}
           />
 
           <div className="page-scroll-frame">{renderPage()}</div>
