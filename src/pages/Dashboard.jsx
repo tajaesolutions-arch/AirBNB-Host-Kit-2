@@ -50,6 +50,19 @@ const parseDateSafe = (value) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
+function formatStayRange(checkin, checkout) {
+  const start = parseDateSafe(checkin);
+  const end = parseDateSafe(checkout);
+  if (!start || !end) return "—";
+  const startMonth = start.toLocaleString("en-US", { month: "short" });
+  const endMonth = end.toLocaleString("en-US", { month: "short" });
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+  const sameMonthYear = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
+  if (sameMonthYear) return `${startMonth} ${startDay}–${endDay}`;
+  return `${startMonth} ${startDay}–${endMonth} ${endDay}`;
+}
+
 // ...reuse existing setup helpers unchanged behavior
 function loadSetupProgress() { try { const raw = localStorage.getItem(SETUP_PROGRESS_STORAGE_KEY); const p = raw ? JSON.parse(raw) : {}; const s = p && typeof p === "object" && !Array.isArray(p) ? p : {}; const n = (v) => (v === true ? { done: true, skipped: false } : v && typeof v === "object" ? { done: v.done === true, skipped: v.skipped === true } : { done: false, skipped: false }); return { businessInfo: n(s.businessInfo), team: n(s.team), operations: n(s.operations), fees: n(s.fees ?? s.reviewedFees), backup: n(s.backup ?? s.backupExported) }; } catch { return {}; } }
 function saveSetupProgress(nextProgress) { try { localStorage.setItem(SETUP_PROGRESS_STORAGE_KEY, JSON.stringify(nextProgress)); } catch {} }
@@ -129,14 +142,60 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
     <div className="dashboard-main-grid">
       <div className="dashboard-left-stack">
         <div className="dashboard-panel dashboard-chart-card"><h3>Monthly Revenue vs Expenses</h3><MiniBarChart data={weekly} /></div>
-        <div className="dashboard-panel"><div className="panel-head"><h3>Recent Bookings</h3><button className="btn-ghost" onClick={()=>goToPage("bookings")}>View All</button></div><table className="dashboard-mini-table"><thead><tr><th>Guest</th><th>Property</th><th>Platform</th><th>Dates</th><th>Status</th><th>Total</th></tr></thead><tbody>{recent.map((b)=><tr key={b.booking_id}><td>{b.guest_name||"—"}</td><td>{getProp(b.property_id)}</td><td>{b.platform||"—"}</td><td>{fmtDateShort(b.checkin_date)} - {fmtDateShort(b.checkout_date)}</td><td><Chip tone={bookingStatusChip(b.booking_status)}>{b.booking_status||"—"}</Chip> <Chip tone={paymentStatusChip(b.payment_status)}>{b.payment_status||"—"}</Chip></td><td>{fmtCurrency(bookingTotal(b),selectedCurrency)}</td></tr>)}</tbody></table></div>
+        <div className="dashboard-panel">
+          <div className="dashboard-panel-header">
+            <h3>Recent Bookings</h3>
+            <button className="btn-ghost" onClick={() => goToPage("bookings")}>View All</button>
+          </div>
+          <div className="dashboard-panel-body dashboard-table-scroll">
+            <table className="dashboard-bookings-table">
+              <thead>
+                <tr>
+                  <th className="col-guest">Guest</th>
+                  <th className="col-property">Property</th>
+                  <th className="col-platform">Platform</th>
+                  <th className="col-dates">Dates</th>
+                  <th className="col-status">Status</th>
+                  <th className="col-total">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recent.map((b) => (
+                  <tr key={b.booking_id}>
+                    <td className="col-guest">
+                      <div className="dashboard-table-primary">{b.guest_name || "—"}</div>
+                    </td>
+                    <td className="col-property">
+                      <div className="dashboard-table-primary dashboard-property-cell">{getProp(b.property_id)}</div>
+                    </td>
+                    <td className="col-platform">
+                      <div className="dashboard-table-muted">{b.platform || "—"}</div>
+                    </td>
+                    <td className="col-dates">
+                      <span className="dashboard-date-range">{formatStayRange(b.checkin_date, b.checkout_date)}</span>
+                    </td>
+                    <td className="col-status">
+                      <div className="dashboard-status-stack">
+                        <Chip tone={bookingStatusChip(b.booking_status)}>{b.booking_status || "—"}</Chip>
+                        <Chip tone={paymentStatusChip(b.payment_status)}>{b.payment_status || "—"}</Chip>
+                      </div>
+                    </td>
+                    <td className="col-total">
+                      <div className="dashboard-table-primary">{fmtCurrency(bookingTotal(b), selectedCurrency)}</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
         <div className="dashboard-panel"><h3>Revenue Breakdown</h3><HorizontalBarList items={[{label:"Booking Revenue",value:grossRevenue,formatted:fmtCurrency(grossRevenue,selectedCurrency)},{label:"Expenses",value:totalExpenses,formatted:fmtCurrency(totalExpenses,selectedCurrency)},{label:"Tax Reserve",value:taxReserve,formatted:fmtCurrency(taxReserve,selectedCurrency)},{label:"Management Fee",value:managementFee,formatted:fmtCurrency(managementFee,selectedCurrency)},{label:"Net Profit",value:Math.max(0,netProfit),formatted:fmtCurrency(netProfit,selectedCurrency)}]} /></div>
       </div>
       <div className="dashboard-right-stack">
         <SetupProgressCard checklist={checklist} onGoToPage={goToPage} onMarkComplete={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:true,skipped:false}}; saveSetupProgress(n); return n;})} onMarkSkipped={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:false,skipped:true}}; saveSetupProgress(n); return n;})} />
+        <div className="dashboard-panel"><h3>Guest / Direct Snapshot</h3><p>Total guests: <strong>{guests.length}</strong></p><p>Direct booking %: <strong>{fmtPct(monthBookings.length ? monthBookings.filter((b)=>isDirectPlatform(b.platform)).length / monthBookings.length : 0)}</strong></p><p>Direct leads: <strong>{leads.filter((l)=>isDirectPlatform(l?.source || "")).length}</strong></p><CircularStat value={occupancy} label="Occupancy" /></div>
         <div className="dashboard-panel"><h3>Operations Alerts</h3><div className="dashboard-alert-card" onClick={()=>goToPage("supplies")}><Package size={14}/>Low stock supplies <strong>{lowStock.length}</strong></div><div className="dashboard-alert-card" onClick={()=>goToPage("cleaning")}><Sparkles size={14}/>Scheduled cleaning <strong>{cleaningDue.length}</strong></div><div className="dashboard-alert-card" onClick={()=>goToPage("maintenance")}><Wrench size={14}/>Open maintenance <strong>{openMaintenance.length}</strong></div><div className="dashboard-alert-card" onClick={()=>goToPage("bookings")}><Bell size={14}/>Unpaid / partial bookings <strong>{unpaidCount}</strong></div></div>
         <div className="dashboard-panel"><h3>Upcoming Activity</h3><div className="dashboard-activity-list">{upcomingCheckins.slice(0,4).map((b)=><div key={b.booking_id}><span>{fmtDateShort(b.checkin_date)} · {b.guest_name||"Guest"}</span><Chip tone={bookingStatusChip(b.booking_status)}>{b.booking_status||"-"}</Chip></div>)}</div></div>
-        <div className="dashboard-panel"><h3>Guest / Direct Snapshot</h3><p>Total guests: <strong>{guests.length}</strong></p><p>Direct booking %: <strong>{fmtPct(monthBookings.length ? monthBookings.filter((b)=>isDirectPlatform(b.platform)).length / monthBookings.length : 0)}</strong></p><p>Direct leads: <strong>{leads.filter((l)=>isDirectPlatform(l?.source || "")).length}</strong></p><CircularStat value={occupancy} label="Occupancy" /></div>
       </div>
     </div>
   </div>;
