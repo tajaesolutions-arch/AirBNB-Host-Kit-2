@@ -26,6 +26,10 @@ const STORAGE_KEYS = {
   supplies: "jak_supplies",
   expenses: "jak_expenses",
   leads: "jak_leads",
+  calendarEvents: "jak_calendarEvents",
+  quotes: "jak_quotes",
+  messageHistory: "jak_messageHistory",
+  reviewTasks: "jak_reviewTasks",
   settings: "jak_settings",
 };
 
@@ -201,6 +205,10 @@ const normalizeImportedBackup = (payload) => {
     supplies: safeArray(source.supplies),
     expenses: safeArray(source.expenses),
     leads: safeArray(source.leads),
+    calendarEvents: safeArray(source.calendarEvents),
+    quotes: safeArray(source.quotes),
+    messageHistory: safeArray(source.messageHistory),
+    reviewTasks: safeArray(source.reviewTasks),
     settings: safeSettings(source.settings),
   };
 };
@@ -239,6 +247,18 @@ export function AppProvider({ children }) {
   );
 
   const [settings, setSettingsRaw] = useState(() => loadSettings());
+  const [calendarEvents, setCalendarEventsRaw] = useState(() =>
+    load(STORAGE_KEYS.calendarEvents, [], [])
+  );
+  const [quotes, setQuotesRaw] = useState(() =>
+    load(STORAGE_KEYS.quotes, [], [])
+  );
+  const [messageHistory, setMessageHistoryRaw] = useState(() =>
+    load(STORAGE_KEYS.messageHistory, [], [])
+  );
+  const [reviewTasks, setReviewTasksRaw] = useState(() =>
+    load(STORAGE_KEYS.reviewTasks, [], [])
+  );
 
   const persist = (key, setter, normalizer = null) => (valueOrUpdater) => {
     setter((previousValue) => {
@@ -263,6 +283,22 @@ export function AppProvider({ children }) {
   const setSupplies = persist(STORAGE_KEYS.supplies, setSuppliesRaw);
   const setExpenses = persist(STORAGE_KEYS.expenses, setExpensesRaw);
   const setLeads = persist(STORAGE_KEYS.leads, setLeadsRaw);
+  const setCalendarEvents = persist(
+    STORAGE_KEYS.calendarEvents,
+    setCalendarEventsRaw,
+    safeArray
+  );
+  const setQuotes = persist(STORAGE_KEYS.quotes, setQuotesRaw, safeArray);
+  const setMessageHistory = persist(
+    STORAGE_KEYS.messageHistory,
+    setMessageHistoryRaw,
+    safeArray
+  );
+  const setReviewTasks = persist(
+    STORAGE_KEYS.reviewTasks,
+    setReviewTasksRaw,
+    safeArray
+  );
   const setSettings = persist(
     STORAGE_KEYS.settings,
     setSettingsRaw,
@@ -280,6 +316,10 @@ export function AppProvider({ children }) {
     setSuppliesRaw([]);
     setExpensesRaw([]);
     setLeadsRaw([]);
+    setCalendarEventsRaw([]);
+    setQuotesRaw([]);
+    setMessageHistoryRaw([]);
+    setReviewTasksRaw([]);
     setSettingsRaw(clone(BLANK_SETTINGS));
   };
 
@@ -294,6 +334,10 @@ export function AppProvider({ children }) {
     setSupplies(SAMPLE_SUPPLIES);
     setExpenses(SAMPLE_EXPENSES);
     setLeads(SAMPLE_LEADS);
+    setCalendarEvents([]);
+    setQuotes([]);
+    setMessageHistory([]);
+    setReviewTasks([]);
     setSettings(DEFAULT_SETTINGS);
   };
 
@@ -318,6 +362,10 @@ export function AppProvider({ children }) {
         supplies: clone(supplies),
         expenses: clone(expenses),
         leads: clone(leads),
+        calendarEvents: clone(calendarEvents),
+        quotes: clone(quotes),
+        messageHistory: clone(messageHistory),
+        reviewTasks: clone(reviewTasks),
         settings: clone(settings),
       },
     };
@@ -334,6 +382,10 @@ export function AppProvider({ children }) {
     save(STORAGE_KEYS.supplies, nextData.supplies);
     save(STORAGE_KEYS.expenses, nextData.expenses);
     save(STORAGE_KEYS.leads, nextData.leads);
+    save(STORAGE_KEYS.calendarEvents, nextData.calendarEvents);
+    save(STORAGE_KEYS.quotes, nextData.quotes);
+    save(STORAGE_KEYS.messageHistory, nextData.messageHistory);
+    save(STORAGE_KEYS.reviewTasks, nextData.reviewTasks);
     save(STORAGE_KEYS.settings, nextData.settings);
 
     setSampleClearedFlag(!hasOperationalRecords(nextData));
@@ -346,6 +398,10 @@ export function AppProvider({ children }) {
     setSuppliesRaw(nextData.supplies);
     setExpensesRaw(nextData.expenses);
     setLeadsRaw(nextData.leads);
+    setCalendarEventsRaw(nextData.calendarEvents);
+    setQuotesRaw(nextData.quotes);
+    setMessageHistoryRaw(nextData.messageHistory);
+    setReviewTasksRaw(nextData.reviewTasks);
     setSettingsRaw(nextData.settings);
 
     return nextData;
@@ -379,6 +435,14 @@ export function AppProvider({ children }) {
 
         leads,
         setLeads,
+        calendarEvents,
+        setCalendarEvents,
+        quotes,
+        setQuotes,
+        messageHistory,
+        setMessageHistory,
+        reviewTasks,
+        setReviewTasks,
 
         settings,
         setSettings,
