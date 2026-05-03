@@ -160,6 +160,9 @@ function DashboardShell() {
       case "dashboard":
         return <Dashboard {...shared} />;
 
+      case "properties":
+        return <Settings {...shared} />;
+
       case "bookings":
       case "booking-calendar":
         return <Bookings {...shared} />;
