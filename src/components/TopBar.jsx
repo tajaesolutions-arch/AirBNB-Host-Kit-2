@@ -13,7 +13,7 @@ export default function TopBar({
   setMonthFilter,
   propFilter,
   setPropFilter,
-  onMenuClick,
+  onAccountClick,
 }) {
   const { properties, settings, setSettings } = useApp();
   const safeProperties = Array.isArray(properties) ? properties : [];
@@ -78,6 +78,12 @@ export default function TopBar({
     }));
   };
 
+  const handleAccountClick = () => {
+    if (typeof onAccountClick === "function") {
+      onAccountClick();
+    }
+  };
+
   return (
     <header className={`topbar ${isMobileFiltersCollapsed ? "mobile-filters-collapsed" : ""}`}>
       <button
@@ -90,7 +96,10 @@ export default function TopBar({
       </button>
 
       <div className="topbar-filters">
-        <span className="topbar-label">Property</span>
+        <div className="topbar-filter-group">
+          <label className="topbar-label" htmlFor="property-filter">
+            Property
+          </label>
 
         <select
           id="property-filter"
@@ -106,24 +115,27 @@ export default function TopBar({
           ))}
         </select>
 
-        <span className="topbar-label" style={{ marginLeft: 6 }}>
-          Month
-        </span>
+            {properties?.map((property) => (
+              <option key={property.id} value={property.id}>
+                {property.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <input
-          type="month"
-          value={monthFilter}
-          onChange={(event) => setMonthFilter(event.target.value)}
-          style={{
-            width: "auto",
-            padding: "6px 10px",
-            fontSize: 13,
-          }}
-        />
+        <div className="topbar-filter-group">
+          <label className="topbar-label" htmlFor="month-filter">
+            Month
+          </label>
 
-        <span className="topbar-label" style={{ marginLeft: 6 }}>
-          Currency
-        </span>
+          <input
+            id="month-filter"
+            className="topbar-control topbar-month-input"
+            type="month"
+            value={monthFilter}
+            onChange={(event) => setMonthFilter(event.target.value)}
+          />
+        </div>
 
         <select
           className="topbar-control"
@@ -143,7 +155,16 @@ export default function TopBar({
         <span className="chip chip-gray" title={getCurrencyHelperText(selectedCurrency)}>
           <UserCircle size={14} />
           {CURRENCY_DISPLAY_NAMES[selectedCurrency] || selectedCurrency}
-        </span>
+        </div>
+
+        <button
+          className="topbar-account-btn"
+          type="button"
+          onClick={handleAccountClick}
+        >
+          <UserCircle size={18} />
+          <span>My Account</span>
+        </button>
       </div>
     </header>
   );
