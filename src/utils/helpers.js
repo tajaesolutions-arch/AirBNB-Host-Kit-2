@@ -459,3 +459,77 @@ export const supplyChip = (s) =>
     "Low Stock": "amber",
     "Out of Stock": "red",
   }[s] || "gray");
+export const safeArray = (value) => (Array.isArray(value) ? value : []);
+export const toNumber = (value, fallback = 0) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+};
+export const datesOverlap = (startA, endA, startB, endB) => {
+  if (!startA || !endA || !startB || !endB) return false;
+  return new Date(startA) < new Date(endB) && new Date(startB) < new Date(endA);
+};
+export const calculateQuoteTotals = ({ checkin_date, checkout_date, nightly_rate, cleaning_fee, extra_fees, discount, deposit_percent = 30 }) => {
+  const nights = calcNights(checkin_date, checkout_date);
+  const room_total = nights * toNumber(nightly_rate);
+  const total = room_total + toNumber(cleaning_fee) + toNumber(extra_fees) - toNumber(discount);
+  const deposit_due = Math.max(0, total * (toNumber(deposit_percent) / 100));
+  return { nights, room_total, cleaning_fee: toNumber(cleaning_fee), extra_fees: toNumber(extra_fees), discount: toNumber(discount), total, deposit_due, balance_due: total - deposit_due };
+};
+export const generateQuoteMessage = (quote, settings = {}) => `Direct Booking Quote\nBusiness: ${settings.business_name || "Host Operations"}\nGuest: ${quote.guest_name || "Guest"}\nProperty: ${quote.property_name || "Property"}\nStay: ${quote.checkin_date || "?"} to ${quote.checkout_date || "?"} (${quote.nights || 0} nights)\nTotal: ${fmtCurrency(quote.total || 0)}\nDeposit Due: ${fmtCurrency(quote.deposit_due || 0)}\nBalance Due: ${fmtCurrency(quote.balance_due || 0)}`;
+export const generateSmartMessage = ({ type, tone, guestName, propertyName, checkin, checkout, businessName }) => `${guestName || "Guest"}, ${type}. ${propertyName ? `Property: ${propertyName}.` : ""} ${checkin ? `Check-in: ${checkin}.` : ""} ${checkout ? `Checkout: ${checkout}.` : ""} (${tone} tone)\n- ${businessName || "Host Operations"}`;
+export const normalizePhoneForWhatsApp = (phone = "") => String(phone).replace(/[^\d]/g, "");
+export const openWhatsAppDraft = ({ phone, text }) => {
+  const normalized = normalizePhoneForWhatsApp(phone);
+  if (!normalized) return false;
+  window.open(`https://wa.me/${normalized}?text=${encodeURIComponent(text || "")}`, "_blank");
+  return true;
+};
+export const openEmailDraft = ({ email, subject, body }) => {
+  if (!email) return false;
+  window.open(`mailto:${email}?subject=${encodeURIComponent(subject || "")}&body=${encodeURIComponent(body || "")}`);
+  return true;
+};
+export const copyText = async (text = "") => {
+  try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
+};
+export const openPrintDocument = ({ title, bodyHtml, businessName }) => {
+  const win = window.open("", "_blank");
+  if (!win) return false;
+  win.document.write(`<!doctype html><html><head><title>${title}</title><style>body{font-family:Inter,Arial,sans-serif;padding:24px;color:#17212b} .h{background:#0b2d5c;color:#fff;padding:16px;border-radius:8px} table{width:100%;border-collapse:collapse;margin-top:12px}td,th{border:1px solid #d6dde6;padding:8px;text-align:left}</style></head><body><div class='h'><h2>Host Operations</h2><div>Jamaica Airbnb Kit</div><div>${businessName || ""}</div><div>Prepared: ${new Date().toLocaleDateString()}</div></div>${bodyHtml}</body></html>`);
+  win.document.close(); win.focus(); win.print(); return true;
+};
+export const calculateProfitForecast = ({ bookings = [], expenses = [], month, propertyId, taxRate = 0 }) => {
+  const scopedBookings = safeArray(bookings).filter((b) => (!propertyId || b.property_id === propertyId) && (!month || (b.checkin_date || "").slice(0,7) === month));
+  const confirmed = scopedBookings.filter((b) => (b.booking_status || "") === "Confirmed");
+  const confirmed_booking_value = confirmed.reduce((s,b)=>s+bookingTotal(b),0);
+  const unpaid_booking_value = confirmed.filter((b)=>b.payment_status!=="Paid").reduce((s,b)=>s+bookingTotal(b),0);
+  const projected_gross_revenue = scopedBookings.reduce((s,b)=>s+bookingTotal(b),0);
+  const projected_expenses = safeArray(expenses).filter((e)=>(!propertyId||e.property_id===propertyId)&&(!month||(e.expense_date||"").slice(0,7)===month)).reduce((s,e)=>s+toNumber(e.amount),0);
+  const estimated_tax_reserve = projected_gross_revenue * (toNumber(taxRate)/100);
+  return { projected_gross_revenue, projected_expenses, projected_net_profit: projected_gross_revenue - projected_expenses, confirmed_booking_value, unpaid_booking_value, estimated_fees: projected_gross_revenue*0.03, estimated_tax_reserve };
+};
+export const calculateHostHealthScore = ({ bookings=[], cleaning=[], maintenance=[], supplies=[], guests=[], damageDeposits=[] }) => {
+  const deductions=[]; let score=100;
+  const add=(label, count, pts)=>{ if(count>0){ const d=count*pts; score-=d; deductions.push({label,count,points:d}); }};
+  add("Urgent maintenance", maintenance.filter((m)=>m.priority==="Urgent"&&m.status!=="Completed").length,10);
+  add("Overdue cleaning", cleaning.filter((c)=>(c.cleaning_status||"")!=="Completed"&&c.checkout_date&&new Date(c.checkout_date)<new Date()).length,8);
+  add("Out of stock", supplies.filter((s)=>Number(s.current_stock)<=0).length,6);
+  add("Low stock", supplies.filter((s)=>Number(s.current_stock)>0&&Number(s.current_stock)<=Number(s.reorder_level||0)).length,4);
+  add("Unpaid confirmed", bookings.filter((b)=>b.booking_status==="Confirmed"&&b.payment_status!=="Paid").length,8);
+  add("Deposit not collected", damageDeposits.filter((d)=>!d.deposit_collected).length,6);
+  add("Unresolved damage", damageDeposits.filter((d)=>d.damage_status&&d.damage_status!=="Resolved").length,6);
+  add("Guest follow-up due", guests.filter((g)=>g.follow_up_due).length,4);
+  return { score: Math.max(0,score), status: score>=85?"Strong":score>=70?"Watch":"At Risk", deductions };
+};
+export const buildOwnerReportSummary = ({ bookings=[], expenses=[], maintenance=[], cleaning=[], month, propertyId }) => ({
+  revenue: safeArray(bookings).filter((b)=>(!propertyId||b.property_id===propertyId)&&(!month||(b.checkin_date||"").slice(0,7)===month)).reduce((s,b)=>s+bookingTotal(b),0),
+  expenses: safeArray(expenses).filter((e)=>(!propertyId||e.property_id===propertyId)&&(!month||(e.expense_date||"").slice(0,7)===month)).reduce((s,e)=>s+toNumber(e.amount),0),
+  maintenance_count: safeArray(maintenance).filter((m)=>!propertyId||m.property_id===propertyId).length,
+  cleaning_count: safeArray(cleaning).filter((c)=>!propertyId||c.property_id===propertyId).length,
+});
+export const buildTaxPrepSummary = ({ bookings=[], expenses=[], month, propertyId, taxReservePercent=0, managementFeePercent=0 }) => {
+  const gross = safeArray(bookings).filter((b)=>(!propertyId||b.property_id===propertyId)&&(!month||(b.checkin_date||"").slice(0,7)===month)).reduce((s,b)=>s+bookingTotal(b),0);
+  const scopedExpenses = safeArray(expenses).filter((e)=>(!propertyId||e.property_id===propertyId)&&(!month||(e.expense_date||"").slice(0,7)===month));
+  const deductible = scopedExpenses.reduce((s,e)=>s+toNumber(e.amount),0);
+  return { gross_revenue:gross, deductible_expense_total:deductible, management_fees:gross*(toNumber(managementFeePercent)/100), tax_reserve:gross*(toNumber(taxReservePercent)/100), owner_payout_estimate:gross-deductible };
+};
