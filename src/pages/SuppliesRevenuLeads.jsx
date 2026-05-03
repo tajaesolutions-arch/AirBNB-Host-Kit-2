@@ -1,7 +1,7 @@
 // ============================================================
 //  SUPPLIES, REVENUE, AND DIRECT LEADS PAGES
 // ============================================================
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
 import {
   PageHeader,
@@ -360,7 +360,7 @@ function SupplyForm({ record, onClose, onSave, onDelete, properties, currency })
   );
 }
 
-export function Supplies({ propFilter }) {
+export function Supplies({ propFilter, pageAction, onPageActionHandled }) {
   const {
     supplies: rawSupplies,
     setSupplies,
@@ -787,7 +787,7 @@ function ExpenseForm({ record, onClose, onSave, onDelete, properties, currency }
   );
 }
 
-export function Revenue({ monthFilter, propFilter }) {
+export function Revenue({ monthFilter, propFilter, pageAction, onPageActionHandled }) {
   const {
     expenses: rawExpenses,
     setExpenses,
@@ -874,6 +874,12 @@ export function Revenue({ monthFilter, propFilter }) {
     receipt_link: "",
     notes: "",
   };
+
+  useEffect(() => {
+    if (pageAction !== "addExpense") return;
+    setEditing(empty);
+    onPageActionHandled?.();
+  }, [pageAction]);
 
   const save = (expense) => {
     if (!expense.expense_id) {
@@ -1318,7 +1324,7 @@ function LeadForm({ record, onClose, onSave, onDelete, properties, currency }) {
   );
 }
 
-export function Leads({ propFilter }) {
+export function Leads({ propFilter, pageAction, onPageActionHandled }) {
   const {
     leads: rawLeads,
     setLeads,
@@ -1361,6 +1367,12 @@ export function Leads({ propFilter }) {
     message_template_used: "",
     notes: "",
   };
+
+  useEffect(() => {
+    if (pageAction !== "addLead") return;
+    setEditing(empty);
+    onPageActionHandled?.();
+  }, [pageAction]);
 
   const save = (lead) => {
     if (!lead.lead_id) {

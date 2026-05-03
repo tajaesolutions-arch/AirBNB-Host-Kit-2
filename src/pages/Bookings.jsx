@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
 import {
   PageHeader,
@@ -578,7 +578,7 @@ function BookingForm({
   );
 }
 
-export default function Bookings({ monthFilter, propFilter, setPage }) {
+export default function Bookings({ monthFilter, propFilter, setPage, pageAction, onPageActionHandled }) {
   const {
     bookings: rawBookings,
     setBookings,
@@ -643,6 +643,12 @@ export default function Bookings({ monthFilter, propFilter, setPage }) {
     setSaveNotice("");
     setEditing(emptyRecord);
   };
+
+  useEffect(() => {
+    if (pageAction !== "addBooking") return;
+    if (hasProperties) startNewBooking();
+    onPageActionHandled?.();
+  }, [pageAction, hasProperties]);
 
   const getOrCreateGuestForBooking = (booking) => {
     const cleanName = String(booking.guest_name || "").trim();

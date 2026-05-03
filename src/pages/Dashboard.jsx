@@ -89,7 +89,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
   const app = useApp();
   const bookings = safeArray(app.bookings); const expenses = safeArray(app.expenses); const maintenance = safeArray(app.maintenance); const supplies = safeArray(app.supplies); const cleaning = safeArray(app.cleaning); const properties = safeArray(app.properties); const settings = safeSettings(app.settings);
   const [savedSetupProgress, setSavedSetupProgress] = useState(() => loadSetupProgress());
-  const goToPage = (p) => typeof setPage === "function" && setPage(p);
+  const goToPage = (p, action = null) => typeof setPage === "function" && setPage(p, action);
   const selectedMonth = monthFilter || new Date().toISOString().slice(0, 7);
   const selectedPropFilter = !propFilter || propFilter === "all" ? "ALL" : propFilter;
   const filterByProp = (arr, key = "property_id") => selectedPropFilter === "ALL" ? arr : arr.filter((x) => x?.[key] === selectedPropFilter || !x?.[key]);
@@ -162,7 +162,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
 
   return <div className="dashboard-page">
     <section className="dashboard-page-header"><div className="dashboard-title-block"><h1 className="page-title">Dashboard</h1><p className="page-subtitle">{selectedMonth} · {selectedPropFilter === "ALL" ? "All Properties" : getProp(selectedPropFilter)}</p></div></section>
-    <section className="dashboard-command-bar"><label className="dashboard-toolbar-control">Property<select value={selectedPropFilter} onChange={(e)=>setPropFilter?.(e.target.value)}><option value="ALL">All</option>{properties.map((p)=><option key={p.property_id} value={p.property_id}>{p.property_name||"Unnamed"}</option>)}</select></label><label className="dashboard-toolbar-control">Month<input type="month" value={selectedMonth} onChange={(e)=>setMonthFilter?.(e.target.value)} /></label><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("bookings")}><PlusCircle size={14}/>Add Booking</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("revenue")}><ReceiptText size={14}/>Add Expense</button></section>
+    <section className="dashboard-command-bar"><label className="dashboard-toolbar-control">Property<select value={selectedPropFilter} onChange={(e)=>setPropFilter?.(e.target.value)}><option value="ALL">All</option>{properties.map((p)=><option key={p.property_id} value={p.property_id}>{p.property_name||"Unnamed"}</option>)}</select></label><label className="dashboard-toolbar-control">Month<input type="month" value={selectedMonth} onChange={(e)=>setMonthFilter?.(e.target.value)} /></label><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("bookings","addBooking")}><PlusCircle size={14}/>Add Booking</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("revenue","addExpense")}><ReceiptText size={14}/>Add Expense</button></section>
     {shouldShowSetupChecklist && (
       <section className="dashboard-setup-top">
         <SetupProgressCard checklist={checklist} onGoToPage={goToPage} onMarkComplete={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:true,skipped:false}}; saveSetupProgress(n); return n;})} onMarkSkipped={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:false,skipped:true}}; saveSetupProgress(n); return n;})} />

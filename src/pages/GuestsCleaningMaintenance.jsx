@@ -1,7 +1,7 @@
 // ============================================================
 //  GUESTS, CLEANING, AND MAINTENANCE PAGES
 // ============================================================
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
 import {
   PageHeader,
@@ -360,7 +360,7 @@ function GuestForm({ record, onClose, onSave, onDelete }) {
   );
 }
 
-export function Guests({ propFilter }) {
+export function Guests({ propFilter, pageAction, onPageActionHandled }) {
   const {
     guests: rawGuests,
     setGuests,
@@ -857,7 +857,7 @@ function CleaningForm({
   );
 }
 
-export function Cleaning({ propFilter, setPage }) {
+export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled }) {
   const {
     cleaning: rawCleaning,
     setCleaning,
@@ -906,6 +906,12 @@ export function Cleaning({ propFilter, setPage }) {
     if (!hasProperties) return;
     setEditing(empty);
   };
+
+  useEffect(() => {
+    if (pageAction !== "addCleaning") return;
+    setEditing(empty);
+    onPageActionHandled?.();
+  }, [pageAction]);
 
   const save = (task) => {
     if (!task.cleaning_id) {
@@ -1378,7 +1384,7 @@ function MaintenanceForm({
   );
 }
 
-export function Maintenance({ propFilter, setPage }) {
+export function Maintenance({ propFilter, setPage, pageAction, onPageActionHandled }) {
   const {
     maintenance: rawMaintenance,
     setMaintenance,
@@ -1430,6 +1436,12 @@ export function Maintenance({ propFilter, setPage }) {
     if (!hasProperties) return;
     setEditing(empty);
   };
+
+  useEffect(() => {
+    if (pageAction !== "addMaintenance") return;
+    setEditing(empty);
+    onPageActionHandled?.();
+  }, [pageAction]);
 
   const save = (issue) => {
     if (!issue.issue_id) {
