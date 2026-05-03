@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { AppProvider } from "./context/AppContext.jsx";
 import Sidebar from "./components/Sidebar.jsx";
-import TopBar from "./components/TopBar.jsx";
 
 // Pages
 import Dashboard from "./pages/Dashboard.jsx";
@@ -63,13 +62,14 @@ export default function App() {
         )}
 
         <div className="main-content">
-          <TopBar
-            monthFilter={monthFilter}
-            setMonthFilter={setMonthFilter}
-            propFilter={propFilter}
-            setPropFilter={setPropFilter}
-            onMenuClick={() => setSidebarOpen(true)}
-          />
+          <button
+            type="button"
+            className="mobile-menu-trigger"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open navigation menu"
+          >
+            ☰ Menu
+          </button>
           <main>{renderPage()}</main>
         </div>
       </div>
