@@ -287,6 +287,87 @@ export const parseICalEvents = (icsText = "") => {
     .filter((event) => event.start && event.end);
 };
 
+export const parseICSDate = (value = "") => {
+  const raw = String(value || "").trim();
+
+  if (!raw) return "";
+
+  const datePart = raw.slice(0, 8);
+
+  if (!/^\d{8}$/.test(datePart)) return "";
+
+  const year = datePart.slice(0, 4);
+  const month = datePart.slice(4, 6);
+  const day = datePart.slice(6, 8);
+
+  return `${year}-${month}-${day}`;
+};
+
+export const parseICSCalendar = (icsText = "") => {
+  const events = [];
+  let current = null;
+
+  const normalizedLines = String(icsText || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split("\n");
+
+  normalizedLines.forEach((rawLine) => {
+    const line = String(rawLine || "").trim();
+
+    if (!line) return;
+
+    if (line === "BEGIN:VEVENT") {
+      current = {};
+      return;
+    }
+
+    if (line === "END:VEVENT") {
+      if (current) {
+        events.push({
+          event_id: current.uid || `ICS-${Date.now()}-${events.length + 1}`,
+          external_uid: current.uid || "",
+          summary: current.summary || "Imported Calendar Event",
+          guest_name: current.summary || "Imported Calendar Hold",
+          checkin_date: current.dtstart || "",
+          checkout_date: current.dtend || "",
+          source_status: "Imported",
+        });
+      }
+
+      current = null;
+      return;
+    }
+
+    if (!current) return;
+
+    const separatorIndex = line.indexOf(":");
+    if (separatorIndex === -1) return;
+
+    const rawKey = line.slice(0, separatorIndex);
+    const value = line.slice(separatorIndex + 1).trim();
+    const key = rawKey.split(";")[0].toUpperCase();
+
+    if (key === "UID") {
+      current.uid = value;
+    }
+
+    if (key === "SUMMARY") {
+      current.summary = value;
+    }
+
+    if (key === "DTSTART") {
+      current.dtstart = parseICSDate(value);
+    }
+
+    if (key === "DTEND") {
+      current.dtend = parseICSDate(value);
+    }
+  });
+
+  return events.filter((event) => event.checkin_date && event.checkout_date);
+};
+
 const iCalDateToISO = (raw = "") => {
   if (!raw || raw.length < 8) return "";
   return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
