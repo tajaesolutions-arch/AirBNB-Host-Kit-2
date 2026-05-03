@@ -306,3 +306,47 @@ begin
     execute format('create trigger %I before update on public.%I for each row execute function public.set_updated_at()', t || '_set_updated_at', t);
   end loop;
 end $$;
+
+-- ============================================================
+-- Non-destructive upgrades for global operations + calendar + deposits/reviews
+-- ============================================================
+alter table if exists public.profiles add column if not exists country text;
+alter table if exists public.profiles add column if not exists timezone text;
+alter table if exists public.profiles add column if not exists date_format text;
+alter table if exists public.profiles add column if not exists tax_label text;
+alter table if exists public.profiles add column if not exists business_type text;
+alter table if exists public.profiles add column if not exists property_type text;
+alter table if exists public.profiles add column if not exists language text;
+
+alter table if exists public.properties add column if not exists airbnb_ical_url text;
+alter table if exists public.properties add column if not exists vrbo_ical_url text;
+alter table if exists public.properties add column if not exists booking_ical_url text;
+alter table if exists public.properties add column if not exists last_calendar_sync_at timestamptz;
+
+alter table if exists public.bookings add column if not exists security_deposit_required boolean default false;
+alter table if exists public.bookings add column if not exists security_deposit_amount numeric default 0;
+alter table if exists public.bookings add column if not exists deposit_paid_amount numeric default 0;
+alter table if exists public.bookings add column if not exists deposit_due_date date;
+alter table if exists public.bookings add column if not exists deposit_status text;
+alter table if exists public.bookings add column if not exists damage_status text;
+alter table if exists public.bookings add column if not exists damage_description text;
+alter table if exists public.bookings add column if not exists damage_photo_or_link text;
+alter table if exists public.bookings add column if not exists amount_deducted numeric default 0;
+alter table if exists public.bookings add column if not exists refund_due_date date;
+alter table if exists public.bookings add column if not exists refund_status text;
+alter table if exists public.bookings add column if not exists review_request_sent boolean default false;
+alter table if exists public.bookings add column if not exists review_request_date date;
+alter table if exists public.bookings add column if not exists review_received boolean default false;
+alter table if exists public.bookings add column if not exists review_score numeric;
+alter table if exists public.bookings add column if not exists review_public_text text;
+alter table if exists public.bookings add column if not exists host_response text;
+alter table if exists public.bookings add column if not exists review_followup_status text;
+
+alter table if exists public.maintenance_issues add column if not exists owner_approval_required boolean default false;
+alter table if exists public.maintenance_issues add column if not exists approval_status text;
+alter table if exists public.maintenance_issues add column if not exists approval_requested_date date;
+alter table if exists public.maintenance_issues add column if not exists approval_response_date date;
+alter table if exists public.maintenance_issues add column if not exists owner_approval_notes text;
+alter table if exists public.maintenance_issues add column if not exists vendor_quote_link text;
+alter table if exists public.maintenance_issues add column if not exists before_photo_link text;
+alter table if exists public.maintenance_issues add column if not exists after_photo_link text;
