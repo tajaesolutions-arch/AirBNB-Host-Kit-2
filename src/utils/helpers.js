@@ -378,3 +378,34 @@ export const supplyChip = (s) =>
     "Low Stock": "amber",
     "Out of Stock": "red",
   }[s] || "gray");
+
+
+export const parseICSDate = (value = "") => {
+  const raw = String(value || "").trim().replace(/^.*:/, "");
+  if (!raw) return "";
+  if (/^\d{8}$/.test(raw)) return `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;
+  if (/^\d{8}T/.test(raw)) return `${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`;
+  return raw.slice(0,10);
+};
+export const parseICSCalendar = (icsText = "") => {
+  const events=[]; let current=null;
+  String(icsText||"").split(/
+?
+/).forEach((line)=>{
+    if (line==='BEGIN:VEVENT') current={};
+    else if (line==='END:VEVENT' && current){events.push({external_uid:current.UID||uid('ICS'),summary:current.SUMMARY||'Imported Calendar Hold',checkin_date:parseICSDate(current.DTSTART),checkout_date:parseICSDate(current.DTEND)});current=null;}
+    else if (current && line.includes(':')){const [k,...rest]=line.split(':'); current[k.split(';')[0]]=rest.join(':');}
+  });
+  return events;
+};
+export const datesOverlap = (s1,e1,s2,e2) => !!(s1&&e1&&s2&&e2) && new Date(s1) < new Date(e2) && new Date(s2) < new Date(e1);
+export const calculateQuoteTotal = (quote={}) => {const nights=calcNights(quote.checkin_date, quote.checkout_date); const subtotal=(Number(quote.nightly_rate)||0)*nights + (Number(quote.cleaning_fee)||0) + (Number(quote.extra_fees)||0); const discount=Number(quote.discount)||0; const total=Math.max(0,subtotal-discount); const depositDue=Number(quote.deposit_amount)||0; return {nights, subtotal, discount, total, depositDue, balanceDue:Math.max(0,total-depositDue)};};
+export const generateQuoteMessage=(quote={})=>{const t=calculateQuoteTotal(quote); return `Hi ${quote.guest_name||'Guest'}!\nQuote for ${quote.checkin_date||''} to ${quote.checkout_date||''} (${t.nights} nights):\nNightly: ${fmtCurrency(quote.nightly_rate||0)}\nCleaning: ${fmtCurrency(quote.cleaning_fee||0)}\nExtra: ${fmtCurrency(quote.extra_fees||0)}\nDiscount: ${fmtCurrency(t.discount||0)}\nTotal: ${fmtCurrency(t.total||0)}\nDeposit due: ${fmtCurrency(t.depositDue||0)}\nBalance: ${fmtCurrency(t.balanceDue||0)}\nPayment deadline: ${quote.payment_deadline||'TBD'}.`;};
+export const generateSmartGuestMessage=({template_type='checkin',tone='Friendly',guest_name='Guest',property_name='your villa'}={})=>`${tone} Smart Draft\nHi ${guest_name}, this is your ${template_type.replace('_',' ')} update for ${property_name}. Let us know if you need anything.`;
+export const calculateGuestLTVScore=(guest,bookings=[])=>{const gBookings=bookings.filter(b=>b.guest_id===guest.guest_id||b.guest_name===guest.guest_name); const totalSpent=gBookings.reduce((s,b)=>s+bookingTotal(b),0); const bookingCount=gBookings.length; const lastStay=gBookings.map(b=>b.checkout_date).sort().slice(-1)[0]||''; let score=0; if(totalSpent>200000) score+=40; if(bookingCount>1) score+=20; if(guest?.review_left) score+=15; if(guest?.direct_followup_sent) score+=15; if(lastStay && ((Date.now()-new Date(lastStay).getTime())/86400000)<=180) score+=10; return {score,totalSpent,bookingCount,lastStay};};
+export const getRepeatGuestCandidates=(guests=[],bookings=[])=>guests.filter(g=>!!(g.email||g.phone)).filter(g=>{const ltv=calculateGuestLTVScore(g,bookings); return ltv.bookingCount>0 && ltv.score>=30;});
+export const getSmartAlerts=(data={})=>{const alerts=[]; const now=new Date(); (data.supplies||[]).forEach(s=>{if(Number(s.current_quantity)<=0) alerts.push({alert_type:"Out of stock",severity:"red",title:`${s.item_name} is out of stock`}); else if(Number(s.current_quantity)<=Number(s.reorder_level||0)) alerts.push({alert_type:"Low stock",severity:"amber",title:`${s.item_name} is low stock`});}); (data.bookings||[]).forEach(b=>{if(["Unpaid","Partial","Pending"].includes(b.payment_status)) alerts.push({alert_type:"Unpaid booking",severity:"red",title:`${b.guest_name} payment pending`}); const ci=new Date(b.checkin_date); if((ci-now)/86400000<=3 && (ci-now)/86400000>=0) alerts.push({alert_type:"Upcoming check-in",severity:"blue",title:`Check-in: ${b.guest_name}`});}); return alerts;};
+export const calculateProfitForecast=(data={})=>{const bookings=(data.bookings||[]).filter(b=>String(b.checkin_date||"").slice(0,7)===data.month); const gross=bookings.reduce((s,b)=>s+bookingTotal(b),0); const confirmed=bookings.filter(b=>b.booking_status==="Confirmed").reduce((s,b)=>s+bookingTotal(b),0); const pending=bookings.filter(b=>["Unpaid","Partial","Pending"].includes(b.payment_status)).reduce((s,b)=>s+bookingTotal(b),0); const expenses=(data.expenses||[]).filter(e=>String(e.expense_date||"").slice(0,7)===data.month).reduce((s,e)=>s+Number(e.amount||0),0); const mg=gross*Number(data.settings?.management_fee_percentage||0); const pf=gross*Number(data.settings?.platform_fee_percentage||0); const tax=gross*Number(data.settings?.tax_reserve_percentage||0); const totalExp=expenses+mg+pf+tax; return {projectedGrossRevenue:gross,projectedExpenses:totalExp,projectedNetProfit:gross-totalExp,projectedOccupancy:0,confirmedBookingValue:confirmed,pendingUnpaidValue:pending};};
+export const calculateHostHealthScore=(data={})=>{let score=100; const deductions=[]; const add=(pts,label,page)=>{if(pts>0){score-=pts; deductions.push({points:pts,label,page});}}; add((data.maintenance||[]).filter(x=>x.priority==="Urgent"&&x.status!=="Completed").length*10,"Urgent maintenance open","maintenance"); add((data.supplies||[]).filter(s=>Number(s.current_quantity)<=0).length*6,"Out-of-stock supplies","supplies"); add((data.bookings||[]).filter(b=>["Unpaid","Partial","Pending"].includes(b.payment_status)).length*8,"Unpaid bookings","bookings"); score=Math.max(0,score); const status=score>=90?"Excellent":score>=75?"Healthy":score>=55?"Needs Attention":"At Risk"; return {score,status,deductions,actions:deductions.slice(0,3)};};
+export const calculateTaxPrepPack=(payload={})=>{const month=payload.month; const gross=(payload.bookings||[]).filter(b=>String(b.checkin_date||"").slice(0,7)===month).reduce((s,b)=>s+bookingTotal(b),0); const deductible=(payload.expenses||[]).filter(e=>String(e.expense_date||"").slice(0,7)===month).reduce((s,e)=>s+Number(e.amount||0),0); const management_fees=gross*0.1; const tax_reserve=gross*0.15; return {month,gross_revenue:gross,deductible_expenses:deductible,management_fees,tax_reserve,owner_payout:gross-deductible-management_fees-tax_reserve};};
+export const getPricingNotesForDateRange=(notes=[], propertyId, start, end)=>notes.filter(n=>(!propertyId||n.property_id===propertyId)&&datesOverlap(n.start_date,n.end_date,start,end));

@@ -11,6 +11,7 @@ import * as GuestCleaningMaintenanceModule from "./pages/GuestsCleaningMaintenan
 import * as SuppliesRevenueLeadsModule from "./pages/SuppliesRevenuLeads.jsx";
 import * as OwnerTaxMessagesSettingsModule from "./pages/OwnerReportTaxSOPsMessagesSettings.jsx";
 import * as AccountModule from "./pages/Account.jsx";
+import SmartTools from "./pages/SmartTools.jsx";
 
 import "./styles.css";
 
@@ -32,6 +33,7 @@ const PAGE_TITLES = {
   messages: "Messages",
   settings: "Settings",
   account: "My Account",
+  "smart-tools": "Smart Tools",
 };
 
 function pickComponent(moduleObject, possibleNames, fallbackLabel) {

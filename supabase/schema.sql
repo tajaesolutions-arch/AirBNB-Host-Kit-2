@@ -350,3 +350,30 @@ alter table if exists public.maintenance_issues add column if not exists owner_a
 alter table if exists public.maintenance_issues add column if not exists vendor_quote_link text;
 alter table if exists public.maintenance_issues add column if not exists before_photo_link text;
 alter table if exists public.maintenance_issues add column if not exists after_photo_link text;
+
+-- Premium Smart Tools extensions (optional)
+create table if not exists calendar_feeds (
+  feed_id text primary key,
+  property_id text,
+  platform text,
+  feed_name text,
+  feed_url text,
+  last_synced_at timestamptz,
+  sync_status text,
+  notes text,
+  created_at timestamptz default now()
+);
+
+create table if not exists imported_calendar_events (
+  event_id text primary key,
+  feed_id text,
+  property_id text,
+  platform text,
+  guest_name text,
+  checkin_date date,
+  checkout_date date,
+  external_uid text,
+  summary text,
+  source_status text,
+  created_at timestamptz default now()
+);
