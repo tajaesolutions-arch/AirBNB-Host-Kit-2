@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  Home,
   CalendarDays,
   Users,
   Sparkles,
@@ -21,6 +22,11 @@ const NAV_ITEMS = [
     key: "dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    key: "properties",
+    label: "Properties",
+    icon: Home,
   },
   {
     key: "bookings",
@@ -87,6 +93,7 @@ const NAV_ITEMS = [
 function isActivePage(currentPage, itemKey) {
   const groups = {
     dashboard: ["dashboard"],
+    properties: ["properties", "settings"],
     bookings: ["bookings", "booking-calendar"],
     guests: ["guests", "guest-crm"],
     cleaning: ["cleaning", "cleaning-schedule"],
