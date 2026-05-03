@@ -233,6 +233,10 @@ function SetupProgressCard({
   const totalCount = checklist.length;
   const percent =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const remainingItems = totalCount - completedCount;
+  const isSetupComplete = totalCount > 0 && remainingItems === 0;
+
+  if (isSetupComplete) return null;
 
   const toggleChecklist = () => {
     setIsOpen((previousValue) => {
@@ -269,9 +273,7 @@ function SetupProgressCard({
           <Chip tone={percent === 100 ? "green" : "teal"}>
             {percent === 100
               ? "Setup complete"
-              : `${totalCount - completedCount} item${
-                  totalCount - completedCount === 1 ? "" : "s"
-                } left`}
+              : `${remainingItems} item${remainingItems === 1 ? "" : "s"} left`}
           </Chip>
 
           <button
@@ -367,6 +369,7 @@ function EmptyDashboardSetup({
   checklist,
   onMarkComplete,
   onMarkSkipped,
+  isSetupComplete,
 }) {
   const handleRestoreDemo = () => {
     const confirmed = window.confirm(
@@ -523,12 +526,14 @@ function EmptyDashboardSetup({
         })}
       </div>
 
-      <SetupProgressCard
-        checklist={checklist}
-        onGoToPage={setPage}
-        onMarkComplete={onMarkComplete}
-        onMarkSkipped={onMarkSkipped}
-      />
+      {!isSetupComplete && (
+        <SetupProgressCard
+          checklist={checklist}
+          onGoToPage={setPage}
+          onMarkComplete={onMarkComplete}
+          onMarkSkipped={onMarkSkipped}
+        />
+      )}
     </div>
   );
 }
@@ -641,6 +646,9 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
     ]
   );
 
+  const remainingItems = setupChecklist.filter((item) => !item.completed).length;
+  const isSetupComplete = remainingItems === 0;
+
   const hasNoProperties = properties.length === 0;
 
   if (hasNoProperties) {
@@ -651,6 +659,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
         checklist={setupChecklist}
         onMarkComplete={markSetupComplete}
         onMarkSkipped={markSetupSkipped}
+        isSetupComplete={isSetupComplete}
       />
     );
   }
@@ -935,15 +944,17 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
         </div>
       </div>
 
-      <div className="dashboard-section-spacing">
-        <SetupProgressCard
-          checklist={setupChecklist}
-          onGoToPage={goToPage}
-          onMarkComplete={markSetupComplete}
-          onMarkSkipped={markSetupSkipped}
-          compact
-        />
-      </div>
+      {!isSetupComplete && (
+        <div className="dashboard-section-spacing">
+          <SetupProgressCard
+            checklist={setupChecklist}
+            onGoToPage={goToPage}
+            onMarkComplete={markSetupComplete}
+            onMarkSkipped={markSetupSkipped}
+            compact
+          />
+        </div>
+      )}
 
       {(hasNoBookings || hasNoExpenses || hasNoSupplies || hasNoMaintenance) && (
         <div className="card-sand" style={{ padding: 18, marginBottom: 22 }}>
