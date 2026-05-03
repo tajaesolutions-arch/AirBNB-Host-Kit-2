@@ -96,6 +96,7 @@ export default function TopBar({
         </div>
 
         <button
+          aria-label="Open My Account"
           className="topbar-account-btn"
           type="button"
           onClick={handleAccountClick}

@@ -66,7 +66,7 @@ export function Modal({ open, onClose, title, children, footer, wide }) {
       <div className={`modal ${wide ? "modal-wide" : ""}`} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <span className="modal-title">{title}</span>
-          <button className="btn-ghost" style={{ padding: 6 }} onClick={onClose}>
+          <button type="button" className="btn-ghost" style={{ padding: 6 }} onClick={onClose} aria-label="Close modal">
             <X size={18} />
           </button>
         </div>
@@ -92,8 +92,8 @@ export function Field({ label, helper, children, col2 }) {
 export function ConfirmBar({ onCancel, onSave, saveLabel = "Save", loading }) {
   return (
     <>
-      <button className="btn-secondary" onClick={onCancel}>Cancel</button>
-      <button className="btn-primary" onClick={onSave} disabled={loading}>
+      <button type="button" className="btn-secondary" onClick={onCancel}>Cancel</button>
+      <button type="button" className="btn-primary" onClick={onSave} disabled={loading}>
         {loading ? "Saving…" : saveLabel}
       </button>
     </>
