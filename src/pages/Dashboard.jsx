@@ -35,7 +35,6 @@ import {
   Circle,
   ChevronDown,
   ChevronUp,
-  Download,
   Wallet,
 } from "lucide-react";
 
@@ -160,7 +159,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
 
   return <div className="page dashboard-page">
     <section className="dashboard-page-header"><div className="dashboard-title-block"><h1 className="page-title">Dashboard</h1><p className="page-subtitle">{selectedMonth} · {selectedPropFilter === "ALL" ? "All Properties" : getProp(selectedPropFilter)}</p></div></section>
-    <section className="dashboard-command-bar"><label className="dashboard-toolbar-control">Property<select value={selectedPropFilter} onChange={(e)=>setPropFilter?.(e.target.value)}><option value="ALL">All</option>{properties.map((p)=><option key={p.property_id} value={p.property_id}>{p.property_name||"Unnamed"}</option>)}</select></label><label className="dashboard-toolbar-control">Month<input type="month" value={selectedMonth} onChange={(e)=>setMonthFilter?.(e.target.value)} /></label><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("bookings")}><PlusCircle size={14}/>Add Booking</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("revenue")}><ReceiptText size={14}/>Add Expense</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("settings")}><Download size={14}/>Backup / Export</button></section>
+    <section className="dashboard-command-bar"><label className="dashboard-toolbar-control">Property<select value={selectedPropFilter} onChange={(e)=>setPropFilter?.(e.target.value)}><option value="ALL">All</option>{properties.map((p)=><option key={p.property_id} value={p.property_id}>{p.property_name||"Unnamed"}</option>)}</select></label><label className="dashboard-toolbar-control">Month<input type="month" value={selectedMonth} onChange={(e)=>setMonthFilter?.(e.target.value)} /></label><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("bookings")}><PlusCircle size={14}/>Add Booking</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("revenue")}><ReceiptText size={14}/>Add Expense</button></section>
     <section className="dashboard-kpi-grid">
       <div className="dashboard-kpi-card"><DollarSign size={16}/><label>Gross Revenue</label><h3>{fmtCurrency(grossRevenue, selectedCurrency)}</h3><small>{monthBookings.length} bookings</small></div>
       <div className="dashboard-kpi-card"><TrendingUp size={16}/><label>Net Profit</label><h3>{fmtCurrency(netProfit, selectedCurrency)}</h3><small>{netProfit>=0?"Profitable":"Negative margin"}</small></div>

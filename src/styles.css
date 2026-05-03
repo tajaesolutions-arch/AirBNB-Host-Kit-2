@@ -254,9 +254,61 @@ body {
 
 .metric-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit,minmax(190px,1fr));
-    gap: 12px;
-    margin-bottom: 16px
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 14px;
+    margin-bottom: 18px
+}
+
+.kpi-grid,.page-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 14px;
+    margin-bottom: 18px
+}
+
+.page-title,.sidebar-brand-title,.auth-logo-title,.modal-title,.section-title {
+    font-family: Fraunces,serif
+}
+
+.metric-value,.dashboard-kpi-value,.num,td,th,button,input,select,textarea {
+    font-family: Manrope,ui-sans-serif,system-ui,sans-serif;
+    font-variant-numeric: tabular-nums
+}
+
+button {
+    font-weight: 600
+}
+
+td,th {
+    font-size: 13px
+}
+
+.page-subtitle,.metric-sub {
+    color: var(--muted)
+}
+
+.metric-card,.dashboard-kpi-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 20px
+}
+
+.metric-label {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none
+}
+
+.metric-value {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.1;
+    margin-top: 12px
 }
 
 .metric-card {
@@ -3692,4 +3744,11 @@ body { background: var(--app-bg); }
   .dashboard-bookings-header { display: none; }
   .dashboard-booking-row { min-width: 0; display: grid; grid-template-columns: 1fr; gap: 10px; padding: 16px; }
   .dashboard-booking-total { text-align: left; }
+}
+
+@media (max-width:1100px){
+  .kpi-grid,.page-kpi-grid,.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:620px){
+  .kpi-grid,.page-kpi-grid,.metric-grid{grid-template-columns:1fr}
 }
