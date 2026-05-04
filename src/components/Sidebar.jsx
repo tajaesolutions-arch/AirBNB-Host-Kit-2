@@ -158,6 +158,7 @@ export default function Sidebar({
           <button
             type="button"
             className="sidebar-collapse-btn"
+            style={{ minWidth: 44, minHeight: 44 }}
             onClick={onClose}
             aria-label="Close sidebar"
             title="Close sidebar"

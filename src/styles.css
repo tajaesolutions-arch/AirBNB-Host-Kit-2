@@ -4343,20 +4343,8 @@ input, select, textarea {
   .mobile-menu-trigger { display: none !important; }
 
   .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    width: min(80vw, 280px);
-    z-index: 130;
-    transform: translateX(-110%);
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 4px 0 24px rgba(0,0,0,0.25);
   }
-
-  .sidebar.sidebar-mobile,
-  .sidebar.is-mobile,
-  .sidebar.mobile { transform: translateX(0); }
 
   .sidebar.sidebar-mobile .sidebar-collapse-btn {
     min-width: 44px;
@@ -4510,9 +4498,10 @@ input, select, textarea { font-size: 16px; }
 @media (max-width: 768px) {
   .app-shell { overflow-x: clip; }
   .sidebar { display: none; }
-  .sidebar.sidebar-mobile { display: flex; width: min(86vw, 320px); max-width: 320px; height: 100dvh; overflow-y: auto; }
-  .sidebar-overlay { position: fixed; inset: 0; background: rgba(2, 12, 27, 0.5); z-index: 120; }
-  .mobile-hamburger-tab { z-index: 125; }
+  .sidebar.sidebar-mobile { display: flex; position: fixed; z-index: 130; width: min(86vw, 320px); max-width: 320px; height: 100dvh; overflow-y: auto; transform: translateX(0); }
+  .sidebar-overlay { position: fixed; inset: 0; background: rgba(2, 12, 27, 0.5); z-index: 120; display: none; }
+  .sidebar-overlay.open { display: block; }
+  .mobile-hamburger-tab { z-index: 150; }
 
   .page { padding: 16px 12px 40px; }
   .page-header-row, .page-actions { gap: 8px; }
@@ -4531,4 +4520,20 @@ input, select, textarea { font-size: 16px; }
 
 @media (max-width: 480px) {
   .table-wrap table { min-width: 640px; }
+}
+
+
+.local-mode-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px auto 0;
+  max-width: 1320px;
+  padding: 10px 12px;
+  background: var(--amber-soft);
+  border: 1px solid #EBD491;
+  border-radius: var(--radius-sm);
+  color: var(--amber);
+  font-size: 12.5px;
 }

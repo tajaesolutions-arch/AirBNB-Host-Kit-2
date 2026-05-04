@@ -153,7 +153,21 @@ function LoadingScreen({ label = "Loading your host dashboard…" }) {
   return <div className="loading-screen">{label}</div>;
 }
 
+function LocalModeBanner() {
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed) return null;
+
+  return (
+    <div className="local-mode-banner" role="status">
+      <span>Cloud sync not configured. Data is saved locally in this browser only.</span>
+      <button type="button" className="btn-ghost" onClick={() => setDismissed(true)} aria-label="Dismiss local mode notice">Dismiss</button>
+    </div>
+  );
+}
+
 function DashboardShell() {
+  const { isSupabaseConfigured } = useAuth();
   const [page, setPage] = useState("dashboard");
   const [pageAction, setPageAction] = useState(null);
   const [monthFilter, setMonthFilter] = useState(currentMonth());
@@ -319,7 +333,7 @@ function DashboardShell() {
 
         <ErrorBoundary key={page}>
           <main className="app-main main-content">
-            <div className="page-scroll-frame">{renderPage()}</div>
+            <div className="page-scroll-frame">{!isSupabaseConfigured && <LocalModeBanner />}{renderPage()}</div>
           </main>
         </ErrorBoundary>
       </div>
@@ -328,7 +342,7 @@ function DashboardShell() {
 }
 
 function AuthGate() {
-  const { user, loading, authError } = useAuth();
+  const { user, loading, authError, isSupabaseConfigured } = useAuth();
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;

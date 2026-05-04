@@ -459,6 +459,10 @@ export function AppProvider({ children }) {
   };
 
   const importBackupData = (payload) => {
+    if (JSON.stringify(payload).length > 5 * 1024 * 1024) {
+      throw new Error("Backup file is too large. Maximum size is 5MB.");
+    }
+
     const nextData = normalizeImportedBackup(payload);
     const rawSetupProgress =
       payload && typeof payload === "object" ? payload.setup_progress : {};

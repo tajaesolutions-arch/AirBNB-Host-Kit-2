@@ -31,6 +31,7 @@ import {
   Trash2,
   Download,
   Upload,
+  ClipboardList,
 } from "lucide-react";
 
 function safeArray(value) {
