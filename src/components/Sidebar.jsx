@@ -16,6 +16,7 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
+import { getAllowedNavKeysForRole } from "../utils/accessControl.js";
 
 const NAV_ITEMS = [
   {
@@ -124,6 +125,7 @@ export default function Sidebar({
   onToggleCollapse,
   mobile = false,
   onClose,
+  role = "host",
 }) {
   const handleNavigate = (nextPage) => {
     if (typeof setPage === "function") {
@@ -134,6 +136,8 @@ export default function Sidebar({
       onClose();
     }
   };
+
+  const allowedNavKeys = getAllowedNavKeysForRole(role);
 
   return (
     <aside
@@ -180,11 +184,13 @@ export default function Sidebar({
       </div>
 
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter((item) => allowedNavKeys.has(item.key)).map((item) => {
           const Icon = item.icon;
           const active = isActivePage(page, item.key);
 
-          return (
+          const allowedNavKeys = getAllowedNavKeysForRole(role);
+
+  return (
             <button
               key={item.key}
               type="button"
