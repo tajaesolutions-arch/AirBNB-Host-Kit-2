@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
+import { canAccessPage as canAccessPageByRole } from "../utils/accessControl.js";
 
 const AuthContext = createContext(null);
 const LOCAL_MODE_USER = { id: "local", email: "local" };
@@ -18,6 +19,8 @@ export function AuthProvider({ children }) {
   const [profileLoading, setProfileLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState("");
+  const [memberships, setMemberships] = useState([]);
+  const [propertyAccess, setPropertyAccess] = useState([]);
 
   const profileRequestIdRef = useRef(0);
   const PROFILE_TIMEOUT_MS = 3000;
@@ -122,6 +125,22 @@ export function AuthProvider({ children }) {
 
       if (mountedRef.current && requestId === profileRequestIdRef.current) {
         setProfile(nextProfile);
+      }
+      if (supabase) {
+        const [{ data: memberRows }, { data: accessRows }] = await Promise.all([
+          supabase
+            .from("organization_members")
+            .select("*")
+            .or(`user_id.eq.${authUser.id},email.eq.${authUser.email || ""}`),
+          supabase
+            .from("property_access")
+            .select("*")
+            .or(`user_id.eq.${authUser.id},email.eq.${authUser.email || ""}`),
+        ]);
+        if (mountedRef.current && requestId === profileRequestIdRef.current) {
+          setMemberships(Array.isArray(memberRows) ? memberRows : []);
+          setPropertyAccess(Array.isArray(accessRows) ? accessRows : []);
+        }
       }
     } catch (err) {
       if (mountedRef.current && requestId === profileRequestIdRef.current) {
@@ -367,7 +386,17 @@ export function AuthProvider({ children }) {
     });
   };
 
+  const activeMembership = memberships.find((m) => m.status === "active") || null;
+  const activeOrganization = activeMembership?.organization_id || null;
+  const activeRole = activeMembership?.role || "host_admin";
+  const allowedPropertyIds = propertyAccess
+    .filter((row) => !activeOrganization || row.organization_id === activeOrganization)
+    .map((row) => row.property_id)
+    .filter(Boolean);
   const isApproved = profile?.account_status === "approved";
+  const hasRole = (role) => activeRole === role;
+  const canAccessPage = (pageKey) => canAccessPageByRole(activeRole, pageKey);
+  const canAccessProperty = (propertyId) => activeRole === "host_admin" || allowedPropertyIds.includes(propertyId);
 
   const value = useMemo(
     () => ({
@@ -378,6 +407,17 @@ export function AuthProvider({ children }) {
       loading,
       authError,
       isApproved,
+      memberships,
+      activeOrganization,
+      activeRole,
+      allowedPropertyIds,
+      isHostAdmin: hasRole("host_admin"),
+      isPropertyManager: hasRole("property_manager"),
+      isCleaner: hasRole("cleaner"),
+      isOwner: hasRole("owner"),
+      hasRole,
+      canAccessPage,
+      canAccessProperty,
       isSupabaseConfigured,
       signIn,
       signUp,
@@ -387,7 +427,7 @@ export function AuthProvider({ children }) {
       updateProfile,
       completeOnboarding,
     }),
-    [session, user, profile, profileLoading, loading, authError, isApproved]
+    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, activeOrganization, activeRole, allowedPropertyIds]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

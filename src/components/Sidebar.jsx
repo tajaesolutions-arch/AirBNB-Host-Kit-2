@@ -15,7 +15,11 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Shield,
+  BrushCleaning,
+  Building2,
 } from "lucide-react";
+import { ROLE_NAVIGATION } from "../utils/accessControl.js";
 
 const NAV_ITEMS = [
   {
@@ -119,6 +123,7 @@ function isActivePage(currentPage, itemKey) {
 export default function Sidebar({
   page,
   setPage,
+  activeRole = "host_admin",
   collapsed = false,
   onToggleCollapse,
   mobile = false,
@@ -133,6 +138,12 @@ export default function Sidebar({
       onClose();
     }
   };
+
+  const dynamicItems = NAV_ITEMS.concat([
+    { key: "team-access", label: "Team Access", icon: Shield },
+    { key: "cleaner-portal", label: "Cleaner Portal", icon: BrushCleaning },
+    { key: "owner-portal", label: "Owner Portal", icon: Building2 },
+  ]).filter((item) => ROLE_NAVIGATION[activeRole]?.includes(item.key));
 
   return (
     <aside
@@ -179,7 +190,7 @@ export default function Sidebar({
       </div>
 
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {NAV_ITEMS.map((item) => {
+        {dynamicItems.map((item) => {
           const Icon = item.icon;
           const active = isActivePage(page, item.key);
 

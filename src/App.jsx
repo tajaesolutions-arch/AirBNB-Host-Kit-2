@@ -14,6 +14,11 @@ import * as SuppliesRevenueLeadsModule from "./pages/SuppliesRevenuLeads.jsx";
 import * as OwnerTaxMessagesSettingsModule from "./pages/OwnerReportTaxSOPsMessagesSettings.jsx";
 import * as AccountModule from "./pages/Account.jsx";
 import * as SmartToolsModule from "./pages/SmartTools.jsx";
+import TeamAccess from "./pages/TeamAccess.jsx";
+import CleanerPortal from "./pages/CleanerPortal.jsx";
+import OwnerPortal from "./pages/OwnerPortal.jsx";
+import AccessDenied from "./pages/AccessDenied.jsx";
+import { canAccessPage, getDefaultPageForRole } from "./utils/accessControl.js";
 
 import "./styles.css";
 
@@ -168,8 +173,8 @@ function LocalModeBanner() {
 }
 
 function DashboardShell() {
-  const { isSupabaseConfigured } = useAuth();
-  const [page, setPage] = useState("dashboard");
+  const { isSupabaseConfigured, activeRole = "host_admin" } = useAuth();
+  const [page, setPage] = useState(getDefaultPageForRole(activeRole));
   const [pageAction, setPageAction] = useState(null);
   const [monthFilter, setMonthFilter] = useState(currentMonth());
   const [propFilter, setPropFilter] = useState("ALL");
@@ -202,6 +207,10 @@ function DashboardShell() {
   };
 
   const goToPage = (nextPage, action = null) => {
+    if (!canAccessPage(activeRole, nextPage)) {
+      setPage("access-denied");
+      return;
+    }
     setPage(nextPage);
     setPageAction(action);
     closeMobileSidebar();
@@ -223,6 +232,19 @@ function DashboardShell() {
     };
 
     switch (page) {
+      case "cleaner-portal":
+      case "cleaner-completed":
+        return <CleanerPortal {...shared} />;
+      case "owner-portal":
+      case "owner-properties":
+      case "owner-bookings":
+      case "owner-revenue":
+      case "owner-maintenance":
+        return <OwnerPortal {...shared} />;
+      case "team-access":
+        return <TeamAccess {...shared} />;
+      case "access-denied":
+        return <AccessDenied />;
       case "dashboard":
         return <Dashboard {...shared} />;
 
@@ -300,6 +322,7 @@ function DashboardShell() {
         <Sidebar
           page={page}
           setPage={goToPage}
+          activeRole={activeRole}
           collapsed={sidebarCollapsed}
           onToggleCollapse={toggleSidebarCollapsed}
         />
@@ -314,6 +337,7 @@ function DashboardShell() {
             <Sidebar
               page={page}
               setPage={goToPage}
+              activeRole={activeRole}
               collapsed={false}
               mobile
               onClose={closeMobileSidebar}
