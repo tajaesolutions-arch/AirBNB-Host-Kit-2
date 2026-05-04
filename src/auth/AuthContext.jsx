@@ -10,6 +10,13 @@ import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 
 const AuthContext = createContext(null);
 const LOCAL_MODE_USER = { id: "local", email: "local" };
+const LOCAL_MODE_PROFILE = {
+  id: "local",
+  email: "local",
+  role: "admin",
+  account_status: "approved",
+  onboarding_completed: true,
+};
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -160,7 +167,7 @@ export function AuthProvider({ children }) {
         if (!isSupabaseConfigured || !supabase) {
           setSession(null);
           setUser(LOCAL_MODE_USER);
-          setProfile(null);
+          setProfile(LOCAL_MODE_PROFILE);
           setProfileLoading(false);
           return;
         }
