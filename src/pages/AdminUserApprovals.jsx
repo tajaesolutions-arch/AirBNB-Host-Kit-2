@@ -12,7 +12,7 @@ export default function AdminUserApprovals() {
     setError("");
     const { data, error: queryError } = await supabase
       .from("profiles")
-      .select("id, email, role, account_status, created_at")
+      .select("id, email, role, account_status, created_at, approved_at, suspended_at, rejected_at")
       .order("created_at", { ascending: false });
 
     if (queryError) {
@@ -66,9 +66,9 @@ export default function AdminUserApprovals() {
                 <td>{p.created_at ? new Date(p.created_at).toLocaleString() : "—"}</td>
                 <td>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button className="btn" onClick={() => updateUser(p.id, { account_status: "approved", approved_at: new Date().toISOString() })}>Approve</button>
-                    <button className="btn-secondary" onClick={() => updateUser(p.id, { account_status: "suspended", suspended_at: new Date().toISOString() })}>Suspend</button>
-                    <button className="btn-ghost" onClick={() => updateUser(p.id, { account_status: "approved", suspended_at: null, rejected_at: null })}>Reactivate</button>
+                    <button className="btn" onClick={() => updateUser(p.id, { account_status: "approved", approved_at: new Date().toISOString(), suspended_at: null, rejected_at: null })}>Approve</button>
+                    <button className="btn-secondary" onClick={() => updateUser(p.id, { account_status: "suspended", suspended_at: new Date().toISOString(), rejected_at: null })}>Suspend</button>
+                    <button className="btn-ghost" onClick={() => updateUser(p.id, { account_status: "approved", approved_at: new Date().toISOString(), suspended_at: null, rejected_at: null })}>Reactivate</button>
                   </div>
                 </td>
               </tr>
