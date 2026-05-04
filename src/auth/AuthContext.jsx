@@ -143,6 +143,16 @@ export function AuthProvider({ children }) {
         }
       }
     } catch (err) {
+      const message = err?.message || "";
+      const missingTables =
+        /organization_members|property_access|relation|schema cache|could not find/i.test(
+          message
+        );
+      if (missingTables && mountedRef.current && requestId === profileRequestIdRef.current) {
+        setMemberships([]);
+        setPropertyAccess([]);
+        return;
+      }
       if (mountedRef.current && requestId === profileRequestIdRef.current) {
         setAuthError(formatProfileError(err));
       }

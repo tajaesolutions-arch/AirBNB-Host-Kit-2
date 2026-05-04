@@ -56,3 +56,69 @@ alter table if exists public.cleaning_tasks add column if not exists task_delive
 create or replace function public.current_org_ids() returns setof uuid language sql stable as $$
   select organization_id from public.organization_members where (user_id = auth.uid() or lower(email)=lower(coalesce(auth.jwt()->>'email',''))) and status='active'
 $$;
+
+create or replace function public.current_user_role_for_org(org_id uuid) returns text language sql stable as $$
+  select role from public.organization_members
+  where organization_id = org_id
+    and status='active'
+    and (user_id = auth.uid() or lower(email)=lower(coalesce(auth.jwt()->>'email','')))
+  limit 1
+$$;
+
+create or replace function public.current_user_can_access_property(org_id uuid, property_key text) returns boolean language sql stable as $$
+  select exists (
+    select 1
+    from public.organization_members om
+    where om.organization_id = org_id
+      and om.status='active'
+      and (om.user_id = auth.uid() or lower(om.email)=lower(coalesce(auth.jwt()->>'email','')))
+      and om.role = 'host_admin'
+  )
+  or exists (
+    select 1
+    from public.property_access pa
+    where pa.organization_id = org_id
+      and pa.property_id = property_key
+      and (pa.user_id = auth.uid() or lower(pa.email)=lower(coalesce(auth.jwt()->>'email','')))
+  )
+$$;
+
+create or replace function public.current_user_can_update_cleaning_task(org_id uuid, property_key text) returns boolean language sql stable as $$
+  select exists (
+    select 1 from public.organization_members om
+    where om.organization_id = org_id and om.status='active'
+      and (om.user_id = auth.uid() or lower(om.email)=lower(coalesce(auth.jwt()->>'email','')))
+      and om.role in ('host_admin','property_manager')
+  ) or exists (
+    select 1 from public.property_access pa
+    where pa.organization_id = org_id and pa.property_id = property_key
+      and (pa.user_id = auth.uid() or lower(pa.email)=lower(coalesce(auth.jwt()->>'email','')))
+      and (pa.role in ('property_manager','cleaner') and coalesce(pa.can_update_cleaning,false)=true)
+  )
+$$;
+
+alter table public.organizations enable row level security;
+alter table public.organization_members enable row level security;
+alter table public.property_access enable row level security;
+alter table public.invitations enable row level security;
+
+drop policy if exists org_admin_all_orgs on public.organizations;
+create policy org_admin_all_orgs on public.organizations for all
+  using (owner_user_id = auth.uid() or public.current_user_role_for_org(id) = 'host_admin')
+  with check (owner_user_id = auth.uid() or public.current_user_role_for_org(id) = 'host_admin');
+
+drop policy if exists org_members_view on public.organization_members;
+create policy org_members_view on public.organization_members for select
+  using (organization_id in (select public.current_org_ids()));
+
+drop policy if exists org_members_admin_manage on public.organization_members;
+create policy org_members_admin_manage on public.organization_members for all
+  using (public.current_user_role_for_org(organization_id)='host_admin')
+  with check (public.current_user_role_for_org(organization_id)='host_admin');
+
+drop policy if exists property_access_view on public.property_access;
+create policy property_access_view on public.property_access for select
+  using (
+    public.current_user_role_for_org(organization_id)='host_admin'
+    or (user_id = auth.uid() or lower(email)=lower(coalesce(auth.jwt()->>'email','')))
+  );
