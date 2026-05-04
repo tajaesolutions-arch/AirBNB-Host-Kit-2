@@ -9,6 +9,7 @@ import {
   Field,
   ConfirmBar,
   Chip,
+  CurrencyInput,
 } from "../components/index.jsx";
 import {
   uid,
@@ -659,11 +660,10 @@ function CleaningForm({
         </Field>
 
         <Field label={`Cleaning Cost (${currency})`}>
-          <input
-            type="number"
-            min="0"
+          <CurrencyInput
+            min={0}
             value={c.cleaning_cost ?? 0}
-            onChange={(e) => set("cleaning_cost", e.target.value)}
+            onChange={(nextValue) => set("cleaning_cost", nextValue)}
           />
         </Field>
       </div>
@@ -1173,20 +1173,18 @@ function MaintenanceForm({
         </Field>
 
         <Field label={`Estimated Cost (${currency})`}>
-          <input
-            type="number"
-            min="0"
+          <CurrencyInput
+            min={0}
             value={m.estimated_cost ?? 0}
-            onChange={(e) => set("estimated_cost", e.target.value)}
+            onChange={(nextValue) => set("estimated_cost", nextValue)}
           />
         </Field>
 
         <Field label={`Actual Cost (${currency})`}>
-          <input
-            type="number"
-            min="0"
+          <CurrencyInput
+            min={0}
             value={m.actual_cost ?? 0}
-            onChange={(e) => set("actual_cost", e.target.value)}
+            onChange={(nextValue) => set("actual_cost", nextValue)}
           />
         </Field>
 

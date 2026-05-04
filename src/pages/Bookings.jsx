@@ -6,6 +6,7 @@ import {
   Field,
   ConfirmBar,
   Chip,
+  CurrencyInput,
 } from "../components/index.jsx";
 import {
   uid,
@@ -466,38 +467,34 @@ function BookingForm({
         </Field>
 
         <Field label={`Nightly Rate (${currency})`} helper={`${nights} nights × rate`}>
-          <input
-            type="number"
-            min="0"
+          <CurrencyInput
+            min={0}
             value={b.nightly_rate ?? 0}
-            onChange={(e) => set("nightly_rate", e.target.value)}
+            onChange={(nextValue) => set("nightly_rate", nextValue)}
           />
         </Field>
 
         <Field label={`Cleaning Fee (${currency})`}>
-          <input
-            type="number"
-            min="0"
+          <CurrencyInput
+            min={0}
             value={b.cleaning_fee ?? 0}
-            onChange={(e) => set("cleaning_fee", e.target.value)}
+            onChange={(nextValue) => set("cleaning_fee", nextValue)}
           />
         </Field>
 
         <Field label={`Extra Fees (${currency})`} helper="Late checkout, extra guest, etc.">
-          <input
-            type="number"
-            min="0"
+          <CurrencyInput
+            min={0}
             value={b.extra_fees ?? 0}
-            onChange={(e) => set("extra_fees", e.target.value)}
+            onChange={(nextValue) => set("extra_fees", nextValue)}
           />
         </Field>
 
         <Field label={`Discounts (${currency})`}>
-          <input
-            type="number"
-            min="0"
+          <CurrencyInput
+            min={0}
             value={b.discounts ?? 0}
-            onChange={(e) => set("discounts", e.target.value)}
+            onChange={(nextValue) => set("discounts", nextValue)}
           />
         </Field>
       </div>

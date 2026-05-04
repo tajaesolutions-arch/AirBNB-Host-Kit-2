@@ -9,6 +9,7 @@ import {
   Field,
   ConfirmBar,
   Chip,
+  CurrencyInput,
 } from "../components/index.jsx";
 import {
   uid,
@@ -323,11 +324,10 @@ function SupplyForm({ record, onClose, onSave, onDelete, properties, currency })
         </Field>
 
         <Field label={`Unit Cost (${currency})`}>
-          <input
-            type="number"
-            min="0"
+          <CurrencyInput
+            min={0}
             value={s.unit_cost ?? 0}
-            onChange={(event) => set("unit_cost", event.target.value)}
+            onChange={(nextValue) => set("unit_cost", nextValue)}
           />
         </Field>
 
@@ -737,11 +737,10 @@ function ExpenseForm({ record, onClose, onSave, onDelete, properties, currency }
         </Field>
 
         <Field label={`Amount (${currency})`}>
-          <input
-            type="number"
-            min="0"
+          <CurrencyInput
+            min={0}
             value={e.amount ?? 0}
-            onChange={(event) => set("amount", event.target.value)}
+            onChange={(nextValue) => set("amount", nextValue)}
           />
         </Field>
       </div>
@@ -1267,11 +1266,10 @@ function LeadForm({ record, onClose, onSave, onDelete, properties, currency }) {
         </Field>
 
         <Field label={`Budget (${currency})`}>
-          <input
-            type="number"
-            min="0"
+          <CurrencyInput
+            min={0}
             value={l.budget ?? 0}
-            onChange={(event) => set("budget", event.target.value)}
+            onChange={(nextValue) => set("budget", nextValue)}
           />
         </Field>
 

@@ -9,6 +9,7 @@ import {
   Disclaimer,
   Modal,
   ConfirmBar,
+  CurrencyInput,
 } from "../components/index.jsx";
 import {
   bookingTotal,
@@ -1156,14 +1157,13 @@ export function Settings() {
               <label className="field-label">
                 Default Nightly Rate ({currentCurrency})
               </label>
-              <input
-                type="number"
+              <CurrencyInput
                 min={0}
                 value={propForm.default_nightly_rate || 0}
-                onChange={(event) =>
+                onChange={(nextValue) =>
                   setPropForm((current) => ({
                     ...current,
-                    default_nightly_rate: Number(event.target.value),
+                    default_nightly_rate: nextValue,
                   }))
                 }
               />
@@ -1173,14 +1173,13 @@ export function Settings() {
               <label className="field-label">
                 Default Cleaning Fee ({currentCurrency})
               </label>
-              <input
-                type="number"
+              <CurrencyInput
                 min={0}
                 value={propForm.default_cleaning_fee || 0}
-                onChange={(event) =>
+                onChange={(nextValue) =>
                   setPropForm((current) => ({
                     ...current,
-                    default_cleaning_fee: Number(event.target.value),
+                    default_cleaning_fee: nextValue,
                   }))
                 }
               />

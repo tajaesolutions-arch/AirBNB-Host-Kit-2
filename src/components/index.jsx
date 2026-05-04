@@ -1,5 +1,20 @@
 import { Info, X } from "lucide-react";
 
+function parseCurrencyInput(value) {
+  const cleanValue = String(value ?? "").replace(/,/g, "").replace(/[^\d.]/g, "");
+  if (!cleanValue) return "";
+  const [intPart = "", ...decimalParts] = cleanValue.split(".");
+  const normalizedInt = intPart.replace(/^0+(?=\d)/, "") || "0";
+  const withCommas = normalizedInt.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  if (!decimalParts.length) return withCommas;
+  return `${withCommas}.${decimalParts.join("").slice(0, 2)}`;
+}
+
+function toNumericCurrencyValue(value) {
+  const numericValue = Number(String(value ?? "").replace(/,/g, ""));
+  return Number.isFinite(numericValue) ? numericValue : 0;
+}
+
 // ── CHIP ────────────────────────────────────────────────────
 export function Chip({ tone = "gray", children, icon: Icon }) {
   return (
@@ -107,5 +122,22 @@ export function Disclaimer({ text }) {
       <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
       <span>{text}</span>
     </div>
+  );
+}
+
+export function CurrencyInput({ value, onChange, placeholder = "0", min = 0, ...props }) {
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      placeholder={placeholder}
+      value={parseCurrencyInput(value)}
+      onChange={(event) => onChange(toNumericCurrencyValue(event.target.value))}
+      onBlur={(event) => {
+        if (!event.target.value) onChange(0);
+      }}
+      min={min}
+      {...props}
+    />
   );
 }
