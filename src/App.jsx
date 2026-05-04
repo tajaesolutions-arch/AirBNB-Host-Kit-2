@@ -388,7 +388,7 @@ function AppDataGate({ children }) {
 }
 
 function AuthGate() {
-  const { user, session, profile, loading, profileLoading, authError } = useAuth();
+  const { user, session, profile, loading, authError } = useAuth();
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;
@@ -400,10 +400,6 @@ function AuthGate() {
 
   if (!user) {
     return <AuthScreen />;
-  }
-
-  if (user && profileLoading) {
-    return <LoadingScreen label="Loading your account..." />;
   }
 
   return (
