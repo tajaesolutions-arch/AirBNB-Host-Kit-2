@@ -14,6 +14,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState("");
 
@@ -103,11 +104,16 @@ export function AuthProvider({ children }) {
         setUser(currentUser);
 
         if (currentUser) {
+          setProfileLoading(true);
           ensureProfile(currentUser).then((nextProfile) => {
-            if (mounted) setProfile(nextProfile);
+            if (mounted) {
+              setProfile(nextProfile);
+              setProfileLoading(false);
+            }
           });
         } else {
           setProfile(null);
+          setProfileLoading(false);
         }
       } catch (err) {
         console.error("Auth session error:", err?.message || err);
@@ -119,6 +125,7 @@ export function AuthProvider({ children }) {
           setSession(null);
           setUser(null);
           setProfile(null);
+          setProfileLoading(false);
         }
       } finally {
         if (mounted) {
@@ -141,17 +148,23 @@ export function AuthProvider({ children }) {
             setUser(nextUser);
 
             if (nextUser) {
+              setProfileLoading(true);
               ensureProfile(nextUser).then((nextProfile) => {
-                if (mounted) setProfile(nextProfile);
+                if (mounted) {
+                  setProfile(nextProfile);
+                  setProfileLoading(false);
+                }
               });
             } else {
               setProfile(null);
+              setProfileLoading(false);
             }
 
             setAuthError("");
           } catch (err) {
             console.error("Auth state change error:", err?.message || err);
             setAuthError(err?.message || "Authentication error.");
+            setProfileLoading(false);
           } finally {
             setLoading(false);
           }
@@ -294,6 +307,9 @@ export function AuthProvider({ children }) {
 
   const completeOnboarding = async (choice) => {
     if (!user) throw new Error("You must be logged in.");
+    if (choice !== "fresh" && choice !== "sample") {
+      throw new Error("Invalid onboarding choice.");
+    }
     return updateProfile({
       onboarding_completed: true,
       onboarding_choice: choice,
@@ -306,6 +322,7 @@ export function AuthProvider({ children }) {
       session,
       user,
       profile,
+      profileLoading,
       loading,
       authError,
       isSupabaseConfigured,
@@ -317,7 +334,7 @@ export function AuthProvider({ children }) {
       updateProfile,
       completeOnboarding,
     }),
-    [session, user, profile, loading, authError]
+    [session, user, profile, profileLoading, loading, authError]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
