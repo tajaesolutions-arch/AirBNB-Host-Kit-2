@@ -158,7 +158,7 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
       </aside>
     </section>
 
-    <section className="dashboard-kpi-grid">
+    <section className="dashboard-bottom-grid">
       <article className="card"><div className="dashboard-card-header"><h3>Profit Breakdown</h3></div><div className="dashboard-list"><div className="dashboard-list-item"><span>Gross Revenue</span><strong>{fmtCurrency(grossRevenue, selectedCurrency)}</strong></div><div className="dashboard-list-item"><span>Expenses</span><strong>{fmtCurrency(totalExpenses, selectedCurrency)}</strong></div><div className="dashboard-list-item"><span>Tax Reserve</span><strong>{fmtCurrency(taxReserve, selectedCurrency)}</strong></div><div className="dashboard-list-item"><span>Management Fee</span><strong>{fmtCurrency(managementFee, selectedCurrency)}</strong></div><div className="dashboard-list-item"><span>Net Profit</span><strong>{fmtCurrency(netProfit, selectedCurrency)}</strong></div></div></article>
       <article className="card"><div className="dashboard-card-header"><h3>Cleaning Due</h3></div><div className="dashboard-list">{cleaningDue.length === 0 ? <p className="dashboard-empty">No cleaning tasks due right now.</p> : cleaningDue.slice(0, 5).map((item) => <div className="dashboard-list-item" key={item.cleaning_id}><div><strong>{properties.find((p) => p.property_id === item.property_id)?.property_name || "—"}</strong><p>{fmtDateShort(item.cleaning_date)}</p></div><Chip tone={cleaningStatusChip(item.cleaning_status)}>{item.cleaning_status || "—"}</Chip></div>)}</div></article>
     </section>
