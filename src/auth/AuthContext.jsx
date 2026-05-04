@@ -84,6 +84,10 @@ export function AuthProvider({ children }) {
         default_currency: "JMD",
         default_tax_reserve_percentage: 0.15,
         default_management_fee_percentage: 0.15,
+        account_status: "pending",
+        role: "host",
+        approved_at: null,
+        approved_by: null,
         onboarding_completed: false,
         onboarding_choice: null,
         onboarded_at: null,
@@ -363,6 +367,8 @@ export function AuthProvider({ children }) {
     });
   };
 
+  const isApproved = profile?.account_status === "approved";
+
   const value = useMemo(
     () => ({
       session,
@@ -371,6 +377,7 @@ export function AuthProvider({ children }) {
       profileLoading,
       loading,
       authError,
+      isApproved,
       isSupabaseConfigured,
       signIn,
       signUp,
@@ -380,7 +387,7 @@ export function AuthProvider({ children }) {
       updateProfile,
       completeOnboarding,
     }),
-    [session, user, profile, profileLoading, loading, authError]
+    [session, user, profile, profileLoading, loading, authError, isApproved]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

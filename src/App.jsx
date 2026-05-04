@@ -340,6 +340,45 @@ function DashboardShell() {
   );
 }
 
+
+function AccountStatusScreen({ status, email, onSignOut }) {
+  const statusMap = {
+    pending: {
+      title: "Your account is pending approval",
+      body: "Thanks for signing up. Your host workspace is waiting for manual approval before access is enabled.",
+    },
+    suspended: {
+      title: "Your account is suspended",
+      body: "This account currently cannot access the dashboard. Contact support if you believe this is a mistake.",
+    },
+    rejected: {
+      title: "Access was not approved",
+      body: "This account has not been approved for access to the beta.",
+    },
+  };
+
+  const content = statusMap[status] || {
+    title: "Account access unavailable",
+    body: "Your account status does not currently allow dashboard access.",
+  };
+
+  return (
+    <div className="approval-shell">
+      <div className="approval-card">
+        <p className="approval-kicker">Account status</p>
+        <h1 className="approval-title">{content.title}</h1>
+        <p className="approval-body">{content.body}</p>
+        <p className="approval-meta">Signed in as: {email || "Unknown email"}</p>
+        <div className="approval-actions">
+          <button type="button" className="btn" onClick={onSignOut}>
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AuthErrorView({ message, showSignOut }) {
   const { signOut } = useAuth();
   const databaseIssue = /database setup issue|schema cache|could not find|column|relation|violates row-level security|invalid input syntax/i.test(message || "");
@@ -390,7 +429,7 @@ function AppDataGate({ children }) {
 }
 
 function AuthGate() {
-  const { user, session, profile, loading, authError } = useAuth();
+  const { user, session, profile, profileLoading, loading, authError, signOut } = useAuth();
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;
@@ -402,6 +441,20 @@ function AuthGate() {
 
   if (!user) {
     return <AuthScreen />;
+  }
+
+  if (profileLoading || !profile) {
+    return <LoadingScreen label="Checking account approval…" />;
+  }
+
+  if (profile.account_status !== "approved") {
+    return (
+      <AccountStatusScreen
+        status={profile.account_status}
+        email={user.email}
+        onSignOut={signOut}
+      />
+    );
   }
 
   return (

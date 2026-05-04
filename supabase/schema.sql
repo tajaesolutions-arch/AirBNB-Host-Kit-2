@@ -26,6 +26,10 @@ create table if not exists public.profiles (
   default_currency text default 'JMD',
   default_tax_reserve_percentage numeric default 0.15,
   default_management_fee_percentage numeric default 0.15,
+  account_status text not null default 'pending',
+  role text not null default 'host',
+  approved_at timestamptz,
+  approved_by uuid references auth.users(id),
   onboarding_completed boolean not null default false,
   onboarding_choice text,
   onboarded_at timestamptz,
@@ -48,6 +52,32 @@ drop trigger if exists profiles_set_updated_at on public.profiles;
 create trigger profiles_set_updated_at
 before update on public.profiles
 for each row execute function public.set_updated_at();
+
+
+alter table public.profiles add column if not exists account_status text not null default 'pending';
+alter table public.profiles add column if not exists role text not null default 'host';
+alter table public.profiles add column if not exists approved_at timestamptz;
+alter table public.profiles add column if not exists approved_by uuid references auth.users(id);
+
+alter table public.profiles drop constraint if exists profiles_account_status_check;
+alter table public.profiles add constraint profiles_account_status_check check (account_status in ('pending', 'approved', 'rejected', 'suspended'));
+
+alter table public.profiles drop constraint if exists profiles_role_check;
+alter table public.profiles add constraint profiles_role_check check (role in ('host', 'admin'));
+
+create or replace function public.is_approved_user()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where id = auth.uid()
+      and account_status = 'approved'
+  );
+$$;
 
 -- ============================================================
 -- User-owned data tables
@@ -322,16 +352,16 @@ begin
     execute format('alter table public.%I enable row level security', t);
 
     execute format('drop policy if exists "Users can view own records" on public.%I', t);
-    execute format('create policy "Users can view own records" on public.%I for select using (auth.uid() = user_id)', t);
+    execute format('create policy "Users can view own records" on public.%I for select using (auth.uid() = user_id and public.is_approved_user())', t);
 
     execute format('drop policy if exists "Users can insert own records" on public.%I', t);
-    execute format('create policy "Users can insert own records" on public.%I for insert with check (auth.uid() = user_id)', t);
+    execute format('create policy "Users can insert own records" on public.%I for insert with check (auth.uid() = user_id and public.is_approved_user())', t);
 
     execute format('drop policy if exists "Users can update own records" on public.%I', t);
-    execute format('create policy "Users can update own records" on public.%I for update using (auth.uid() = user_id) with check (auth.uid() = user_id)', t);
+    execute format('create policy "Users can update own records" on public.%I for update using (auth.uid() = user_id and public.is_approved_user()) with check (auth.uid() = user_id and public.is_approved_user())', t);
 
     execute format('drop policy if exists "Users can delete own records" on public.%I', t);
-    execute format('create policy "Users can delete own records" on public.%I for delete using (auth.uid() = user_id)', t);
+    execute format('create policy "Users can delete own records" on public.%I for delete using (auth.uid() = user_id and public.is_approved_user())', t);
   end loop;
 end $$;
 
