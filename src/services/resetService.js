@@ -112,31 +112,36 @@ export async function resetAccountToSampleData() {
       rows: [
         {
           user_id: userId,
-          default_currency: DEFAULT_SETTINGS.default_currency || "JMD",
-          airbnb_currency: DEFAULT_SETTINGS.airbnb_currency || "USD",
-          platform_fee_percentage:
-            DEFAULT_SETTINGS.platform_fee_percentage || 0.03,
-          management_fee_percentage:
-            DEFAULT_SETTINGS.management_fee_percentage || 0.15,
-          tax_reserve_percentage:
-            DEFAULT_SETTINGS.tax_reserve_percentage || 0.15,
-          default_checkin_time: DEFAULT_SETTINGS.default_checkin_time || "15:00",
-          default_checkout_time:
-            DEFAULT_SETTINGS.default_checkout_time || "11:00",
-          host_name: DEFAULT_SETTINGS.host_name || "Your Host Name",
-          host_phone: DEFAULT_SETTINGS.host_phone || "",
-          host_email: DEFAULT_SETTINGS.host_email || "",
-          business_name:
-            DEFAULT_SETTINGS.business_name || "Your Hospitality Co.",
+          data: {
+            ...DEFAULT_SETTINGS,
+            default_currency: DEFAULT_SETTINGS.default_currency || "JMD",
+            airbnb_currency: DEFAULT_SETTINGS.airbnb_currency || "USD",
+          },
         },
       ],
+      onConflict: "user_id",
     },
   ];
+
+  const onConflictMap = {
+    properties: "user_id,property_id",
+    guests: "user_id,guest_id",
+    bookings: "user_id,booking_id",
+    cleaning_tasks: "user_id,cleaning_id",
+    maintenance_issues: "user_id,issue_id",
+    supplies: "user_id,supply_id",
+    expenses: "user_id,expense_id",
+    direct_booking_leads: "user_id,lead_id",
+  };
 
   for (const insert of inserts) {
     if (!insert.rows || insert.rows.length === 0) continue;
 
-    const { error } = await supabase.from(insert.table).insert(insert.rows);
+    const onConflict = insert.onConflict || onConflictMap[insert.table];
+    const query = supabase.from(insert.table);
+    const { error } = onConflict
+      ? await query.upsert(insert.rows, { onConflict })
+      : await query.insert(insert.rows);
 
     if (error) {
       throw new Error(`Could not load ${insert.table}: ${error.message}`);
