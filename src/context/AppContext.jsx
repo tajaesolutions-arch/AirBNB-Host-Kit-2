@@ -68,13 +68,14 @@ const normalizeImportedBackup = (payload) => {
     maintenanceApprovals: safeArray(source.maintenanceApprovals), settings: normalizeSettings(safeSettings(source.settings)),
   };
 };
+const isDatabaseSetupError = (message = "") => /schema cache|could not find|column|relation|violates row-level security|invalid input syntax/i.test(message);
 const parseSchemaCacheError = (error) => {
   const message = error?.message || "";
   const code = error?.code || "";
   const missingColumnMatch = message.match(/column ['"]?([^'"]+)['"]?/i) || message.match(/'([^']+)' column/i);
-  if (code === "PGRST204" || /schema cache|missing|required column|could not find/i.test(message)) {
+  if (code === "PGRST204" || isDatabaseSetupError(message)) {
     const missingColumn = missingColumnMatch?.[1] || "";
-    return `Database setup issue: sample data could not be loaded because the Supabase schema is missing a required column.${missingColumn ? ` Missing column: ${missingColumn}.` : ""}`;
+    return `Database Setup Issue: The app could not save data because the Supabase database schema does not match the app data model.${missingColumn ? ` Missing column: ${missingColumn}.` : ""} Raw error: ${message}`;
   }
   return "";
 };
@@ -217,17 +218,20 @@ export function AppProvider({ children }) {
     const next = normalizeImportedBackup(payload);
     try {
       if (signedInUserId) {
-        await Promise.all([
-          upsertUserRows("properties", next.properties, signedInUserId, "property_id"),
-          upsertUserRows("bookings", next.bookings, signedInUserId, "booking_id"),
-          upsertUserRows("guests", next.guests, signedInUserId, "guest_id"),
-          upsertUserRows("cleaning_tasks", next.cleaning, signedInUserId, "cleaning_id"),
-          upsertUserRows("maintenance_issues", next.maintenance, signedInUserId, "issue_id"),
-          upsertUserRows("supplies", next.supplies, signedInUserId, "supply_id"),
-          upsertUserRows("expenses", next.expenses, signedInUserId, "expense_id"),
-          upsertUserRows("direct_booking_leads", next.leads, signedInUserId, "lead_id"),
-          upsertUserSettings(signedInUserId, next.settings),
-        ]);
+        const syncTasks = [
+          ["properties", () => upsertUserRows("properties", next.properties, signedInUserId, "property_id")],
+          ["bookings", () => upsertUserRows("bookings", next.bookings, signedInUserId, "booking_id")],
+          ["guests", () => upsertUserRows("guests", next.guests, signedInUserId, "guest_id")],
+          ["cleaning_tasks", () => upsertUserRows("cleaning_tasks", next.cleaning, signedInUserId, "cleaning_id")],
+          ["maintenance_issues", () => upsertUserRows("maintenance_issues", next.maintenance, signedInUserId, "issue_id")],
+          ["supplies", () => upsertUserRows("supplies", next.supplies, signedInUserId, "supply_id")],
+          ["expenses", () => upsertUserRows("expenses", next.expenses, signedInUserId, "expense_id")],
+          ["direct_booking_leads", () => upsertUserRows("direct_booking_leads", next.leads, signedInUserId, "lead_id")],
+          ["settings", () => upsertUserSettings(signedInUserId, next.settings)],
+        ];
+        for (const [tableName, task] of syncTasks) {
+          try { await task(); } catch (tableError) { throw new Error(`Table ${tableName}: ${tableError?.message || "Unknown Supabase error"}`); }
+        }
       }
       setProperties(next.properties); setBookings(next.bookings); setGuests(next.guests); setCleaning(next.cleaning); setMaintenance(next.maintenance); setSupplies(next.supplies); setExpenses(next.expenses); setLeads(next.leads); setCalendarEvents(next.calendarEvents); setQuotes(next.quotes); setMessageHistory(next.messageHistory); setReviewTasks(next.reviewTasks); setMessageDrafts(next.messageDrafts); setCalendarFeeds(next.calendarFeeds); setImportedCalendarEvents(next.importedCalendarEvents); setPhotoProofs(next.photoProofs); setOwnerPortalShares(next.ownerPortalShares); setDamageDeposits(next.damageDeposits); setPricingNotes(next.pricingNotes); setRepeatCampaigns(next.repeatCampaigns); setTaxPrepPacks(next.taxPrepPacks); setMaintenanceApprovals(next.maintenanceApprovals); setSettings(next.settings);
       return next;

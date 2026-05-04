@@ -259,6 +259,45 @@ create table if not exists public.tax_reserve_records (
   unique(user_id, tax_record_id)
 );
 
+-- ============================================================
+-- Safe additive migrations for app/schema compatibility
+-- ============================================================
+alter table public.cleaning_tasks
+add column if not exists checklist jsonb not null default '[]'::jsonb;
+
+alter table public.direct_booking_leads
+add column if not exists full_name text;
+
+alter table public.direct_booking_leads
+add column if not exists property_id text;
+
+alter table public.properties
+add column if not exists country text;
+
+alter table public.properties
+add column if not exists timezone text;
+
+alter table public.bookings
+add column if not exists deposit_status text;
+
+alter table public.bookings
+add column if not exists damage_status text;
+
+alter table public.bookings
+add column if not exists refund_status text;
+
+alter table public.bookings
+add column if not exists review_followup_status text;
+
+alter table public.guests
+add column if not exists tags jsonb not null default '[]'::jsonb;
+
+alter table public.maintenance_issues
+add column if not exists maintenance_id text;
+
+alter table public.maintenance_issues
+add column if not exists approval_status text;
+
 create table if not exists public.settings (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade unique,
