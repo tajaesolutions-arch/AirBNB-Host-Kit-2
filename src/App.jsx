@@ -342,6 +342,9 @@ function DashboardShell() {
 
 function AuthErrorView({ message, showSignOut }) {
   const { signOut } = useAuth();
+  const issueTitle = /database setup issue|schema|column/i.test(message || "")
+    ? "Database Setup Issue"
+    : "Authentication Setup Issue";
 
   const handleSignOut = async () => {
     try {
@@ -355,7 +358,7 @@ function AuthErrorView({ message, showSignOut }) {
   return (
     <div className="auth-setup-error">
       <div>
-        <strong>Authentication Setup Issue</strong>
+        <strong>{issueTitle}</strong>
         <p>{message}</p>
         <div className="row" style={{ gap: 8, marginTop: 12 }}>
           <button type="button" className="btn" onClick={() => window.location.reload()}>
