@@ -7,6 +7,7 @@ import {
   ConfirmBar,
   Chip,
   CurrencyInput,
+  ConfirmDialog,
 } from "../components/index.jsx";
 import {
   uid,
@@ -635,6 +636,7 @@ export default function Bookings({ monthFilter, propFilter, setPage, pageAction,
   const [editing, setEditing] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [saveNotice, setSaveNotice] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [calendarView, setCalendarView] = useState("month");
   const [calendarCursor, setCalendarCursor] = useState(() => startOfDay(new Date()));
 
@@ -824,15 +826,7 @@ export default function Bookings({ monthFilter, propFilter, setPage, pageAction,
   };
 
   const del = (id) => {
-    const confirmed = window.confirm(
-      "Delete this booking? This will not automatically delete the connected guest or cleaning task. Continue?"
-    );
-
-    if (!confirmed) return;
-
-    setBookings(bookings.filter((booking) => booking.booking_id !== id));
-    setEditing(null);
-    setSaveNotice("Booking deleted.");
+    setConfirmDeleteId(id);
   };
 
   const getProp = (id) =>
@@ -1155,6 +1149,21 @@ export default function Bookings({ monthFilter, propFilter, setPage, pageAction,
           currency={cur}
         />
       )}
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        title="Delete booking?"
+        description="This will not automatically delete the connected guest or cleaning task. Continue?"
+        confirmLabel="Delete Booking"
+        cancelLabel="Cancel"
+        destructive
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          setBookings(bookings.filter((booking) => booking.booking_id !== confirmDeleteId));
+          setEditing(null);
+          setSaveNotice("Booking deleted.");
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }

@@ -141,3 +141,40 @@ export function CurrencyInput({ value, onChange, placeholder = "0", min = 0, ...
     />
   );
 }
+
+
+export function ConfirmDialog({
+  open,
+  title,
+  description,
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
+  destructive = false,
+  onConfirm,
+  onCancel,
+}) {
+  return (
+    <Modal
+      open={open}
+      onClose={onCancel}
+      title={title}
+      footer={
+        <>
+          <button type="button" className="btn-secondary" onClick={onCancel}>
+            {cancelLabel}
+          </button>
+          <button
+            type="button"
+            className={destructive ? "btn-danger" : "btn-primary"}
+            onClick={onConfirm}
+            autoFocus
+          >
+            {confirmLabel}
+          </button>
+        </>
+      }
+    >
+      <p style={{ fontSize: 13.5, color: "var(--muted)", lineHeight: 1.6 }}>{description}</p>
+    </Modal>
+  );
+}

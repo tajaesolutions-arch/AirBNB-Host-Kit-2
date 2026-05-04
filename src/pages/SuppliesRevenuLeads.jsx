@@ -10,6 +10,7 @@ import {
   ConfirmBar,
   Chip,
   CurrencyInput,
+  ConfirmDialog,
 } from "../components/index.jsx";
 import {
   uid,
@@ -374,6 +375,7 @@ export function Supplies({ propFilter, pageAction, onPageActionHandled }) {
 
   const [editing, setEditing] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const cur = settings.default_currency || "JMD";
   const selectedPropFilter = propFilter || "ALL";
@@ -424,14 +426,7 @@ export function Supplies({ propFilter, pageAction, onPageActionHandled }) {
   };
 
   const del = (id) => {
-    const confirmed = window.confirm(
-      "Delete this supply item? This cannot be undone."
-    );
-
-    if (!confirmed) return;
-
-    setSupplies(supplies.filter((supply) => supply.supply_id !== id));
-    setEditing(null);
+    setConfirmDeleteId(id);
   };
 
   const getProp = (id) =>
@@ -625,6 +620,20 @@ export function Supplies({ propFilter, pageAction, onPageActionHandled }) {
           currency={cur}
         />
       )}
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        title="Delete supply item?"
+        description="Delete this supply item? This cannot be undone."
+        confirmLabel="Delete Supply"
+        cancelLabel="Cancel"
+        destructive
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          setSupplies(supplies.filter((supply) => supply.supply_id !== confirmDeleteId));
+          setEditing(null);
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }
@@ -801,6 +810,7 @@ export function Revenue({ monthFilter, propFilter, pageAction, onPageActionHandl
   const settings = safeSettings(rawSettings);
 
   const [editing, setEditing] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const cur = settings.default_currency || "JMD";
   const selectedMonth = monthFilter || new Date().toISOString().slice(0, 7);
@@ -897,14 +907,7 @@ export function Revenue({ monthFilter, propFilter, pageAction, onPageActionHandl
   };
 
   const del = (id) => {
-    const confirmed = window.confirm(
-      "Delete this expense? This cannot be undone."
-    );
-
-    if (!confirmed) return;
-
-    setExpenses(expenses.filter((expense) => expense.expense_id !== id));
-    setEditing(null);
+    setConfirmDeleteId(id);
   };
 
   const getProp = (id) =>
@@ -1113,6 +1116,20 @@ export function Revenue({ monthFilter, propFilter, pageAction, onPageActionHandl
           currency={cur}
         />
       )}
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        title="Delete expense?"
+        description="Delete this expense? This cannot be undone."
+        confirmLabel="Delete Expense"
+        cancelLabel="Cancel"
+        destructive
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          setExpenses(expenses.filter((expense) => expense.expense_id !== confirmDeleteId));
+          setEditing(null);
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }
@@ -1336,6 +1353,7 @@ export function Leads({ propFilter, pageAction, onPageActionHandled }) {
 
   const [editing, setEditing] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const cur = settings.default_currency || "JMD";
   const selectedPropFilter = propFilter || "ALL";
@@ -1387,14 +1405,7 @@ export function Leads({ propFilter, pageAction, onPageActionHandled }) {
   };
 
   const del = (id) => {
-    const confirmed = window.confirm(
-      "Delete this lead? This cannot be undone."
-    );
-
-    if (!confirmed) return;
-
-    setLeads(leads.filter((lead) => lead.lead_id !== id));
-    setEditing(null);
+    setConfirmDeleteId(id);
   };
 
   const getProp = (id) =>
@@ -1586,6 +1597,20 @@ export function Leads({ propFilter, pageAction, onPageActionHandled }) {
           currency={cur}
         />
       )}
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        title="Delete lead?"
+        description="Delete this lead? This cannot be undone."
+        confirmLabel="Delete Lead"
+        cancelLabel="Cancel"
+        destructive
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          setLeads(leads.filter((lead) => lead.lead_id !== confirmDeleteId));
+          setEditing(null);
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }
