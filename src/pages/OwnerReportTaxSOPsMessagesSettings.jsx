@@ -1506,12 +1506,12 @@ function ResetDashboardDataCard() {
         "This will permanently clear all dashboard records and blank out the workspace for this account.",
       confirmLabel: "Reset to Blank",
       destructive: true,
-      onConfirm: () => {
+      onConfirm: async () => {
         setResetLoading(true);
         setResetMessage("");
         setResetError("");
         try {
-          resetToBlankData();
+          await resetToBlankData();
           setResetMessage("Your dashboard is now blank.");
         } catch (error) {
           setResetError(error?.message || "Could not reset account data.");
@@ -1531,12 +1531,12 @@ function ResetDashboardDataCard() {
         "This will replace your current dashboard records with sample data.",
       confirmLabel: "Load Sample Data",
       destructive: true,
-      onConfirm: () => {
+      onConfirm: async () => {
         setResetLoading(true);
         setResetMessage("");
         setResetError("");
         try {
-          restoreSampleData();
+          await restoreSampleData();
           setResetMessage("Sample data has been reloaded.");
         } catch (error) {
           setResetError(error?.message || "Could not reload sample data.");

@@ -68,6 +68,16 @@ const normalizeImportedBackup = (payload) => {
     maintenanceApprovals: safeArray(source.maintenanceApprovals), settings: normalizeSettings(safeSettings(source.settings)),
   };
 };
+const parseSchemaCacheError = (error) => {
+  const message = error?.message || "";
+  const code = error?.code || "";
+  const missingColumnMatch = message.match(/column ['"]?([^'"]+)['"]?/i) || message.match(/'([^']+)' column/i);
+  if (code === "PGRST204" || /schema cache|missing|required column|could not find/i.test(message)) {
+    const missingColumn = missingColumnMatch?.[1] || "";
+    return `Database setup issue: sample data could not be loaded because the Supabase schema is missing a required column.${missingColumn ? ` Missing column: ${missingColumn}.` : ""}`;
+  }
+  return "";
+};
 
 const COLLECTIONS = {
   properties: { table: "properties", idField: "property_id", normalize: (v) => normalizeCollection(v, normalizeProperty) },
@@ -202,7 +212,31 @@ export function AppProvider({ children }) {
   const resetToSampleData = restoreSampleData;
   const updateCurrency = (nextCurrency) => setSettings((p) => ({ ...p, default_currency: normalizeCurrency(nextCurrency) }));
   const getBackupData = () => ({ app: "AirBNB Host Kit", backup_version: BACKUP_VERSION, exported_at: new Date().toISOString(), setup_progress: clone(JSON.parse(localStorage.getItem(SETUP_PROGRESS_STORAGE_KEY) || "{}")), backup_exported_at: localStorage.getItem(BACKUP_EXPORTED_AT_STORAGE_KEY) || "", data: { properties: clone(properties), bookings: clone(bookings), guests: clone(guests), cleaning: clone(cleaning), maintenance: clone(maintenance), supplies: clone(supplies), expenses: clone(expenses), leads: clone(leads), calendarEvents: clone(calendarEvents), quotes: clone(quotes), messageHistory: clone(messageHistory), reviewTasks: clone(reviewTasks), messageDrafts: clone(messageDrafts), calendarFeeds: clone(calendarFeeds), importedCalendarEvents: clone(importedCalendarEvents), photoProofs: clone(photoProofs), ownerPortalShares: clone(ownerPortalShares), damageDeposits: clone(damageDeposits), pricingNotes: clone(pricingNotes), repeatCampaigns: clone(repeatCampaigns), taxPrepPacks: clone(taxPrepPacks), maintenanceApprovals: clone(maintenanceApprovals), settings: clone(settings) } });
-  const importBackupData = async (payload) => { if (JSON.stringify(payload).length > 5 * 1024 * 1024) throw new Error("Backup file is too large. Maximum size is 5MB."); const next = normalizeImportedBackup(payload); setProperties(next.properties); setBookings(next.bookings); setGuests(next.guests); setCleaning(next.cleaning); setMaintenance(next.maintenance); setSupplies(next.supplies); setExpenses(next.expenses); setLeads(next.leads); setCalendarEvents(next.calendarEvents); setQuotes(next.quotes); setMessageHistory(next.messageHistory); setReviewTasks(next.reviewTasks); setMessageDrafts(next.messageDrafts); setCalendarFeeds(next.calendarFeeds); setImportedCalendarEvents(next.importedCalendarEvents); setPhotoProofs(next.photoProofs); setOwnerPortalShares(next.ownerPortalShares); setDamageDeposits(next.damageDeposits); setPricingNotes(next.pricingNotes); setRepeatCampaigns(next.repeatCampaigns); setTaxPrepPacks(next.taxPrepPacks); setMaintenanceApprovals(next.maintenanceApprovals); setSettings(next.settings); return next; };
+  const importBackupData = async (payload) => {
+    if (JSON.stringify(payload).length > 5 * 1024 * 1024) throw new Error("Backup file is too large. Maximum size is 5MB.");
+    const next = normalizeImportedBackup(payload);
+    try {
+      if (signedInUserId) {
+        await Promise.all([
+          upsertUserRows("properties", next.properties, signedInUserId, "property_id"),
+          upsertUserRows("bookings", next.bookings, signedInUserId, "booking_id"),
+          upsertUserRows("guests", next.guests, signedInUserId, "guest_id"),
+          upsertUserRows("cleaning_tasks", next.cleaning, signedInUserId, "cleaning_id"),
+          upsertUserRows("maintenance_issues", next.maintenance, signedInUserId, "issue_id"),
+          upsertUserRows("supplies", next.supplies, signedInUserId, "supply_id"),
+          upsertUserRows("expenses", next.expenses, signedInUserId, "expense_id"),
+          upsertUserRows("direct_booking_leads", next.leads, signedInUserId, "lead_id"),
+          upsertUserSettings(signedInUserId, next.settings),
+        ]);
+      }
+      setProperties(next.properties); setBookings(next.bookings); setGuests(next.guests); setCleaning(next.cleaning); setMaintenance(next.maintenance); setSupplies(next.supplies); setExpenses(next.expenses); setLeads(next.leads); setCalendarEvents(next.calendarEvents); setQuotes(next.quotes); setMessageHistory(next.messageHistory); setReviewTasks(next.reviewTasks); setMessageDrafts(next.messageDrafts); setCalendarFeeds(next.calendarFeeds); setImportedCalendarEvents(next.importedCalendarEvents); setPhotoProofs(next.photoProofs); setOwnerPortalShares(next.ownerPortalShares); setDamageDeposits(next.damageDeposits); setPricingNotes(next.pricingNotes); setRepeatCampaigns(next.repeatCampaigns); setTaxPrepPacks(next.taxPrepPacks); setMaintenanceApprovals(next.maintenanceApprovals); setSettings(next.settings);
+      return next;
+    } catch (error) {
+      const schemaMessage = parseSchemaCacheError(error);
+      if (schemaMessage) throw new Error(schemaMessage);
+      throw error;
+    }
+  };
 
   return <AppContext.Provider value={{ properties, setProperties, bookings, setBookings, guests, setGuests, cleaning, setCleaning, maintenance, setMaintenance, supplies, setSupplies, expenses, setExpenses, leads, setLeads, calendarEvents, setCalendarEvents, quotes, setQuotes, messageHistory, setMessageHistory, reviewTasks, setReviewTasks, messageDrafts, setMessageDrafts, calendarFeeds, setCalendarFeeds, importedCalendarEvents, setImportedCalendarEvents, photoProofs, setPhotoProofs, ownerPortalShares, setOwnerPortalShares, damageDeposits, setDamageDeposits, pricingNotes, setPricingNotes, repeatCampaigns, setRepeatCampaigns, taxPrepPacks, setTaxPrepPacks, maintenanceApprovals, setMaintenanceApprovals, settings, setSettings, updateCurrency, resetToBlankData, resetToSampleData, restoreSampleData, getBackupData, importBackupData, dataLoading: authLoading ? true : dataLoading, dataError: authLoading ? "" : dataError }}>{children}</AppContext.Provider>;
 }
