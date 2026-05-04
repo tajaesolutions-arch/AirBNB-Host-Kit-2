@@ -21,7 +21,7 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
-import { getAllowedNavItems } from "../utils/accessControl.js";
+import { canAccessPage } from "../utils/permissions.js";
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -45,8 +45,9 @@ const NAV_ITEMS = [
   { key: "account", label: "My Account", icon: Users },
 ];
 
-export default function Sidebar({ page, setPage, collapsed = false, onToggleCollapse, mobile = false, onClose, role = "host" }) {
-  const allowedNavItems = getAllowedNavItems(role, NAV_ITEMS);
+export default function Sidebar({ page, setPage, collapsed = false, onToggleCollapse, mobile = false, onClose, role = "host", permissions }) {
+  const perm = permissions || { role };
+  const allowedNavItems = NAV_ITEMS.filter((item) => canAccessPage(item.key, perm));
 
   const handleNavigate = (nextPage) => {
     if (typeof setPage === "function") setPage(nextPage);

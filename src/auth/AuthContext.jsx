@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
+import { getEffectiveRole, getPermissions } from "../utils/permissions.js";
 
 const AuthContext = createContext(null);
 const LOCAL_MODE_USER = { id: "local", email: "local" };
@@ -25,6 +26,20 @@ export function AuthProvider({ children }) {
   const [profileLoading, setProfileLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState("");
+  const [memberships, setMemberships] = useState([]);
+  const [membershipsLoading, setMembershipsLoading] = useState(false);
+  const [membershipsError, setMembershipsError] = useState("");
+
+  const fetchMemberships = async (authUser) => {
+    if (!supabase || !authUser?.id) { setMemberships([]); return []; }
+    setMembershipsLoading(true); setMembershipsError("");
+    const { data, error } = await supabase.from("property_memberships").select("*").eq("member_user_id", authUser.id).eq("active", true);
+    if (error) { setMembershipsError(error.message || "Failed to load memberships."); setMemberships([]); setMembershipsLoading(false); return []; }
+    const rows = Array.isArray(data) ? data : [];
+    setMemberships(rows); setMembershipsLoading(false);
+    return rows;
+  };
+
 
   const profileRequestIdRef = useRef(0);
   const PROFILE_TIMEOUT_MS = 3000;
@@ -188,6 +203,7 @@ export function AuthProvider({ children }) {
           void loadUserProfile(currentUser, mountedRef);
         } else {
           setProfile(null);
+    setMemberships([]);
           setProfileLoading(false);
         }
       } catch (err) {
@@ -218,9 +234,12 @@ export function AuthProvider({ children }) {
 
           if (nextUser) {
             void loadUserProfile(nextUser, mountedRef);
+            void fetchMemberships(nextUser);
           } else {
             setProfile(null);
+    setMemberships([]);
             setProfileLoading(false);
+            setMemberships([]);
             setAuthError("");
           }
         } catch (err) {
@@ -259,6 +278,7 @@ export function AuthProvider({ children }) {
     setUser(data.user);
 
     if (data.user) {
+      void fetchMemberships(data.user);
       setProfileLoading(true);
       try {
         setProfile(await ensureProfile(data.user));
@@ -289,6 +309,7 @@ export function AuthProvider({ children }) {
     if (error) throw error;
 
     if (data.user) {
+      void fetchMemberships(data.user);
       setProfileLoading(true);
       try {
         setProfile(await ensureProfile(data.user));
@@ -317,6 +338,7 @@ export function AuthProvider({ children }) {
     setSession(null);
     setUser(null);
     setProfile(null);
+    setMemberships([]);
   };
 
   const sendPasswordReset = async (email) => {
@@ -390,6 +412,11 @@ export function AuthProvider({ children }) {
   };
 
   const isApproved = profile?.account_status === "approved";
+  const assignedPropertyIds = useMemo(() => Array.from(new Set((memberships || []).map((m) => m?.property_id).filter(Boolean))), [memberships]);
+  const effectiveRole = useMemo(() => getEffectiveRole(memberships, user, []), [memberships, user]);
+  const permissions = useMemo(() => getPermissions(memberships, effectiveRole), [memberships, effectiveRole]);
+  const isHostLike = Boolean(permissions?.isHostLike);
+
 
   const value = useMemo(
     () => ({
@@ -401,6 +428,8 @@ export function AuthProvider({ children }) {
       authError,
       isApproved,
       isSupabaseConfigured,
+      memberships, membershipsLoading, membershipsError, effectiveRole, permissions, assignedPropertyIds, isHostLike,
+      refetchMemberships: () => fetchMemberships(user),
       signIn,
       signUp,
       signOut,
@@ -409,7 +438,7 @@ export function AuthProvider({ children }) {
       updateProfile,
       completeOnboarding,
     }),
-    [session, user, profile, profileLoading, loading, authError, isApproved]
+    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, membershipsLoading, membershipsError, effectiveRole, permissions, assignedPropertyIds, isHostLike]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
