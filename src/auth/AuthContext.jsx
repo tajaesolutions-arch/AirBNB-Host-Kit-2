@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
-import { getEffectiveRole, getPermissions } from "../utils/permissions.js";
+import { getEffectiveRole, getPermissions, getAssignedPropertyIds, getAssignedPropertyRecordIds } from "../utils/permissions.js";
 
 const AuthContext = createContext(null);
 const LOCAL_MODE_USER = { id: "local", email: "local" };
@@ -201,6 +201,7 @@ export function AuthProvider({ children }) {
 
         if (currentUser) {
           void loadUserProfile(currentUser, mountedRef);
+          void fetchMemberships(currentUser);
         } else {
           setProfile(null);
     setMemberships([]);
@@ -412,11 +413,11 @@ export function AuthProvider({ children }) {
   };
 
   const isApproved = profile?.account_status === "approved";
-  const assignedPropertyIds = useMemo(() => Array.from(new Set((memberships || []).map((m) => m?.property_id).filter(Boolean))), [memberships]);
-  const effectiveRole = useMemo(() => getEffectiveRole(memberships, user, []), [memberships, user]);
-  const permissions = useMemo(() => getPermissions(memberships, effectiveRole), [memberships, effectiveRole]);
+  const assignedPropertyIds = useMemo(() => getAssignedPropertyIds(memberships), [memberships]);
+  const assignedPropertyRecordIds = useMemo(() => getAssignedPropertyRecordIds(memberships), [memberships]);
+  const effectiveRole = useMemo(() => getEffectiveRole({ memberships, user }), [memberships, user]);
+  const permissions = useMemo(() => getPermissions({ memberships, effectiveRole }), [memberships, effectiveRole]);
   const isHostLike = Boolean(permissions?.isHostLike);
-
 
   const value = useMemo(
     () => ({
@@ -428,7 +429,7 @@ export function AuthProvider({ children }) {
       authError,
       isApproved,
       isSupabaseConfigured,
-      memberships, membershipsLoading, membershipsError, effectiveRole, permissions, assignedPropertyIds, isHostLike,
+      memberships, membershipsLoading, membershipsError, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike,
       refetchMemberships: () => fetchMemberships(user),
       signIn,
       signUp,
@@ -438,7 +439,7 @@ export function AuthProvider({ children }) {
       updateProfile,
       completeOnboarding,
     }),
-    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, membershipsLoading, membershipsError, effectiveRole, permissions, assignedPropertyIds, isHostLike]
+    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, membershipsLoading, membershipsError, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
