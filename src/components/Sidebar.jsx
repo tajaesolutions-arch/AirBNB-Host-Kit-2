@@ -6,6 +6,10 @@ import {
   Wrench,
   Package,
   TrendingUp,
+  BarChart3,
+  Building2,
+  Home,
+  Shield,
   MessageSquare,
   FileText,
   Calculator,
@@ -22,11 +26,14 @@ import { getAllowedNavItems } from "../utils/accessControl.js";
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "bookings", label: "Booking Calendar", icon: CalendarDays },
+  { key: "property-manager", label: "Property Manager", icon: Building2 },
+  { key: "cleaner-portal", label: "Cleaner Portal", icon: Sparkles },
+  { key: "owner-portal", label: "Owner Portal", icon: Home },
   { key: "guests", label: "Guest CRM", icon: Users },
   { key: "cleaning", label: "Cleaning Schedule", icon: Sparkles },
   { key: "maintenance", label: "Maintenance", icon: Wrench },
   { key: "supplies", label: "Supplies", icon: Package },
-  { key: "revenue", label: "Revenue & Profit", icon: TrendingUp },
+  { key: "revenue", label: "Revenue & Profit", icon: BarChart3 },
   { key: "leads", label: "Direct Leads", icon: MessageSquare },
   { key: "owner", label: "Owner Report", icon: FileText },
   { key: "tax", label: "Tax Reserve", icon: Calculator },
@@ -34,12 +41,12 @@ const NAV_ITEMS = [
   { key: "messages", label: "Messages", icon: MessageSquare },
   { key: "settings", label: "Settings", icon: Settings },
   { key: "smart-tools", label: "Smart Tools", icon: WandSparkles },
-  { key: "admin-users", label: "User Approvals", icon: ShieldCheck },
+  { key: "admin-users", label: "User Approvals", icon: Shield },
   { key: "account", label: "My Account", icon: Users },
 ];
 
 export default function Sidebar({ page, setPage, collapsed = false, onToggleCollapse, mobile = false, onClose, role = "host" }) {
-  const allowedNav = new Set(getAllowedNavItems(role));
+  const allowedNavItems = getAllowedNavItems(role, NAV_ITEMS);
 
   const handleNavigate = (nextPage) => {
     if (typeof setPage === "function") setPage(nextPage);
@@ -57,7 +64,7 @@ export default function Sidebar({ page, setPage, collapsed = false, onToggleColl
       </div>
 
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {NAV_ITEMS.filter((item) => allowedNav.has(item.key)).map((item) => {
+        {allowedNavItems.map((item) => {
           const Icon = item.icon;
           const active = page === item.key;
           return (

@@ -15,6 +15,9 @@ import * as OwnerTaxMessagesSettingsModule from "./pages/OwnerReportTaxSOPsMessa
 import * as AccountModule from "./pages/Account.jsx";
 import * as SmartToolsModule from "./pages/SmartTools.jsx";
 import AdminUserApprovals from "./pages/AdminUserApprovals.jsx";
+import PropertyManagerPortal from "./pages/PropertyManagerPortal.jsx";
+import CleanerPortal from "./pages/CleanerPortal.jsx";
+import OwnerPortal from "./pages/OwnerPortal.jsx";
 
 import "./styles.css";
 import { canAccessPage, getDefaultPageForRole, normalizePageKey } from "./utils/accessControl.js";
@@ -24,6 +27,9 @@ const currentMonth = () => new Date().toISOString().slice(0, 7);
 
 const PAGE_TITLES = {
   dashboard: "Dashboard",
+  "property-manager": "Property Manager Portal",
+  "cleaner-portal": "Cleaner Portal",
+  "owner-portal": "Owner Portal",
   bookings: "Booking Calendar",
   guests: "Guest CRM",
   cleaning: "Cleaning Schedule",
@@ -231,6 +237,12 @@ function DashboardShell() {
   }, [role, page]);
 
   const renderPage = () => {
+    const safeCurrentPage = normalizePageKey(page);
+
+    if (!canAccessPage(profile?.role || "host", safeCurrentPage)) {
+      return <Dashboard monthFilter={monthFilter} setMonthFilter={setMonthFilter} propFilter={propFilter} setPropFilter={setPropFilter} setPage={goToPage} pageAction={{ type: "access-denied", requestedPage: safeCurrentPage }} onPageActionHandled={clearPageAction} />;
+    }
+
     const shared = {
       monthFilter,
       setMonthFilter,
@@ -244,6 +256,15 @@ function DashboardShell() {
     switch (page) {
       case "dashboard":
         return <Dashboard {...shared} />;
+
+      case "property-manager":
+        return <PropertyManagerPortal {...shared} />;
+
+      case "cleaner-portal":
+        return <CleanerPortal {...shared} />;
+
+      case "owner-portal":
+        return <OwnerPortal {...shared} />;
 
       case "bookings":
       case "booking-calendar":

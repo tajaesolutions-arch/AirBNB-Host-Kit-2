@@ -1,22 +1,5 @@
 export const ROLE_PERMISSIONS = {
-  admin: [
-    "dashboard",
-    "bookings",
-    "guests",
-    "cleaning",
-    "maintenance",
-    "supplies",
-    "revenue",
-    "leads",
-    "owner",
-    "tax",
-    "sops",
-    "messages",
-    "settings",
-    "smart-tools",
-    "admin-users",
-    "account",
-  ],
+  admin: ["*"],
   host: [
     "dashboard",
     "bookings",
@@ -33,12 +16,24 @@ export const ROLE_PERMISSIONS = {
     "settings",
     "account",
   ],
-  cleaner: ["cleaning", "account"],
-  owner: ["owner", "maintenance", "account"],
+  property_manager: [
+    "property-manager",
+    "bookings",
+    "cleaning",
+    "maintenance",
+    "supplies",
+    "owner",
+    "account",
+  ],
+  cleaner: ["cleaner-portal", "account"],
+  owner: ["owner-portal", "account"],
 };
 
 export const PAGE_ALIASES = {
   dashboard: "dashboard",
+  "property-manager": "property-manager",
+  "cleaner-portal": "cleaner-portal",
+  "owner-portal": "owner-portal",
   bookings: "bookings",
   "booking-calendar": "bookings",
   guests: "guests",
@@ -87,20 +82,46 @@ function normalizeRole(role) {
 }
 
 export function getDefaultPageForRole(role) {
-  return ROLE_PERMISSIONS[normalizeRole(role)][0] || "account";
+  const safeRole = normalizeRole(role);
+  const pages = ROLE_PERMISSIONS[safeRole];
+  if (pages.includes("*")) return "dashboard";
+
+  const firstPage = pages[0] || "dashboard";
+
+  if (firstPage === "property-manager") return "dashboard";
+  if (firstPage === "cleaner-portal") return "cleaning";
+  if (firstPage === "owner-portal") return "owner";
+
+  return normalizePageKey(firstPage);
 }
 
 export function canAccessPage(role, page) {
+  const safeRole = normalizeRole(role);
+  const permissions = ROLE_PERMISSIONS[safeRole];
+  if (permissions.includes("*")) return true;
+
   const normalizedPage = normalizePageKey(page);
-  return ROLE_PERMISSIONS[normalizeRole(role)].includes(normalizedPage);
+
+  return permissions.some((permission) => {
+    if (permission === normalizedPage) return true;
+
+    if (permission === "cleaner-portal" && normalizedPage === "cleaning") return true;
+    if (permission === "owner-portal" && normalizedPage === "owner") return true;
+    if (permission === "property-manager" && normalizedPage === "dashboard") return true;
+
+    return false;
+  });
 }
 
-export function getAllowedNavItems(role) {
-  return ROLE_PERMISSIONS[normalizeRole(role)];
+export function getAllowedNavItems(role, navItems = []) {
+  const safeRole = normalizeRole(role);
+  const permissions = ROLE_PERMISSIONS[safeRole];
+  if (permissions.includes("*")) return navItems;
+
+  return navItems.filter((item) => canAccessPage(safeRole, item?.key));
 }
 
-// Backward-compatible aliases
 export const isPageAllowedForRole = canAccessPage;
-export function getAllowedNavKeysForRole(role) {
-  return new Set(getAllowedNavItems(role));
+export function getAllowedNavKeysForRole(role, navItems = []) {
+  return new Set(getAllowedNavItems(role, navItems).map((item) => item.key));
 }
