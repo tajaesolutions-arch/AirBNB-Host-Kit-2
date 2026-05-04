@@ -33,6 +33,8 @@ import {
   Download,
   Upload,
   ClipboardList,
+  Users,
+  Briefcase,
 } from "lucide-react";
 
 function safeArray(value) {
@@ -1021,38 +1023,123 @@ export function Settings() {
         </div>
       </div>
 
-      <div className="card" style={{ padding: 22, marginBottom: 22 }}>
-        <SectionTitle>Cleaners & Vendors</SectionTitle>
-        <div className="form-grid-2">
+      <div className="card settings-team-card" style={{ padding: 22, marginBottom: 22 }}>
+        <div className="settings-team-header">
           <div>
-            <div className="field-label" style={{ marginBottom: 8 }}>Cleaners</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-              {cleaners.length === 0 && <p className="text-muted text-small">No cleaners added yet.</p>}
-              {cleaners.map((cleaner, index) => (
-                <div key={`${cleaner.name}-${index}`} style={{ display: "flex", justifyContent: "space-between", gap: 8, border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px" }}>
-                  <div><strong>{cleaner.name}</strong><div className="text-muted text-small">{cleaner.phone || "No phone"}</div></div>
-                  <button className="btn-ghost" onClick={() => removeCleaner(index)}>Remove</button>
-                </div>
-              ))}
-            </div>
-            <div className="field"><label className="field-label">Cleaner Name</label><input value={newCleaner.name} onChange={(e)=>setNewCleaner((c)=>({...c,name:e.target.value}))} /></div>
-            <div className="field"><label className="field-label">Phone</label><input value={newCleaner.phone} onChange={(e)=>setNewCleaner((c)=>({...c,phone:e.target.value}))} /></div>
-            <button className="btn-primary" onClick={addCleaner}>Add Cleaner</button>
+            <SectionTitle>Cleaners & Vendors</SectionTitle>
+            <p className="settings-team-helper">
+              Manage the people and service providers used across cleaning, maintenance, and operations.
+            </p>
           </div>
-          <div>
-            <div className="field-label" style={{ marginBottom: 8 }}>Vendors</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-              {vendors.length === 0 && <p className="text-muted text-small">No vendors added yet.</p>}
-              {vendors.map((vendor, index) => (
-                <div key={`${vendor.name}-${index}`} style={{ display: "flex", justifyContent: "space-between", gap: 8, border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px" }}>
-                  <div><strong>{vendor.name}</strong><div className="text-muted text-small">{vendor.category || "No category"}</div></div>
-                  <button className="btn-ghost" onClick={() => removeVendor(index)}>Remove</button>
+          <div className="settings-team-summary" aria-label="Team summary">
+            <span className="chip chip-gray">{cleaners.length} Cleaners</span>
+            <span className="chip chip-gray">{vendors.length} Vendors</span>
+          </div>
+        </div>
+
+        <div className="settings-team-grid">
+          <div className="settings-team-column">
+            <div className="settings-team-column-header">
+              <Users size={16} aria-hidden="true" />
+              <span>Cleaners</span>
+              <span className="settings-team-count">{cleaners.length}</span>
+            </div>
+
+            <div className="settings-team-list">
+              {cleaners.length === 0 && (
+                <div className="settings-team-empty">
+                  <Users size={16} aria-hidden="true" />
+                  <div className="settings-team-name">No cleaners yet</div>
+                  <div className="settings-team-meta">Add your first cleaner below.</div>
+                </div>
+              )}
+
+              {cleaners.map((cleaner, index) => (
+                <div key={`${cleaner.name}-${index}`} className="settings-team-row">
+                  <div className="settings-team-avatar" aria-hidden="true">
+                    {String(cleaner.name || "?").trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "?"}
+                  </div>
+                  <div className="settings-team-info">
+                    <div className="settings-team-name">{cleaner.name}</div>
+                    <div className="settings-team-meta">{cleaner.phone || "No phone"}</div>
+                  </div>
+                  <button type="button" className="settings-team-remove" aria-label="Remove cleaner" onClick={() => removeCleaner(index)}>
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               ))}
+
+              <div className="settings-team-add-card">
+                <div className="settings-team-add-title">Add new cleaner</div>
+                <div className="settings-team-add-grid">
+                  <div>
+                    <label className="field-label" htmlFor="new-cleaner-name">Cleaner name</label>
+                    <input id="new-cleaner-name" aria-label="Cleaner name" value={newCleaner.name} onChange={(e)=>setNewCleaner((c)=>({...c,name:e.target.value}))} onKeyDown={(e)=>{ if (e.key === "Enter" && String(newCleaner.name || "").trim()) addCleaner(); }} />
+                  </div>
+                  <div>
+                    <label className="field-label" htmlFor="new-cleaner-phone">Phone</label>
+                    <input id="new-cleaner-phone" aria-label="Cleaner phone" value={newCleaner.phone} onChange={(e)=>setNewCleaner((c)=>({...c,phone:e.target.value}))} onKeyDown={(e)=>{ if (e.key === "Enter" && String(newCleaner.name || "").trim()) addCleaner(); }} />
+                  </div>
+                </div>
+                <div className="settings-team-add-actions">
+                  <button type="button" className="btn-primary" onClick={addCleaner} disabled={!String(newCleaner.name || "").trim()}>
+                    Add
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="field"><label className="field-label">Vendor Name</label><input value={newVendor.name} onChange={(e)=>setNewVendor((v)=>({...v,name:e.target.value}))} /></div>
-            <div className="field"><label className="field-label">Category</label><input value={newVendor.category} onChange={(e)=>setNewVendor((v)=>({...v,category:e.target.value}))} /></div>
-            <button className="btn-primary" onClick={addVendor}>Add Vendor</button>
+          </div>
+
+          <div className="settings-team-column">
+            <div className="settings-team-column-header">
+              <Briefcase size={16} aria-hidden="true" />
+              <span>Vendors</span>
+              <span className="settings-team-count">{vendors.length}</span>
+            </div>
+
+            <div className="settings-team-list">
+              {vendors.length === 0 && (
+                <div className="settings-team-empty">
+                  <Briefcase size={16} aria-hidden="true" />
+                  <div className="settings-team-name">No vendors yet</div>
+                  <div className="settings-team-meta">Add your first vendor below.</div>
+                </div>
+              )}
+
+              {vendors.map((vendor, index) => (
+                <div key={`${vendor.name}-${index}`} className="settings-team-row">
+                  <div className="settings-team-avatar" aria-hidden="true">
+                    {String(vendor.name || "?").trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "?"}
+                  </div>
+                  <div className="settings-team-info">
+                    <div className="settings-team-name">{vendor.name}</div>
+                    <div className="settings-team-meta">{vendor.category || "No category"}</div>
+                  </div>
+                  <button type="button" className="settings-team-remove" aria-label="Remove vendor" onClick={() => removeVendor(index)}>
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ))}
+
+              <div className="settings-team-add-card">
+                <div className="settings-team-add-title">Add new vendor</div>
+                <div className="settings-team-add-grid">
+                  <div>
+                    <label className="field-label" htmlFor="new-vendor-name">Vendor name</label>
+                    <input id="new-vendor-name" aria-label="Vendor name" value={newVendor.name} onChange={(e)=>setNewVendor((v)=>({...v,name:e.target.value}))} onKeyDown={(e)=>{ if (e.key === "Enter" && String(newVendor.name || "").trim()) addVendor(); }} />
+                  </div>
+                  <div>
+                    <label className="field-label" htmlFor="new-vendor-category">Category</label>
+                    <input id="new-vendor-category" aria-label="Vendor category" value={newVendor.category} onChange={(e)=>setNewVendor((v)=>({...v,category:e.target.value}))} onKeyDown={(e)=>{ if (e.key === "Enter" && String(newVendor.name || "").trim()) addVendor(); }} />
+                  </div>
+                </div>
+                <div className="settings-team-add-actions">
+                  <button type="button" className="btn-primary" onClick={addVendor} disabled={!String(newVendor.name || "").trim()}>
+                    Add
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

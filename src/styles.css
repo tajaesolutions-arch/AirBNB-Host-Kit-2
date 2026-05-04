@@ -4682,3 +4682,48 @@ input, select, textarea { font-size: 16px; }
     min-height: auto;
   }
 }
+
+.settings-team-card {
+    border-radius: 16px;
+}
+.settings-team-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+.settings-team-helper {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 640px;
+}
+.settings-team-summary { display: flex; gap: 8px; flex-wrap: wrap; }
+.settings-team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.settings-team-column { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 16px; min-width: 0; }
+.settings-team-column-header { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 12px; }
+.settings-team-count { margin-left: auto; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); color: var(--muted); }
+.settings-team-list { display: flex; flex-direction: column; gap: 8px; }
+.settings-team-row { display: flex; align-items: center; gap: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px; transition: background .15s,border-color .15s; }
+.settings-team-row:hover { background: var(--sand-soft); border-color: var(--line-strong); }
+.settings-team-avatar { width: 34px; height: 34px; border-radius: 999px; background: var(--teal-soft); border: 1px solid #9fd8cf; display: grid; place-items: center; color: var(--teal); font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.settings-team-info { min-width: 0; flex: 1; }
+.settings-team-name { font-size: 14px; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+.settings-team-meta { font-size: 12px; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+.settings-team-remove { width: 36px; height: 36px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--muted); display: grid; place-items: center; padding: 0; }
+.settings-team-row:hover .settings-team-remove,.settings-team-remove:hover,.settings-team-remove:focus-visible { color: #b93a3a; background: #fff5f5; border-color: #ffd7d7; }
+.settings-team-add-card { border: 1px solid #c9e9e5; background: var(--teal-soft); border-radius: 12px; padding: 12px; }
+.settings-team-add-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.settings-team-add-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.settings-team-add-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+.settings-team-add-actions .btn-primary { min-height: 36px; padding: 8px 14px; }
+.settings-team-empty { border: 1px dashed var(--line-strong); border-radius: 12px; background: var(--paper); color: var(--muted); display: grid; justify-items: center; text-align: center; gap: 3px; padding: 14px 12px; }
+
+@media (max-width: 768px) {
+    .settings-team-grid { grid-template-columns: 1fr; }
+    .settings-team-add-grid { grid-template-columns: 1fr; }
+    .settings-team-add-actions .btn-primary,
+    .settings-team-remove { min-height: 44px; min-width: 44px; }
+}
