@@ -29,6 +29,13 @@ import {
 } from "../utils/normalizers.js";
 import { useAuth } from "../auth/AuthContext.jsx";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
+import {
+  fetchUserTable,
+  upsertUserRows,
+  deleteUserRow,
+  fetchUserSettings,
+  upsertUserSettings,
+} from "../services/supabaseData.js";
 
 const AppContext = createContext(null);
 const BACKUP_VERSION = 1;
@@ -93,12 +100,10 @@ export function AppProvider({ children }) {
     if (!signedInUserId) return false;
     const nextIds = new Set(nextRows.map((r) => r?.[idField]).filter(Boolean));
     const removedIds = previousRows.map((r) => r?.[idField]).filter((id) => id && !nextIds.has(id));
-    const payload = nextRows.filter((r) => r?.[idField]).map((row) => ({ ...row, user_id: signedInUserId }));
-    const { error: upsertError } = await supabase.from(table).upsert(payload, { onConflict: `user_id,${idField}` });
-    if (upsertError) throw upsertError;
+    const payload = nextRows.filter((r) => r?.[idField]);
+    await upsertUserRows(table, payload, signedInUserId, idField);
     if (removedIds.length > 0) {
-      const { error: deleteError } = await supabase.from(table).delete().eq("user_id", signedInUserId).in(idField, removedIds);
-      if (deleteError) throw deleteError;
+      await Promise.all(removedIds.map((id) => deleteUserRow(table, idField, id, signedInUserId)));
     }
     return true;
   };
@@ -171,7 +176,7 @@ export function AppProvider({ children }) {
   const setSupplies = makeSetter(setSuppliesRaw, "supplies", COLLECTIONS.supplies.normalize, { table: "supplies", idField: "supply_id" });
   const setExpenses = makeSetter(setExpensesRaw, "expenses", COLLECTIONS.expenses.normalize, { table: "expenses", idField: "expense_id" });
   const setLeads = makeSetter(setLeadsRaw, "leads", COLLECTIONS.leads.normalize, { table: "direct_booking_leads", idField: "lead_id" });
-  const setSettings = (valueOrUpdater) => setSettingsRaw((prev) => { const next = normalizeSettings(safeSettings(typeof valueOrUpdater === "function" ? valueOrUpdater(prev) : valueOrUpdater)); saveScoped("settings", next); if (signedInUserId) supabase.from("settings").upsert({ user_id: signedInUserId, data: next }, { onConflict: "user_id" }).then(({ error }) => { if (error) setDataError(error.message); }); return next; });
+  const setSettings = (valueOrUpdater) => setSettingsRaw((prev) => { const next = normalizeSettings(safeSettings(typeof valueOrUpdater === "function" ? valueOrUpdater(prev) : valueOrUpdater)); saveScoped("settings", next); if (signedInUserId) upsertUserSettings(signedInUserId, next).catch((error) => setDataError(error.message)); return next; });
 
   const simple = (setter, key, n = safeArray) => makeSetter(setter, key, n, null);
   const setCalendarEvents = simple(setCalendarEventsRaw, "calendarEvents", (v) => normalizeCollection(v, normalizeCalendarEvent));
@@ -186,7 +191,7 @@ export function AppProvider({ children }) {
     const blank = normalizeSettings(clone(BLANK_SETTINGS));
     if (signedInUserId) {
       await Promise.all(Object.values(COLLECTIONS).map((cfg) => supabase.from(cfg.table).delete().eq("user_id", signedInUserId)));
-      await supabase.from("settings").upsert({ user_id: signedInUserId, data: blank }, { onConflict: "user_id" });
+      await upsertUserSettings(signedInUserId, blank);
     }
     setProperties([]); setBookings([]); setGuests([]); setCleaning([]); setMaintenance([]); setSupplies([]); setExpenses([]); setLeads([]);
     setCalendarEvents([]); setQuotes([]); setMessageHistory([]); setReviewTasks([]); setMessageDrafts([]); setCalendarFeeds([]);

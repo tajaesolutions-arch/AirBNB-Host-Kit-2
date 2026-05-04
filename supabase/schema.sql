@@ -367,3 +367,48 @@ alter table if exists public.maintenance_issues add column if not exists owner_a
 alter table if exists public.maintenance_issues add column if not exists vendor_quote_link text;
 alter table if exists public.maintenance_issues add column if not exists before_photo_link text;
 alter table if exists public.maintenance_issues add column if not exists after_photo_link text;
+
+-- ============================================================
+-- Auto-create profile for each new auth user
+-- ============================================================
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (
+    id,
+    email,
+    business_name,
+    host_name,
+    default_currency,
+    default_tax_reserve_percentage,
+    default_management_fee_percentage,
+    onboarding_completed
+  )
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data ->> 'business_name', 'Your Hospitality Co.'),
+    coalesce(new.raw_user_meta_data ->> 'host_name', 'Your Host Name'),
+    'JMD',
+    0.15,
+    0.15,
+    false
+  )
+  on conflict (id) do update
+    set email = excluded.email,
+        business_name = coalesce(excluded.business_name, public.profiles.business_name),
+        host_name = coalesce(excluded.host_name, public.profiles.host_name),
+        updated_at = now();
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function public.handle_new_user();
