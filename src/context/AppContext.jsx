@@ -146,7 +146,7 @@ export function AppProvider({ children }) {
       }
       try {
         const queries = Object.entries(COLLECTIONS).map(async ([key, cfg]) => {
-          const { data, error } = await supabase.from(cfg.table).select("*").eq("user_id", signedInUserId);
+          const { data, error } = await supabase.from(cfg.table).select("*");
           if (error) throw new Error(`${key}: ${error.message}`);
           return [key, cfg.normalize(data || [])];
         });

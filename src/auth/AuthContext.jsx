@@ -31,9 +31,18 @@ export function AuthProvider({ children }) {
   const [membershipsError, setMembershipsError] = useState("");
 
   const fetchMemberships = async (authUser) => {
-    if (!supabase || !authUser?.id) { setMemberships([]); return []; }
+    if (!supabase || !authUser?.id) {
+      setMemberships([]);
+      setMembershipsLoading(false);
+      setMembershipsError("");
+      return [];
+    }
     setMembershipsLoading(true); setMembershipsError("");
-    const { data, error } = await supabase.from("property_memberships").select("*").eq("member_user_id", authUser.id).eq("active", true);
+    const { data, error } = await supabase
+      .from("property_memberships")
+      .select("*")
+      .eq("member_user_id", authUser.id)
+      .eq("active", true);
     if (error) { setMembershipsError(error.message || "Failed to load memberships."); setMemberships([]); setMembershipsLoading(false); return []; }
     const rows = Array.isArray(data) ? data : [];
     setMemberships(rows); setMembershipsLoading(false);
@@ -227,6 +236,8 @@ export function AuthProvider({ children }) {
       const { data } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
         if (!mountedRef.current) return;
 
+        // Avoid deadlock issues from follow-up Supabase calls in auth callback.
+        window.setTimeout(async () => {
         try {
           const nextUser = nextSession?.user || null;
 
@@ -238,9 +249,10 @@ export function AuthProvider({ children }) {
             void fetchMemberships(nextUser);
           } else {
             setProfile(null);
-    setMemberships([]);
-            setProfileLoading(false);
             setMemberships([]);
+            setMembershipsError("");
+            setMembershipsLoading(false);
+            setProfileLoading(false);
             setAuthError("");
           }
         } catch (err) {
@@ -252,6 +264,7 @@ export function AuthProvider({ children }) {
         } finally {
           if (mountedRef.current) setLoading(false);
         }
+        }, 0);
       });
 
       subscription = data?.subscription;
