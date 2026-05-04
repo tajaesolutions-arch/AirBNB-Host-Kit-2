@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
 import AuthScreen from "./auth/AuthScreen.jsx";
-import { AppProvider } from "./context/AppContext.jsx";
-import FirstTimeSetup from "./pages/FirstTimeSetup.jsx";
+import { AppProvider, useApp } from "./context/AppContext.jsx";
+import FirstTimeSetup from "./components/FirstTimeSetup.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { Menu } from "lucide-react";
-import { resetAccountToBlank, resetAccountToSampleData } from "./services/resetService.js";
 
 import * as DashboardModule from "./pages/Dashboard.jsx";
 import * as BookingsModule from "./pages/Bookings.jsx";
@@ -342,8 +341,7 @@ function DashboardShell() {
 }
 
 function AuthGate() {
-  const { user, profile, loading, authError, completeOnboarding } = useAuth();
-  const [onboardingBusy, setOnboardingBusy] = useState(false);
+  const { user, profile, loading, profileLoading, authError } = useAuth();
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;
@@ -364,43 +362,65 @@ function AuthGate() {
     return <AuthScreen />;
   }
 
-  if (user && !profile) {
+  if (user && profileLoading) {
     return <LoadingScreen label="Loading your account..." />;
   }
+
+  return (
+    <AppProvider>
+      <OnboardingGate profile={profile} />
+    </AppProvider>
+  );
+}
+
+function OnboardingGate({ profile }) {
+  const { completeOnboarding } = useAuth();
+  const { resetToBlankData, restoreSampleData } = useApp();
+  const [onboardingBusy, setOnboardingBusy] = useState("");
+  const [onboardingError, setOnboardingError] = useState("");
 
   const onboardingDone = profile?.onboarding_completed === true;
 
   const handleFresh = async () => {
-    setOnboardingBusy(true);
+    if (onboardingBusy) return;
+    setOnboardingBusy("fresh");
+    setOnboardingError("");
     try {
-      await resetAccountToBlank();
+      await resetToBlankData();
       await completeOnboarding("fresh");
+    } catch (err) {
+      setOnboardingError(err?.message || "Could not set up your blank workspace. Please try again.");
     } finally {
-      setOnboardingBusy(false);
+      setOnboardingBusy("");
     }
   };
   const handleSample = async () => {
-    setOnboardingBusy(true);
+    if (onboardingBusy) return;
+    setOnboardingBusy("sample");
+    setOnboardingError("");
     try {
-      await resetAccountToSampleData();
+      await restoreSampleData();
       await completeOnboarding("sample");
+    } catch (err) {
+      setOnboardingError(err?.message || "Could not load sample data. Please try again.");
     } finally {
-      setOnboardingBusy(false);
+      setOnboardingBusy("");
     }
   };
 
   return (
-    <AppProvider>
+    <>
       {!onboardingDone ? (
         <FirstTimeSetup
-          loading={onboardingBusy}
+          loadingChoice={onboardingBusy}
+          error={onboardingError}
           onStartFresh={handleFresh}
           onUseSampleData={handleSample}
         />
       ) : (
         <DashboardShell />
       )}
-    </AppProvider>
+    </>
   );
 }
 
