@@ -4294,3 +4294,198 @@ input, select, textarea {
 .booking-mini-day{height:10px;border-radius:999px;background:#eef2f7}.booking-mini-day.has-booking{background:var(--teal)}.booking-mini-day.is-muted{opacity:.35}
 @media (max-width: 900px){.booking-year-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.booking-month-day{min-height:95px}.booking-event-chip span:first-child{display:none}}
 @media (max-width: 700px){.booking-month-grid{display:none}.booking-week-grid{grid-template-columns:1fr}.booking-year-grid{grid-template-columns:1fr}.booking-mobile-agenda{display:block}}
+
+/* Mobile responsiveness overhaul */
+.mobile-hamburger-tab {
+  display: none;
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 150;
+  width: 28px;
+  height: 64px;
+  background: var(--navy);
+  border: none;
+  border-radius: 0 12px 12px 0;
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.18);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  padding: 0;
+}
+
+.mobile-hamburger-tab:hover {
+  background: var(--navy-soft);
+  width: 32px;
+}
+
+@media (max-width: 768px) {
+  html, body, #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  img, video, iframe {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .tr-clickable:hover { background: var(--paper); }
+  .section-title { font-size: 15px; }
+  .page-helper { flex-direction: row; align-items: flex-start; font-size: 12px; }
+  .card-sand { padding: 18px !important; }
+  .disclaimer-box { font-size: 12px; padding: 12px; }
+
+  .mobile-hamburger-tab { display: flex; }
+  .mobile-menu-trigger { display: none !important; }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: min(80vw, 280px);
+    z-index: 130;
+    transform: translateX(-110%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.25);
+  }
+
+  .sidebar.sidebar-mobile,
+  .sidebar.is-mobile,
+  .sidebar.mobile { transform: translateX(0); }
+
+  .sidebar.sidebar-mobile .sidebar-collapse-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .app-main,
+  .main-content { margin-left: 0 !important; }
+
+  .mobile-sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.52);
+    z-index: 129;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .mobile-sidebar-overlay.open { display: block; }
+
+  .page { padding: 20px 14px 80px 14px; }
+
+  .grid-2, .grid-3, .form-grid-2, .page-kpi-grid, .kpi-grid, .metric-grid,
+  .dashboard-kpi-grid, .account-grid, .settings-reset-grid, .smart-feature-grid,
+  .smart-hero-card, .smart-roadmap, .auth-benefit-grid { grid-template-columns: 1fr !important; }
+
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius); }
+  .table-wrap table { min-width: 700px; }
+
+  .modal-backdrop { align-items: flex-end; padding: 0; }
+  .modal { width: 100%; max-width: 100%; border-radius: 20px 20px 0 0; max-height: 92vh; }
+
+  .page-header-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .page-actions { width: 100%; flex-wrap: wrap; }
+  .page-actions .btn-primary,
+  .page-actions .btn-secondary { flex: 1 1 auto; justify-content: center; min-width: 120px; }
+  .page-title { font-size: 24px; }
+
+  .status-filters { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .status-filter-btn { flex-shrink: 0; }
+
+  .dashboard-page { padding: 16px 14px 80px; }
+  .dashboard-command-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .dashboard-toolbar-control { grid-column: span 1; width: 100%; border-radius: 10px; justify-content: space-between; }
+  .dashboard-toolbar-control select,
+  .dashboard-toolbar-control input { width: 100%; min-width: 0; }
+  .dashboard-command-bar .btn-primary,
+  .dashboard-command-bar .btn-secondary { border-radius: 10px; justify-content: center; }
+  .dashboard-primary-grid,
+  .dashboard-side-column { grid-template-columns: 1fr; gap: 14px; }
+  .dashboard-chart-svg { height: 200px; }
+  .dashboard-kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+  .dashboard-recent-bookings-table { overflow-x: auto; }
+  .dashboard-recent-bookings-table table { min-width: 860px; }
+
+  .booking-calendar-toolbar { flex-direction: column; align-items: stretch; gap: 10px; }
+  .booking-calendar-view-toggle { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+  .booking-calendar-view-toggle .btn-secondary { flex-shrink: 0; }
+  .booking-calendar-period-nav { justify-content: space-between; width: 100%; }
+  .booking-calendar-period-label { min-width: 0; text-align: center; font-size: 13px; }
+  .booking-calendar-inline-actions { display: none; }
+  .booking-month-day { min-height: 72px; padding: 5px; font-size: 12px; }
+  .booking-month-weekday { font-size: 10px; padding: 2px; }
+  .booking-week-grid { grid-template-columns: 1fr; overflow-x: visible; }
+  .booking-year-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .guest-detail-grid { grid-template-columns: 1fr; gap: 14px; }
+  .guest-list-panel { min-height: 0; max-height: 300px; overflow: hidden; }
+  .guest-list-scroll { max-height: 240px; }
+  .guest-detail-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .guest-detail-header-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .guest-detail-header-actions .btn-secondary { justify-content: center; }
+  .guest-activity-grid, .guest-stat-grid { grid-template-columns: 1fr 1fr; }
+  .guest-message-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .guest-message-actions .btn-secondary,
+  .guest-message-actions .btn-primary { justify-content: center; }
+
+  .settings-reset-grid { grid-template-columns: 1fr !important; }
+  .modal-footer { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+  .modal-footer .btn-danger { width: 100%; justify-content: center; order: 3; }
+  .modal-footer .modal-footer-spacer { display: none; }
+  .modal-footer .btn-primary,
+  .modal-footer .btn-secondary { flex: 1; justify-content: center; }
+
+  .exp-bar-row { margin-bottom: 14px; }
+  .profit-row { font-size: 13px; padding: 9px 10px; }
+  .smart-hero-visual { display: none; }
+  .smart-roadmap-steps { grid-template-columns: 1fr; }
+  .smart-roadmap-steps::before { display: none; }
+
+  button, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger, .sidebar-nav-item,
+  .status-filter-btn, .tab-btn, .sop-item, .msg-card-header, .tr-clickable td,
+  input[type="checkbox"] { min-height: 44px; }
+
+  input[type="checkbox"] { width: 20px; height: 20px; min-height: 20px; }
+  .chip { padding: 5px 12px; font-size: 12px; }
+  .sidebar-nav-item { min-height: 50px; padding: 14px 12px; }
+
+  .account-card { padding: 16px; }
+  .account-detail-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .account-detail-row strong { text-align: left; }
+}
+
+@media (max-width: 600px) {
+  .auth-shell { padding: 0; align-items: flex-end; }
+  .auth-shell-inner { grid-template-columns: 1fr; border-radius: 0; border: 0; min-height: 100vh; }
+  .auth-brand-panel { display: none; }
+  .auth-form-panel { padding: 24px 18px 40px; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .auth-form-card { padding: 24px 20px; border-radius: 16px; box-shadow: none; border: 1px solid var(--line); width: 100%; max-width: 100%; }
+  .auth-form-top h2 { font-size: 24px; }
+  .auth-primary-button { height: 52px; font-size: 15px; }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .auth-shell-inner { grid-template-columns: 1fr; }
+  .auth-brand-panel { padding: 28px 24px; min-height: auto; }
+  .auth-hero-copy { margin-top: 28px; }
+  .auth-benefit-grid { grid-template-columns: 1fr 1fr 1fr !important; margin-top: 20px; }
+  .auth-note-card { position: relative; left: auto; right: auto; bottom: auto; margin-top: 20px; }
+}
+
+@media (max-width: 480px) {
+  .dashboard-kpi-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 430px) {
+  .page { padding: 16px 12px 80px 12px; }
+  .page-title { font-size: 21px; }
+  .btn-primary,
+  .btn-secondary { font-size: 13px; padding: 9px 12px; }
+}
