@@ -36,6 +36,7 @@ const NAV_ITEMS = [
   {
     key: "cleaning",
     label: "Cleaning Schedule",
+    // Sparkles is supported across lucide-react versions used in this project.
     icon: Sparkles,
   },
   {
