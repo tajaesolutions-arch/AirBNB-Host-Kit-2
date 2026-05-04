@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
-import { getEffectiveRole, getPermissions, getAssignedPropertyIds, getAssignedPropertyRecordIds } from "../utils/permissions.js";
+import { getPermissions, getAssignedPropertyIds, getAssignedPropertyRecordIds, getAvailableRoles, normalizeRole } from "../utils/permissions.js";
 
 const AuthContext = createContext(null);
 const LOCAL_MODE_USER = { id: "local", email: "local" };
@@ -29,6 +29,9 @@ export function AuthProvider({ children }) {
   const [memberships, setMemberships] = useState([]);
   const [membershipsLoading, setMembershipsLoading] = useState(false);
   const [membershipsError, setMembershipsError] = useState("");
+  const [requestedRole, setRequestedRole] = useState("");
+  const [selectedPortalRole, setSelectedPortalRole] = useState("");
+  const [accessNotAssigned, setAccessNotAssigned] = useState(false);
 
   const fetchMemberships = async (authUser) => {
     if (!supabase || !authUser?.id) {
@@ -276,7 +279,9 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const signIn = async ({ email, password }) => {
+  const signIn = async ({ email, password, requestedRole: nextRequestedRole }) => {
+    setRequestedRole(normalizeRole(nextRequestedRole));
+    setAccessNotAssigned(false);
     if (!supabase || !isSupabaseConfigured) {
       throw new Error("Supabase is not configured.");
     }
@@ -304,7 +309,7 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const signUp = async ({ email, password, businessName, hostName }) => {
+  const signUp = async ({ email, password, businessName, hostName, requestedRole: signupRole }) => {
     if (!supabase || !isSupabaseConfigured) {
       throw new Error("Supabase is not configured.");
     }
@@ -316,6 +321,7 @@ export function AuthProvider({ children }) {
         data: {
           business_name: businessName || "",
           host_name: hostName || "",
+          requested_role: normalizeRole(signupRole) || "host",
         },
       },
     });
@@ -353,6 +359,9 @@ export function AuthProvider({ children }) {
     setUser(null);
     setProfile(null);
     setMemberships([]);
+    setRequestedRole("");
+    setSelectedPortalRole("");
+    setAccessNotAssigned(false);
   };
 
   const sendPasswordReset = async (email) => {
@@ -426,10 +435,23 @@ export function AuthProvider({ children }) {
   };
 
   const isApproved = profile?.account_status === "approved";
-  const assignedPropertyIds = useMemo(() => getAssignedPropertyIds(memberships), [memberships]);
-  const assignedPropertyRecordIds = useMemo(() => getAssignedPropertyRecordIds(memberships), [memberships]);
-  const effectiveRole = useMemo(() => getEffectiveRole({ memberships, user }), [memberships, user]);
-  const permissions = useMemo(() => getPermissions({ memberships, effectiveRole }), [memberships, effectiveRole]);
+  const availableRoles = useMemo(() => getAvailableRoles({ memberships, profile, user }), [memberships, profile, user]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (requestedRole && availableRoles.length && !selectedPortalRole) {
+      if (availableRoles.includes(requestedRole)) setSelectedPortalRole(requestedRole);
+      else setAccessNotAssigned(true);
+      return;
+    }
+    if (!selectedPortalRole && availableRoles.length === 1) setSelectedPortalRole(availableRoles[0]);
+  }, [requestedRole, availableRoles, selectedPortalRole, user]);
+
+  const effectiveRole = selectedPortalRole || availableRoles[0] || normalizeRole(profile?.role) || "host";
+  const scopedMemberships = useMemo(() => memberships.filter((m) => effectiveRole === "host" ? true : normalizeRole(m?.access_role) === effectiveRole), [memberships, effectiveRole]);
+  const assignedPropertyIds = useMemo(() => getAssignedPropertyIds(scopedMemberships), [scopedMemberships]);
+  const assignedPropertyRecordIds = useMemo(() => getAssignedPropertyRecordIds(scopedMemberships), [scopedMemberships]);
+  const permissions = useMemo(() => getPermissions({ memberships: scopedMemberships, effectiveRole }), [scopedMemberships, effectiveRole]);
   const isHostLike = Boolean(permissions?.isHostLike);
 
   const value = useMemo(
@@ -442,7 +464,8 @@ export function AuthProvider({ children }) {
       authError,
       isApproved,
       isSupabaseConfigured,
-      memberships, membershipsLoading, membershipsError, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike,
+      memberships, membershipsLoading, membershipsError, requestedRole, selectedPortalRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike, accessNotAssigned,
+      setSelectedPortalRole, setRequestedRole,
       refetchMemberships: () => fetchMemberships(user),
       signIn,
       signUp,

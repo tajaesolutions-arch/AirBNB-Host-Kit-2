@@ -21,7 +21,7 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
-import { canAccessPage } from "../utils/permissions.js";
+import { canAccessPage, ROLE_LABELS } from "../utils/permissions.js";
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -45,7 +45,7 @@ const NAV_ITEMS = [
   { key: "account", label: "My Account", icon: Users },
 ];
 
-export default function Sidebar({ page, setPage, collapsed = false, onToggleCollapse, mobile = false, onClose, role = "host", permissions }) {
+export default function Sidebar({ page, setPage, collapsed = false, onToggleCollapse, mobile = false, onClose, role = "host", permissions, assignedPropertyCount = 0 }) {
   const perm = permissions || { role };
   const allowedNavItems = NAV_ITEMS.filter((item) => canAccessPage(item.key, perm));
 
@@ -76,6 +76,7 @@ export default function Sidebar({ page, setPage, collapsed = false, onToggleColl
           );
         })}
       </nav>
+      <div style={{padding:12,borderTop:"1px solid #e5e7eb",fontSize:12}} title={collapsed?`Logged in as ${ROLE_LABELS[role]||role}`:undefined}>{collapsed?"●":<><div><strong>Logged in as {ROLE_LABELS[role]||role}</strong></div><div>{assignedPropertyCount} properties</div></>}</div>
     </aside>
   );
 }
