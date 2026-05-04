@@ -257,3 +257,7 @@ This product is for the buyer's personal or business use only. Resale or redistr
 
 *Built for Airbnb hosts, villa owners, co-hosts, diaspora property owners, and property managers worldwide.*  
 *Run your rental operations like a real business.*
+
+
+## Optional cleaning task delivery automation
+Use `supabase/functions/send-cleaning-task` as a placeholder. For live delivery configure provider keys (Resend, Twilio, or WhatsApp Cloud API).
