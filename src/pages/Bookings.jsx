@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
 import {
   PageHeader,
@@ -32,6 +32,12 @@ import {
   AlertCircle,
   Users,
   Sparkles,
+  ChevronLeft,
+  ChevronsLeftRight,
+  CalendarDays,
+  LayoutGrid,
+  Rows3,
+  Grid3X3,
 } from "lucide-react";
 
 const STATUSES = ["Confirmed", "Checked In", "Checked Out", "Cancelled"];
@@ -575,6 +581,35 @@ function BookingForm({
   );
 }
 
+
+const DAY_MS = 86400000;
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const toDate = (value) => {
+  const d = new Date(`${value}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+const startOfDay = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+const isSameDay = (a, b) => a && b && startOfDay(a).getTime() === startOfDay(b).getTime();
+const isSameMonth = (a, b) => a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+const getStartOfWeek = (date) => { const d = startOfDay(date); d.setDate(d.getDate() - d.getDay()); return d; };
+const getEndOfWeek = (date) => { const d = getStartOfWeek(date); d.setDate(d.getDate() + 6); return d; };
+const getMonthMatrix = (year, month) => {
+  const first = new Date(year, month, 1);
+  const start = getStartOfWeek(first);
+  return Array.from({ length: 42 }, (_, i) => { const d = new Date(start); d.setDate(start.getDate() + i); return d; });
+};
+const isBookingActiveOnDate = (booking, date) => {
+  const checkin = toDate(booking.checkin_date); const checkout = toDate(booking.checkout_date);
+  if (!checkin || !checkout) return false;
+  return startOfDay(date) >= checkin && startOfDay(date) < checkout;
+};
+
 export default function Bookings({ monthFilter, propFilter, setPage, pageAction, onPageActionHandled }) {
   const {
     bookings: rawBookings,
@@ -600,6 +635,8 @@ export default function Bookings({ monthFilter, propFilter, setPage, pageAction,
   const [editing, setEditing] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [saveNotice, setSaveNotice] = useState("");
+  const [calendarView, setCalendarView] = useState("month");
+  const [calendarCursor, setCalendarCursor] = useState(() => startOfDay(new Date()));
 
   const cur = settings.default_currency || "JMD";
   const selectedMonth = monthFilter || new Date().toISOString().slice(0, 7);
@@ -617,6 +654,24 @@ export default function Bookings({ monthFilter, propFilter, setPage, pageAction,
         statusFilter === "ALL" || booking.booking_status === statusFilter
     )
     .sort((a, b) => new Date(b.checkin_date) - new Date(a.checkin_date));
+
+  const getPropertyName = (propertyId) => properties.find((p) => p.property_id === propertyId)?.property_name || "Unknown property";
+  const getBookingTone = (booking) => {
+    if (booking.booking_status === "Cancelled" || booking.payment_status === "Unpaid") return "red";
+    if (booking.booking_status === "Checked In" || booking.booking_status === "Checked Out") return "blue";
+    if (booking.payment_status === "Partial" || booking.payment_status === "Pending") return "amber";
+    return "teal";
+  };
+  const getBookingsForDate = (date) => filtered.filter((booking) => isBookingActiveOnDate(booking, date));
+  const periodLabel = useMemo(() => {
+    if (calendarView === "year") return String(calendarCursor.getFullYear());
+    if (calendarView === "week") {
+      const start = getStartOfWeek(calendarCursor);
+      const end = getEndOfWeek(calendarCursor);
+      return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${end.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    }
+    return calendarCursor.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  }, [calendarCursor, calendarView]);
 
   const emptyRecord = {
     booking_id: "",
@@ -886,7 +941,91 @@ export default function Bookings({ monthFilter, propFilter, setPage, pageAction,
             </div>
           )}
 
-          <div className="card" style={{ overflow: "hidden" }}>
+          {hasBookings && (
+            <div className="card booking-calendar-workspace">
+              <div className="booking-calendar-toolbar">
+                <div className="booking-calendar-view-toggle">
+                  {[
+                    ["week", "Week", <Rows3 size={14} key="w" />],
+                    ["month", "Month", <LayoutGrid size={14} key="m" />],
+                    ["year", "Year", <Grid3X3 size={14} key="y" />],
+                    ["table", "Table", <ChevronsLeftRight size={14} key="t" />],
+                  ].map(([id, label, icon]) => (
+                    <button key={id} className={`btn-secondary ${calendarView === id ? "is-active" : ""}`} aria-pressed={calendarView === id} onClick={() => setCalendarView(id)}>
+                      {icon}{label}
+                    </button>
+                  ))}
+                </div>
+                <div className="booking-calendar-period-nav">
+                  <button className="btn-secondary" aria-label="Previous period" onClick={() => setCalendarCursor((p) => new Date(p.getFullYear(), p.getMonth() + (calendarView === "year" ? -12 : calendarView === "week" ? 0 : -1), p.getDate() - (calendarView === "week" ? 7 : 0)))}><ChevronLeft size={14} /></button>
+                  <div className="booking-calendar-period-label">{periodLabel}</div>
+                  <button className="btn-secondary" aria-label="Next period" onClick={() => setCalendarCursor((p) => new Date(p.getFullYear(), p.getMonth() + (calendarView === "year" ? 12 : calendarView === "week" ? 0 : 1), p.getDate() + (calendarView === "week" ? 7 : 0)))}><ChevronRight size={14} /></button>
+                  <button className="btn-secondary" aria-label="Jump to today" onClick={() => setCalendarCursor(startOfDay(new Date()))}>Today</button>
+                </div>
+                <div className="booking-calendar-inline-actions">
+                  <button className="btn-secondary" onClick={() => downloadCSV("bookings.csv", filtered)}><Download size={14} />Export</button>
+                  <button className="btn-primary" onClick={startNewBooking}><Plus size={14} />Add Booking</button>
+                </div>
+              </div>
+
+              {calendarView === "month" && (
+                <div className="booking-month-grid">
+                  {WEEKDAYS.map((day) => <div className="booking-month-weekday" key={day}>{day}</div>)}
+                  {getMonthMatrix(calendarCursor.getFullYear(), calendarCursor.getMonth()).map((date) => {
+                    const dayBookings = getBookingsForDate(date);
+                    const muted = !isSameMonth(date, calendarCursor);
+                    return (
+                      <div key={date.toISOString()} className={`booking-month-day ${muted ? "is-muted" : ""} ${isSameDay(date, new Date()) ? "is-today" : ""}`}>
+                        <div className="booking-month-day-head"><span>{date.getDate()}</span>{isSameDay(date, new Date()) && <CalendarDays size={12} />}</div>
+                        <div className="booking-day-indicators">
+                          {dayBookings.slice(0, 2).map((booking) => (
+                            <button key={booking.booking_id} className={`booking-event-chip ${getBookingTone(booking)}`} onClick={() => setEditing(booking)} aria-label={`Booking for ${booking.guest_name} at ${getPropertyName(booking.property_id)} from ${fmtDateShort(booking.checkin_date)} to ${fmtDateShort(booking.checkout_date)}.`}>
+                              <span>{booking.guest_name}</span>
+                              <span className="booking-popover"><strong>{booking.guest_name}</strong><br />{getPropertyName(booking.property_id)}<br />{fmtDateShort(booking.checkin_date)} - {fmtDateShort(booking.checkout_date)} · {calcNights(booking.checkin_date, booking.checkout_date)} nights<br />{booking.platform} · {booking.booking_status} · {booking.payment_status}<br />{fmtCurrency(bookingTotal(booking), cur)} · Click to edit</span>
+                            </button>
+                          ))}
+                          {dayBookings.length > 2 && <div className="booking-event-more">+{dayBookings.length - 2} more</div>}
+                          {!!dayBookings.length && <div className="booking-mobile-stays">{dayBookings.length} stays</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {calendarView === "week" && (
+                <div className="booking-week-grid">
+                  {Array.from({ length: 7 }, (_, i) => { const d = new Date(getStartOfWeek(calendarCursor)); d.setDate(d.getDate() + i); return d; }).map((date) => (
+                    <div className="booking-week-day" key={date.toISOString()}>
+                      <h4>{date.toLocaleDateString("en-US", { weekday: "short" })} <small>{date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</small></h4>
+                      <div className="booking-week-day-list">
+                        {getBookingsForDate(date).map((booking) => (
+                          <button key={booking.booking_id} className={`booking-week-card ${getBookingTone(booking)}`} onClick={() => setEditing(booking)}>
+                            <strong>{booking.guest_name}</strong><span>{getPropertyName(booking.property_id)}</span><span>{booking.platform}</span><span>{booking.booking_status} · {booking.payment_status}</span><span>{fmtCurrency(bookingTotal(booking), cur)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {calendarView === "year" && (
+                <div className="booking-year-grid">
+                  {Array.from({ length: 12 }, (_, m) => new Date(calendarCursor.getFullYear(), m, 1)).map((monthDate) => {
+                    const days = getMonthMatrix(monthDate.getFullYear(), monthDate.getMonth()).slice(0, 35);
+                    const monthCount = filtered.filter((b) => (b.checkin_date || "").startsWith(`${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, "0")}`)).length;
+                    return <button className="booking-mini-month" key={monthDate.toISOString()} onClick={() => { setCalendarCursor(monthDate); setCalendarView("month"); }}>
+                      <div className="booking-mini-month-head">{monthDate.toLocaleDateString("en-US", { month: "long" })} <span>{monthCount} stays</span></div>
+                      <div className="booking-mini-month-grid">{days.map((d) => <span key={d.toISOString()} className={`booking-mini-day ${isSameMonth(d, monthDate) ? "" : "is-muted"} ${getBookingsForDate(d).length ? "has-booking" : ""}`} />)}</div>
+                    </button>;
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="card" style={{ overflow: "hidden", display: calendarView === "table" || !hasBookings ? "block" : "none" }}>
             <div className="table-wrap">
               <table>
                 <thead>
