@@ -176,7 +176,7 @@ function LocalModeBanner() {
 }
 
 function DashboardShell() {
-  const { isSupabaseConfigured, effectiveRole, permissions, assignedPropertyIds, membershipsLoading, isHostLike } = useAuth();
+  const { isSupabaseConfigured, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, membershipsLoading, membershipsError, refetchMemberships, isHostLike } = useAuth();
   const role = effectiveRole || "host";
   const roleDefaultPage = getDefaultPageForRole(role);
   const [page, setPage] = useState(() => (canAccessByPermissions("dashboard", permissions || { role }) ? "dashboard" : roleDefaultPage));
@@ -255,6 +255,7 @@ function DashboardShell() {
       permissions,
       effectiveRole: role,
       assignedPropertyIds,
+      assignedPropertyRecordIds,
       isHostLike,
     };
 
@@ -344,6 +345,17 @@ function DashboardShell() {
   };
 
   if (membershipsLoading) return <LoadingScreen label="Loading role access…" />;
+  if (membershipsError) {
+    return (
+      <div className="auth-setup-error">
+        <div>
+          <strong>Membership access failed to load</strong>
+          <p>{membershipsError}</p>
+          <button type="button" className="btn" onClick={() => refetchMemberships?.()}>Retry</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
       <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
