@@ -8,6 +8,7 @@ import React, {
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 
 const AuthContext = createContext(null);
+const LOCAL_MODE_USER = { id: "local", email: "local" };
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -27,7 +28,6 @@ export function AuthProvider({ children }) {
         .maybeSingle();
 
       if (selectError && selectError.code !== "PGRST116") {
-        console.warn("Profile lookup error:", selectError.message);
       }
 
       if (existingProfile) {
@@ -55,13 +55,11 @@ export function AuthProvider({ children }) {
         .single();
 
       if (insertError) {
-        console.warn("Profile creation error:", insertError.message);
         return newProfile;
       }
 
       return createdProfile;
     } catch (err) {
-      console.warn("ensureProfile error:", err?.message || err);
       return null;
     }
   };
@@ -71,7 +69,6 @@ export function AuthProvider({ children }) {
 
     const safetyTimer = window.setTimeout(() => {
       if (mounted) {
-        console.warn("Auth check timed out. Releasing loading state.");
         setLoading(false);
       }
     }, 5000);
@@ -82,11 +79,8 @@ export function AuthProvider({ children }) {
         setAuthError("");
 
         if (!isSupabaseConfigured || !supabase) {
-          setAuthError(
-            "Supabase is not configured yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel, then redeploy."
-          );
           setSession(null);
-          setUser(null);
+          setUser(LOCAL_MODE_USER);
           setProfile(null);
           return;
         }
@@ -172,7 +166,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signIn = async ({ email, password }) => {
-    if (!supabase) {
+    if (!supabase || !isSupabaseConfigured) {
       throw new Error("Supabase is not configured.");
     }
 
@@ -194,7 +188,7 @@ export function AuthProvider({ children }) {
   };
 
   const signUp = async ({ email, password, businessName, hostName }) => {
-    if (!supabase) {
+    if (!supabase || !isSupabaseConfigured) {
       throw new Error("Supabase is not configured.");
     }
 
@@ -224,7 +218,7 @@ export function AuthProvider({ children }) {
   };
 
   const signOut = async () => {
-    if (!supabase) {
+    if (!supabase || !isSupabaseConfigured) {
       throw new Error("Supabase is not configured.");
     }
 
@@ -238,7 +232,7 @@ export function AuthProvider({ children }) {
   };
 
   const sendPasswordReset = async (email) => {
-    if (!supabase) {
+    if (!supabase || !isSupabaseConfigured) {
       throw new Error("Supabase is not configured.");
     }
 
@@ -254,7 +248,7 @@ export function AuthProvider({ children }) {
   };
 
   const updatePassword = async (newPassword) => {
-    if (!supabase) {
+    if (!supabase || !isSupabaseConfigured) {
       throw new Error("Supabase is not configured.");
     }
 
@@ -268,7 +262,7 @@ export function AuthProvider({ children }) {
   };
 
   const updateProfile = async (updates) => {
-    if (!supabase) {
+    if (!supabase || !isSupabaseConfigured) {
       throw new Error("Supabase is not configured.");
     }
 
@@ -302,6 +296,7 @@ export function AuthProvider({ children }) {
       profile,
       loading,
       authError,
+      isSupabaseConfigured,
       signIn,
       signUp,
       signOut,

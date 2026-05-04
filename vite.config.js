@@ -6,5 +6,14 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          icons: ["lucide-react"],
+          supabase: ["@supabase/supabase-js"],
+        },
+      },
+    },
   },
 });
