@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
 import AuthScreen from "./auth/AuthScreen.jsx";
 import { AppProvider, useApp } from "./context/AppContext.jsx";
@@ -16,6 +16,7 @@ import * as AccountModule from "./pages/Account.jsx";
 import * as SmartToolsModule from "./pages/SmartTools.jsx";
 
 import "./styles.css";
+import { isPageAllowedForRole, normalizePageKey } from "./utils/accessControl.js";
 
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 
@@ -168,8 +169,9 @@ function LocalModeBanner() {
 }
 
 function DashboardShell() {
-  const { isSupabaseConfigured } = useAuth();
-  const [page, setPage] = useState("dashboard");
+  const { isSupabaseConfigured, profile } = useAuth();
+  const role = profile?.role || "host";
+  const [page, setPage] = useState(() => (isPageAllowedForRole(role, "dashboard") ? "dashboard" : "account"));
   const [pageAction, setPageAction] = useState(null);
   const [monthFilter, setMonthFilter] = useState(currentMonth());
   const [propFilter, setPropFilter] = useState("ALL");
@@ -202,7 +204,16 @@ function DashboardShell() {
   };
 
   const goToPage = (nextPage, action = null) => {
-    setPage(nextPage);
+    const safePage = normalizePageKey(nextPage);
+
+    if (!isPageAllowedForRole(role, safePage)) {
+      setPage("account");
+      setPageAction({ type: "access-denied", requestedPage: safePage });
+      closeMobileSidebar();
+      return;
+    }
+
+    setPage(safePage);
     setPageAction(action);
     closeMobileSidebar();
   };
@@ -210,6 +221,13 @@ function DashboardShell() {
   const clearPageAction = () => {
     setPageAction(null);
   };
+
+  useEffect(() => {
+    if (!isPageAllowedForRole(role, page)) {
+      setPage("account");
+      setPageAction({ type: "access-denied", requestedPage: normalizePageKey(page) });
+    }
+  }, [role, page]);
 
   const renderPage = () => {
     const shared = {
@@ -299,6 +317,7 @@ function DashboardShell() {
       <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
         <Sidebar
           page={page}
+          role={role}
           setPage={goToPage}
           collapsed={sidebarCollapsed}
           onToggleCollapse={toggleSidebarCollapsed}
@@ -313,6 +332,7 @@ function DashboardShell() {
 
             <Sidebar
               page={page}
+              role={role}
               setPage={goToPage}
               collapsed={false}
               mobile
