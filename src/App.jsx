@@ -4,6 +4,7 @@ import AuthScreen from "./auth/AuthScreen.jsx";
 import { AppProvider } from "./context/AppContext.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import { Menu } from "lucide-react";
 
 import * as DashboardModule from "./pages/Dashboard.jsx";
 import * as BookingsModule from "./pages/Bookings.jsx";
@@ -306,20 +307,21 @@ function DashboardShell() {
           </>
         )}
 
-        <ErrorBoundary key={page}>
-        <main className="app-main main-content">
+        {!mobileSidebarOpen && (
           <button
-            type="button"
-            className="mobile-menu-trigger"
+            className="mobile-hamburger-tab"
             onClick={() => setMobileSidebarOpen(true)}
             aria-label="Open navigation menu"
           >
-            ☰ Menu
+            <Menu size={16} />
           </button>
+        )}
 
-          <div className="page-scroll-frame">{renderPage()}</div>
-        </main>
-      </ErrorBoundary>
+        <ErrorBoundary key={page}>
+          <main className="app-main main-content">
+            <div className="page-scroll-frame">{renderPage()}</div>
+          </main>
+        </ErrorBoundary>
       </div>
     </AppProvider>
   );
