@@ -4090,3 +4090,217 @@ tbody tr:hover { background:#f9fcff; }
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media (max-width:1200px){.guest-detail-grid{grid-template-columns:minmax(250px,36%) minmax(360px,64%)}.guest-profile-panel{grid-column:1/-1}}
 @media (max-width:760px){.guest-detail-grid{grid-template-columns:1fr}.guest-list-panel{min-height:0}.guest-list-scroll{max-height:320px}.guest-message-actions{flex-direction:column}.guest-detail-header-actions{width:100%}}
+
+/* Responsive Layout Hardening */
+html, body, #root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.app-shell,
+.app-main,
+.main-content,
+.page-scroll-frame,
+.page,
+.card,
+.section,
+.table-wrap,
+.dashboard-page,
+.dashboard-panel,
+.dashboard-table-card {
+  min-width: 0;
+}
+
+.app-main,
+.main-content {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.page {
+  width: 100%;
+  max-width: 1380px;
+  padding: 28px 28px 64px;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrap table {
+  width: 100%;
+  min-width: 900px;
+}
+
+.td-right,
+.num {
+  text-align: right;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+input, select, textarea {
+  max-width: 100%;
+}
+
+.modal {
+  width: min(760px, calc(100vw - 28px));
+  max-height: min(88vh, 920px);
+}
+
+.modal-body {
+  overflow: auto;
+}
+
+.modal-footer {
+  flex-wrap: wrap;
+}
+
+/* Guest CRM Responsive Workspace */
+.guest-detail-shell,
+.guest-detail-grid,
+.guest-detail-header,
+.guest-list-panel,
+.guest-center-panel,
+.guest-profile-panel {
+  min-width: 0;
+}
+
+.guest-detail-grid {
+  grid-template-columns: minmax(280px, 0.85fr) minmax(360px, 1.25fr) minmax(300px, 0.9fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.guest-list-panel {
+  min-height: 0;
+}
+
+.guest-list-scroll {
+  max-height: 540px;
+}
+
+.guest-message-textarea {
+  width: 100%;
+  min-height: 190px;
+  max-height: 220px;
+}
+
+.guest-message-actions {
+  flex-wrap: wrap;
+}
+
+.guest-message-actions .btn-secondary,
+.guest-message-actions .btn-primary {
+  white-space: nowrap;
+}
+
+/* Booking Calendar + Dashboard/table safety */
+.calendar-grid-wrap,
+.booking-calendar-wrap,
+.booking-calendar-shell {
+  min-width: 0;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.calendar-grid,
+.booking-calendar-grid {
+  min-width: 840px;
+}
+
+.dashboard-kpi-grid,
+.metric-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Mobile Shell and Sidebar */
+@media (max-width: 1279px) {
+  .page { padding: 24px 22px 56px; }
+  .dashboard-primary-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 1024px) {
+  .page { padding: 22px 20px 52px; }
+  .dashboard-kpi-grid,
+  .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .guest-detail-grid {
+    grid-template-columns: minmax(260px, 0.9fr) minmax(340px, 1.1fr);
+  }
+
+  .guest-profile-panel {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .page { padding: 20px 16px 48px; }
+
+  .mobile-menu-trigger {
+    width: calc(100% - 24px);
+    margin: 10px 12px 0;
+  }
+
+  .form-grid-2,
+  .grid-2,
+  .grid-3,
+  .dashboard-kpi-grid,
+  .metric-grid,
+  .guest-activity-grid,
+  .guest-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guest-detail-header-actions {
+    width: 100%;
+  }
+
+  .guest-detail-header-actions .btn-secondary,
+  .guest-detail-header-actions .btn-primary {
+    flex: 1 1 220px;
+  }
+
+  .guest-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .guest-list-scroll {
+    max-height: 320px;
+  }
+
+  .guest-message-actions .btn-secondary,
+  .guest-message-actions .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table-wrap table { min-width: 760px; }
+
+  .modal {
+    width: 100vw;
+    max-width: 100vw;
+    border-radius: 16px 16px 0 0;
+    margin: auto 0 0;
+    max-height: 90vh;
+  }
+
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+}
+
+@media (max-width: 430px) {
+  .page { padding: 16px 14px 44px; }
+  .table-wrap table { min-width: 680px; }
+  .guest-detail-header-main { min-width: 0; }
+}
