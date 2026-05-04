@@ -8,10 +8,8 @@ import {
   fmtCurrency,
   fmtPct,
   fmtDateShort,
-  supplyStatus,
   inSelectedMonth,
   daysInMonth,
-  bookingStatusChip,
   paymentStatusChip,
   cleaningStatusChip,
   supplyChip,
@@ -21,24 +19,22 @@ import {
   DollarSign,
   TrendingUp,
   Calendar,
-  Bell,
+  ShieldCheck,
   Package,
-  Wrench,
-  Sparkles,
-  ArrowRight,
   CheckCircle2,
   PlusCircle,
   ReceiptText,
   Circle,
   ChevronDown,
   ChevronUp,
-  Wallet,
+  Megaphone,
 } from "lucide-react";
 
 const SETUP_PROGRESS_STORAGE_KEY = "jak_dashboard_setup_progress";
 const SETUP_CHECKLIST_OPEN_STORAGE_KEY = "jak_setup_checklist_open";
 const safeArray = (value) => (Array.isArray(value) ? value : []);
 const safeSettings = (value) => (value && typeof value === "object" ? value : {});
+const DIRECT_CHANNELS = ["WhatsApp", "Instagram", "Direct", "Google", "Referral", "Website", "Phone Call", "Past Guest"];
 
 const parseDateSafe = (value) => {
   if (!value) return null;
@@ -46,8 +42,6 @@ const parseDateSafe = (value) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-
-// ...reuse existing setup helpers unchanged behavior
 function loadSetupProgress() { try { const raw = localStorage.getItem(SETUP_PROGRESS_STORAGE_KEY); const p = raw ? JSON.parse(raw) : {}; const s = p && typeof p === "object" && !Array.isArray(p) ? p : {}; const n = (v) => (v === true ? { done: true, skipped: false } : v && typeof v === "object" ? { done: v.done === true, skipped: v.skipped === true } : { done: false, skipped: false }); return { businessInfo: n(s.businessInfo), team: n(s.team), operations: n(s.operations), fees: n(s.fees ?? s.reviewedFees), backup: n(s.backup ?? s.backupExported) }; } catch { return {}; } }
 function saveSetupProgress(nextProgress) { try { localStorage.setItem(SETUP_PROGRESS_STORAGE_KEY, JSON.stringify(nextProgress)); } catch {} }
 const isProgressComplete = (savedProgress, key) => savedProgress?.[key]?.done === true || savedProgress?.[key]?.skipped === true;
@@ -68,24 +62,17 @@ function getSetupChecklist({ properties, bookings, expenses, supplies, cleaning,
   ];
 }
 
-function HorizontalBarList({ items = [] }) {
-  const max = Math.max(1, ...items.map((i) => i.value || 0));
-  const clampPercent = (value) => Math.max(0, Math.min(100, value));
-  return <div className="revenue-breakdown-list">{items.map((item) => {
-    const percent = clampPercent(((item.value || 0) / max) * 100);
-    return <div key={item.label} className="revenue-breakdown-row"><div className="revenue-breakdown-topline"><span className="revenue-breakdown-label">{item.label}</span><strong className="revenue-breakdown-value">{item.formatted}</strong></div><div className="revenue-breakdown-track"><div className="revenue-breakdown-fill" style={{ width: `${percent}%` }} /></div></div>;
-  })}</div>;
-}
-
 function SetupProgressCard({ checklist, onGoToPage, onMarkComplete, onMarkSkipped }) {
   const [isOpen, setIsOpen] = useState(() => localStorage.getItem(SETUP_CHECKLIST_OPEN_STORAGE_KEY) !== "false");
-  const completedCount = checklist.filter((item) => item.completed).length; const percent = checklist.length ? Math.round((completedCount / checklist.length) * 100) : 0;
+  const completedCount = checklist.filter((item) => item.completed).length;
+  const percent = checklist.length ? Math.round((completedCount / checklist.length) * 100) : 0;
   if (percent === 100) return null;
   const toggle = () => setIsOpen((p) => { const n = !p; localStorage.setItem(SETUP_CHECKLIST_OPEN_STORAGE_KEY, String(n)); return n; });
-  return <div className="dashboard-panel dashboard-setup-card"><div className="setup-head"><h3>Setup Checklist</h3><button className="btn-ghost" onClick={toggle}>{isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button></div><div className="setup-bar"><div className="setup-fill" style={{ width: `${percent}%` }} /></div>{isOpen && checklist.map((item) => <div key={item.id} className="setup-item"><div>{item.completed ? <CheckCircle2 size={14} /> : <Circle size={14} />}</div><span>{item.title}</span><div>{!item.completed && item.canManuallyComplete && <button className="btn-ghost setup-mini-btn" onClick={() => onMarkComplete(item.id)}>Done</button>}{!item.completed && item.canManuallyComplete && <button className="btn-ghost setup-mini-btn" onClick={() => onMarkSkipped(item.id)}>Skip</button>}<button className="btn-ghost setup-mini-btn" onClick={() => onGoToPage(item.page)}>{item.action}</button></div></div>)}</div>;
+
+  return <div className="card dashboard-overview dashboard-setup-card"><div className="dashboard-card-header"><h3>Setup Checklist</h3><div className="dashboard-setup-meta"><span>{completedCount}/{checklist.length} complete</span><button type="button" className="btn-ghost" onClick={toggle} aria-label="Toggle setup checklist">{isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button></div></div><div className="setup-bar"><div className="setup-fill" style={{ width: `${percent}%` }} /></div>{isOpen && <div className="dashboard-setup-items">{checklist.map((item) => <div key={item.id} className="dashboard-list-item"><span className="dashboard-setup-title">{item.completed ? <CheckCircle2 size={14} /> : <Circle size={14} />}{item.title}</span><div className="dashboard-setup-actions">{!item.completed && item.canManuallyComplete && <button type="button" className="btn-ghost setup-mini-btn" onClick={() => onMarkComplete(item.id)}>Done</button>}{!item.completed && item.canManuallyComplete && <button type="button" className="btn-ghost setup-mini-btn" onClick={() => onMarkSkipped(item.id)}>Skip</button>}<button type="button" className="btn-ghost setup-mini-btn" onClick={() => onGoToPage(item.page)}>{item.action}</button></div></div>)}</div>}</div>;
 }
 
-export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFilter, setPropFilter }) {
+export default function Dashboard({ setPage, monthFilter, propFilter }) {
   const app = useApp();
   const bookings = safeArray(app.bookings); const expenses = safeArray(app.expenses); const maintenance = safeArray(app.maintenance); const supplies = safeArray(app.supplies); const cleaning = safeArray(app.cleaning); const properties = safeArray(app.properties); const settings = safeSettings(app.settings);
   const [savedSetupProgress, setSavedSetupProgress] = useState(() => loadSetupProgress());
@@ -104,124 +91,76 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
   const netProfit = grossRevenue - totalExpenses - managementFee - taxReserve;
   const bookedNights = monthBookings.reduce((s, b) => s + bookingNightsInMonth(b, selectedMonth), 0);
   const occupancy = bookedNights / Math.max(1, daysInMonth(selectedMonth) * Math.max(1, selectedPropFilter === "ALL" ? properties.length : 1));
-  const today = new Date(); today.setHours(0,0,0,0);
-  const upcomingCheckins = activeBookings.filter((b) => { const d = parseDateSafe(b?.checkin_date); return d && d >= today; }).sort((a,b)=>parseDateSafe(a.checkin_date)-parseDateSafe(b.checkin_date)).slice(0,5);
-  const unpaidCount = activeBookings.filter((b) => ["Unpaid", "Partial"].includes(b?.payment_status)).length;
-  const lowStock = filterByProp(supplies).filter((s) => Number(s?.current_quantity) <= Number(s?.reorder_level));
   const cleaningDue = filterByProp(cleaning).filter((c) => ["Scheduled", "In Progress"].includes(c?.cleaning_status));
   const openMaintenance = filterByProp(maintenance).filter((m) => !["Completed", "Cancelled"].includes(m?.status));
+  const urgentMaintenance = openMaintenance.filter((m) => ["Urgent", "High"].includes(m?.priority));
+  const lowStock = filterByProp(supplies).filter((s) => Number(s?.current_quantity) <= Number(s?.reorder_level));
+  const opsTotal = urgentMaintenance.length + lowStock.length + cleaningDue.length;
+  const operationsHealth = Math.max(0, Math.min(100, 100 - (opsTotal * 12)));
   const checklist = useMemo(() => getSetupChecklist({ properties, bookings, expenses, supplies, cleaning, maintenance, settings, savedProgress: savedSetupProgress }), [properties, bookings, expenses, supplies, cleaning, maintenance, settings, savedSetupProgress]);
-  const incompleteSetupItems = checklist.filter((item) => !item.completed);
-  const shouldShowSetupChecklist = incompleteSetupItems.length > 0;
 
   if (!properties.length) {
-    return <div className="page"><PageHeader title="Welcome to your Host Operations Kit" subtitle="Start with your first property to begin tracking your operations." actions={<button className="btn-primary" onClick={() => goToPage("settings")}><PlusCircle size={14}/>Add First Property</button>} /></div>;
+    return <div className="page"><PageHeader title="Welcome to your Host Operations Kit" subtitle="Start with your first property to begin tracking your operations." actions={<button type="button" className="btn-primary" onClick={() => goToPage("settings")}><PlusCircle size={14}/>Add First Property</button>} /></div>;
   }
 
-  const getWeekBucket = (dateString) => {
-    if (!dateString) return -1;
-    const normalizedDate = String(dateString).slice(0, 10);
-    const date = parseDateSafe(`${normalizedDate}T00:00:00`);
-    if (!date) return -1;
-    return Math.min(4, Math.floor((date.getDate() - 1) / 7));
-  };
-  const weekly = [
-    { label: "W1", revenue: 0, expenses: 0 },
-    { label: "W2", revenue: 0, expenses: 0 },
-    { label: "W3", revenue: 0, expenses: 0 },
-    { label: "W4", revenue: 0, expenses: 0 },
-    { label: "W5", revenue: 0, expenses: 0 },
-  ];
-  monthBookings.forEach((booking) => {
-    if (!inSelectedMonth(booking?.checkin_date, selectedMonth)) return;
-    const bucketIndex = getWeekBucket(booking?.checkin_date);
-    if (bucketIndex < 0) return;
-    weekly[bucketIndex].revenue += bookingRevenueInMonth(booking, selectedMonth);
-  });
-  monthExpenses.forEach((expense) => {
-    const bucketIndex = getWeekBucket(expense?.expense_date);
-    if (bucketIndex < 0) return;
-    weekly[bucketIndex].expenses += Number(expense?.amount || 0);
-  });
-  const weeklyMax = Math.max(1, ...weekly.map((w) => Math.max(w.revenue, w.expenses)));
-  const hasWeeklyData = weekly.some((w) => w.revenue > 0 || w.expenses > 0);
-  const getProp = (id) => properties.find((p) => p.property_id === id)?.property_name || "—";
-  const compareRecentBookings = (a, b) => {
-    const aCheckin = parseDateSafe(a?.checkin_date)?.getTime() || 0;
-    const bCheckin = parseDateSafe(b?.checkin_date)?.getTime() || 0;
-    if (bCheckin !== aCheckin) return bCheckin - aCheckin;
-    const aCheckout = parseDateSafe(a?.checkout_date)?.getTime() || 0;
-    const bCheckout = parseDateSafe(b?.checkout_date)?.getTime() || 0;
-    return bCheckout - aCheckout;
-  };
-  const recentBookingSource = monthBookings.length ? monthBookings : activeBookings;
-  const nonCancelledRecent = recentBookingSource.filter((b) => b?.booking_status !== "Cancelled");
-  const cancelledRecent = recentBookingSource.filter((b) => b?.booking_status === "Cancelled");
-  const recentBookings = [...(nonCancelledRecent.length ? nonCancelledRecent : cancelledRecent)].sort(compareRecentBookings).slice(0, 3);
-  const platformTone = (platform) => ["Direct", "WhatsApp", "Instagram", "Referral"].includes(platform) ? "teal" : "blue";
+  const subtitle = `${selectedMonth} · ${selectedPropFilter === "ALL" ? "All Properties" : properties.find((p) => p.property_id === selectedPropFilter)?.property_name || "Selected Property"}`;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcoming = activeBookings
+    .filter((b) => {
+      const checkinDate = parseDateSafe(b?.checkin_date);
+      return checkinDate && checkinDate >= today;
+    })
+    .sort((a, b) => parseDateSafe(a?.checkin_date) - parseDateSafe(b?.checkin_date))
+    .slice(0, 5);
+  const directBookings = monthBookings.filter((b) => DIRECT_CHANNELS.includes(b?.platform));
+  const directRevenue = directBookings.reduce((sum, b) => sum + bookingRevenueInMonth(b, selectedMonth), 0);
+  const alerts = [...urgentMaintenance.map((m) => ({ id: `m-${m.maintenance_id}`, label: `${m.issue || "Maintenance item"} (${m.priority || "Open"})`, page: "maintenance" })), ...lowStock.map((s) => ({ id: `s-${s.supply_id}`, label: `${s.item_name || "Supply"} is low stock`, page: "supplies" })), ...cleaningDue.filter((c) => c?.cleaning_status === "Scheduled").map((c) => ({ id: `c-${c.cleaning_id}`, label: `Cleaning scheduled for ${c?.property_id || "property"}`, page: "cleaning" }))].slice(0, 6);
 
-  return <div className="dashboard-page">
-    <section className="dashboard-page-header"><div className="dashboard-title-block"><h1 className="page-title">Dashboard</h1><p className="page-subtitle">{selectedMonth} · {selectedPropFilter === "ALL" ? "All Properties" : getProp(selectedPropFilter)}</p></div></section>
-    <section className="dashboard-command-bar"><label className="dashboard-toolbar-control">Property<select value={selectedPropFilter} onChange={(e)=>setPropFilter?.(e.target.value)}><option value="ALL">All</option>{properties.map((p)=><option key={p.property_id} value={p.property_id}>{p.property_name||"Unnamed"}</option>)}</select></label><label className="dashboard-toolbar-control">Month<input type="month" value={selectedMonth} onChange={(e)=>setMonthFilter?.(e.target.value)} /></label><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("bookings","addBooking")}><PlusCircle size={14}/>Add Booking</button><button className="btn-secondary dashboard-toolbar-btn" onClick={()=>goToPage("revenue","addExpense")}><ReceiptText size={14}/>Add Expense</button></section>
-    {shouldShowSetupChecklist && (
-      <section className="dashboard-setup-top">
-        <SetupProgressCard checklist={checklist} onGoToPage={goToPage} onMarkComplete={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:true,skipped:false}}; saveSetupProgress(n); return n;})} onMarkSkipped={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:false,skipped:true}}; saveSetupProgress(n); return n;})} />
-      </section>
-    )}
+  return <div className="dashboard-overview page">
+    <section className="dashboard-hero card">
+      <div>
+        <h1 className="page-title">Performance Overview</h1>
+        <p className="page-subtitle">Track bookings, operations, and profitability for {subtitle}.</p>
+      </div>
+      <div className="dashboard-actions">
+        <button type="button" className="btn-secondary" onClick={() => goToPage("bookings", "addBooking")}><PlusCircle size={14} />Add Booking</button>
+        <button type="button" className="btn-secondary" onClick={() => goToPage("revenue", "addExpense")}><ReceiptText size={14} />Add Expense</button>
+        <button type="button" className="btn-secondary" onClick={() => goToPage("supplies") }><Package size={14} />Add Supply</button>
+      </div>
+    </section>
+
+    {checklist.some((item) => !item.completed) && <SetupProgressCard checklist={checklist} onGoToPage={goToPage} onMarkComplete={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:true,skipped:false}}; saveSetupProgress(n); return n;})} onMarkSkipped={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:false,skipped:true}}; saveSetupProgress(n); return n;})} />}
+
     <section className="dashboard-kpi-grid">
-      <div className="dashboard-kpi-card"><DollarSign size={16}/><label>Gross Revenue</label><h3>{fmtCurrency(grossRevenue, selectedCurrency)}</h3><small>{monthBookings.length} bookings</small></div>
-      <div className="dashboard-kpi-card"><TrendingUp size={16}/><label>Net Profit</label><h3>{fmtCurrency(netProfit, selectedCurrency)}</h3><small>{netProfit>=0?"Profitable":"Negative margin"}</small></div>
-      <div className="dashboard-kpi-card"><Calendar size={16}/><label>Occupancy Rate</label><h3>{fmtPct(occupancy)}</h3><small>{bookedNights} nights booked</small></div>
-      <div className="dashboard-kpi-card"><Wallet size={16}/><label>Upcoming Check-ins</label><h3>{upcomingCheckins.length}</h3><small>Next 14+ days queue</small></div>
-    </section>
-    <section className="dashboard-primary-grid">
-      <div className="dashboard-chart-column">
-        <div className="dashboard-panel dashboard-chart-card"><h3>Monthly Revenue vs Expenses</h3><div className="dashboard-chart-legend"><span><i className="dot dot-revenue" />Revenue</span><span><i className="dot dot-expenses" />Expenses</span></div>{hasWeeklyData ? <div className="dashboard-chart-svg">{weekly.map((d) => <div key={d.label} className="dashboard-bar"><div className="dashboard-bar-track"><span className="bar-rev" style={{ height: `${(d.revenue / weeklyMax) * 100}%` }} title={`Revenue ${fmtCurrency(d.revenue, selectedCurrency)}`} /><span className="bar-exp" style={{ height: `${(d.expenses / weeklyMax) * 100}%` }} title={`Expenses ${fmtCurrency(d.expenses, selectedCurrency)}`} /></div><small>{d.label}</small><div className="dashboard-bar-totals"><span>{fmtCurrency(d.revenue, selectedCurrency)}</span><span>{fmtCurrency(d.expenses, selectedCurrency)}</span></div></div>)}</div> : <div className="dashboard-chart-empty">No revenue or expense data for this period yet.</div>}</div>
-      </div>
-      <div className="dashboard-side-column">
-        <div className="card dashboard-card dashboard-revenue-card"><h3 className="section-title">Revenue Breakdown</h3><HorizontalBarList items={[{label:"Booking Revenue",value:grossRevenue,formatted:fmtCurrency(grossRevenue,selectedCurrency)},{label:"Expenses",value:totalExpenses,formatted:fmtCurrency(totalExpenses,selectedCurrency)},{label:"Tax Reserve",value:taxReserve,formatted:fmtCurrency(taxReserve,selectedCurrency)},{label:"Management Fee",value:managementFee,formatted:fmtCurrency(managementFee,selectedCurrency)},{label:"Net Profit",value:Math.max(0,netProfit),formatted:fmtCurrency(netProfit,selectedCurrency)}]} /></div>
-        <div className="card dashboard-card dashboard-alert-card"><h3 className="section-title">Operations Alerts</h3><div className="dashboard-alert-list"><div className="dashboard-alert-row" onClick={()=>goToPage("supplies")}><Package size={14}/><span className="dashboard-alert-label">Low stock supplies</span><strong className="dashboard-alert-count">{lowStock.length}</strong></div><div className="dashboard-alert-row" onClick={()=>goToPage("cleaning")}><Sparkles size={14}/><span className="dashboard-alert-label">Scheduled cleaning</span><strong className="dashboard-alert-count">{cleaningDue.length}</strong></div><div className="dashboard-alert-row" onClick={()=>goToPage("maintenance")}><Wrench size={14}/><span className="dashboard-alert-label">Open maintenance</span><strong className="dashboard-alert-count">{openMaintenance.length}</strong></div><div className="dashboard-alert-row" onClick={()=>goToPage("bookings")}><Bell size={14}/><span className="dashboard-alert-label">Unpaid / partial bookings</span><strong className="dashboard-alert-count">{unpaidCount}</strong></div></div></div>
-        <div className="card dashboard-card dashboard-activity-card"><h3 className="section-title">Upcoming Activity</h3><div className="dashboard-activity-list">{upcomingCheckins.slice(0,4).map((b)=><div key={b.booking_id} className="dashboard-activity-row"><span className="dashboard-activity-text">{fmtDateShort(b.checkin_date)} · {b.guest_name||"Guest"}</span><Chip tone={bookingStatusChip(b.booking_status)}>{b.booking_status||"-"}</Chip></div>)}</div></div>
-      </div>
+      {[{ label: "Gross Revenue", value: fmtCurrency(grossRevenue, selectedCurrency), hint: `${monthBookings.length} bookings in period`, icon: <DollarSign size={16} /> }, { label: "Net Profit", value: fmtCurrency(netProfit, selectedCurrency), hint: netProfit >= 0 ? "Positive monthly margin" : "Needs expense review", icon: <TrendingUp size={16} /> }, { label: "Occupancy", value: fmtPct(occupancy), hint: `${bookedNights} nights booked`, icon: <Calendar size={16} /> }, { label: "Operations Health", value: `${operationsHealth}%`, hint: `${opsTotal} open operation flags`, icon: <ShieldCheck size={16} /> }].map((kpi) => <article key={kpi.label} className="dashboard-kpi-card card"><div className="dashboard-kpi-icon">{kpi.icon}</div><p>{kpi.label}</p><h3>{kpi.value}</h3><small>{kpi.hint}</small></article>)}
     </section>
 
-    <section className="dashboard-full-section">
-      <div className="dashboard-table-card dashboard-recent-bookings-card">
-      <div className="dashboard-panel-header">
-        <h3>Recent Bookings</h3>
-        <button className="btn-ghost" onClick={() => goToPage("bookings")}>View All</button>
+    <section className="dashboard-bento-grid">
+      <div className="dashboard-main-column">
+        <article className="card dashboard-chart-card">
+          <div className="dashboard-card-header"><h3>Revenue vs Expenses</h3></div>
+          <div className="dashboard-mini-chart">
+            <div><span>Gross Revenue</span><strong>{fmtCurrency(grossRevenue, selectedCurrency)}</strong></div>
+            <div><span>Expenses</span><strong>{fmtCurrency(totalExpenses, selectedCurrency)}</strong></div>
+            <div><span>Net Profit</span><strong>{fmtCurrency(netProfit, selectedCurrency)}</strong></div>
+          </div>
+        </article>
+        <article className="card">
+          <div className="dashboard-card-header"><h3>Upcoming Bookings</h3></div>
+          <div className="dashboard-list">{upcoming.length === 0 ? <p className="dashboard-empty">No upcoming bookings for this filter.</p> : upcoming.map((b) => <div className="dashboard-list-item" key={b.booking_id}><div><strong>{b.guest_name || "Guest"}</strong><p>{properties.find((p) => p.property_id === b.property_id)?.property_name || "—"} · {fmtDateShort(b.checkin_date)} to {fmtDateShort(b.checkout_date)}</p></div><div><Chip tone={supplyChip(b.platform)}>{b.platform || "—"}</Chip><Chip tone={paymentStatusChip(b.payment_status)}>{b.payment_status || "—"}</Chip></div></div>)}</div>
+        </article>
       </div>
-      <div className="dashboard-panel-body">
-        <div className="dashboard-recent-bookings-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Guest</th><th>Property</th><th>Platform</th><th>Check-in</th><th>Check-out</th><th className="td-right">Nights</th><th className="td-right">Total</th><th>Payment</th><th>Status</th><th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentBookings.length === 0 ? (
-                <tr><td colSpan={10} className="dashboard-booking-empty">No recent bookings for the selected filters.</td></tr>
-              ) : recentBookings.map((booking) => (
-                <tr key={booking.booking_id} className="tr-clickable" onClick={() => goToPage("bookings")}>
-                  <td><div className="dashboard-booking-primary">{booking.guest_name || "Unnamed guest"}</div><div className="dashboard-booking-muted">{booking.booking_id || "—"}</div></td>
-                  <td><div className="dashboard-booking-primary">{getProp(booking.property_id)}</div></td>
-                  <td><Chip tone={platformTone(booking.platform)}>{booking.platform || "—"}</Chip></td>
-                  <td className="num">{fmtDateShort(booking.checkin_date)}</td>
-                  <td className="num">{fmtDateShort(booking.checkout_date)}</td>
-                  <td className="td-right num">{bookingNightsInMonth(booking, selectedMonth)}</td>
-                  <td className="td-right num dashboard-booking-primary">{fmtCurrency(bookingRevenueInMonth(booking, selectedMonth), selectedCurrency)}</td>
-                  <td><Chip tone={paymentStatusChip(booking.payment_status)}>{booking.payment_status || "—"}</Chip></td>
-                  <td><Chip tone={bookingStatusChip(booking.booking_status)}>{booking.booking_status || "—"}</Chip></td>
-                  <td className="td-right"><ArrowRight size={15} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      </div>
+      <aside className="dashboard-side-column">
+        <article className="card"><div className="dashboard-card-header"><h3>Operations Health</h3></div><div className="dashboard-health-score">{operationsHealth}%</div><div className="dashboard-list"><div className="dashboard-list-item"><span>Urgent maintenance</span><strong>{urgentMaintenance.length}</strong></div><div className="dashboard-list-item"><span>Low-stock items</span><strong>{lowStock.length}</strong></div><div className="dashboard-list-item"><span>Cleaning due</span><strong>{cleaningDue.length}</strong></div></div></article>
+        <article className="card dashboard-alert-card"><div className="dashboard-card-header"><h3>Alerts</h3></div><div className="dashboard-list">{alerts.length === 0 ? <p className="dashboard-empty">No urgent alerts. Operations are stable.</p> : alerts.map((a) => <button type="button" key={a.id} className="dashboard-list-item dashboard-alert-button" onClick={() => goToPage(a.page)}><span>{a.label}</span><Megaphone size={14} /></button>)}</div></article>
+        <article className="card"><div className="dashboard-card-header"><h3>Direct Booking Snapshot</h3></div><div className="dashboard-list"><div className="dashboard-list-item"><span>Direct revenue</span><strong>{fmtCurrency(directRevenue, selectedCurrency)}</strong></div><div className="dashboard-list-item"><span>Direct bookings</span><strong>{directBookings.length}</strong></div><div className="dashboard-list-item"><span>Tracked channels</span><strong>{DIRECT_CHANNELS.length}</strong></div></div></article>
+      </aside>
     </section>
 
+    <section className="dashboard-kpi-grid">
+      <article className="card"><div className="dashboard-card-header"><h3>Profit Breakdown</h3></div><div className="dashboard-list"><div className="dashboard-list-item"><span>Gross Revenue</span><strong>{fmtCurrency(grossRevenue, selectedCurrency)}</strong></div><div className="dashboard-list-item"><span>Expenses</span><strong>{fmtCurrency(totalExpenses, selectedCurrency)}</strong></div><div className="dashboard-list-item"><span>Tax Reserve</span><strong>{fmtCurrency(taxReserve, selectedCurrency)}</strong></div><div className="dashboard-list-item"><span>Management Fee</span><strong>{fmtCurrency(managementFee, selectedCurrency)}</strong></div><div className="dashboard-list-item"><span>Net Profit</span><strong>{fmtCurrency(netProfit, selectedCurrency)}</strong></div></div></article>
+      <article className="card"><div className="dashboard-card-header"><h3>Cleaning Due</h3></div><div className="dashboard-list">{cleaningDue.length === 0 ? <p className="dashboard-empty">No cleaning tasks due right now.</p> : cleaningDue.slice(0, 5).map((item) => <div className="dashboard-list-item" key={item.cleaning_id}><div><strong>{properties.find((p) => p.property_id === item.property_id)?.property_name || "—"}</strong><p>{fmtDateShort(item.cleaning_date)}</p></div><Chip tone={cleaningStatusChip(item.cleaning_status)}>{item.cleaning_status || "—"}</Chip></div>)}</div></article>
+    </section>
   </div>;
 }
