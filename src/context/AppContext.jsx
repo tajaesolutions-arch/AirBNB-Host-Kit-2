@@ -92,7 +92,7 @@ const COLLECTIONS = {
 };
 
 export function AppProvider({ children }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, activeRole = "host_admin", allowedPropertyIds = [] } = useAuth();
   const signedInUserId = isSupabaseConfigured && supabase && user?.id && user.id !== "local" ? user.id : "";
   const getStorageKey = (baseKey) => (user?.id ? `jak_${user.id}_${baseKey}` : `jak_anonymous_${baseKey}`);
   const loadScoped = (baseKey, fallback) => { try { const raw = localStorage.getItem(getStorageKey(baseKey)); return raw !== null ? JSON.parse(raw) : clone(fallback); } catch { return clone(fallback); } };
@@ -242,7 +242,21 @@ export function AppProvider({ children }) {
     }
   };
 
-  return <AppContext.Provider value={{ properties, setProperties, bookings, setBookings, guests, setGuests, cleaning, setCleaning, maintenance, setMaintenance, supplies, setSupplies, expenses, setExpenses, leads, setLeads, calendarEvents, setCalendarEvents, quotes, setQuotes, messageHistory, setMessageHistory, reviewTasks, setReviewTasks, messageDrafts, setMessageDrafts, calendarFeeds, setCalendarFeeds, importedCalendarEvents, setImportedCalendarEvents, photoProofs, setPhotoProofs, ownerPortalShares, setOwnerPortalShares, damageDeposits, setDamageDeposits, pricingNotes, setPricingNotes, repeatCampaigns, setRepeatCampaigns, taxPrepPacks, setTaxPrepPacks, maintenanceApprovals, setMaintenanceApprovals, settings, setSettings, updateCurrency, resetToBlankData, resetToSampleData, restoreSampleData, getBackupData, importBackupData, dataLoading: authLoading ? true : dataLoading, dataError: authLoading ? "" : dataError }}>{children}</AppContext.Provider>;
+  const scopeByProperty = (rows, key = "property_id") => {
+    if (activeRole === "host_admin") return rows;
+    if (!Array.isArray(allowedPropertyIds) || allowedPropertyIds.length === 0) return [];
+    return rows.filter((row) => allowedPropertyIds.includes(row?.[key]));
+  };
+  const scopedProperties = scopeByProperty(properties, "property_id");
+  const scopedBookings = scopeByProperty(bookings, "property_id");
+  const scopedGuests = scopeByProperty(guests, "property_id");
+  const scopedCleaning = scopeByProperty(cleaning, "property_id");
+  const scopedMaintenance = scopeByProperty(maintenance, "property_id");
+  const scopedSupplies = scopeByProperty(supplies, "property_id");
+  const scopedExpenses = scopeByProperty(expenses, "property_id");
+  const scopedLeads = scopeByProperty(leads, "property_id");
+
+  return <AppContext.Provider value={{ properties: scopedProperties, setProperties, bookings: scopedBookings, setBookings, guests: scopedGuests, setGuests, cleaning: scopedCleaning, setCleaning, maintenance: scopedMaintenance, setMaintenance, supplies: scopedSupplies, setSupplies, expenses: scopedExpenses, setExpenses, leads: scopedLeads, setLeads, calendarEvents, setCalendarEvents, quotes, setQuotes, messageHistory, setMessageHistory, reviewTasks, setReviewTasks, messageDrafts, setMessageDrafts, calendarFeeds, setCalendarFeeds, importedCalendarEvents, setImportedCalendarEvents, photoProofs, setPhotoProofs, ownerPortalShares, setOwnerPortalShares, damageDeposits, setDamageDeposits, pricingNotes, setPricingNotes, repeatCampaigns, setRepeatCampaigns, taxPrepPacks, setTaxPrepPacks, maintenanceApprovals, setMaintenanceApprovals, settings, setSettings, updateCurrency, resetToBlankData, resetToSampleData, restoreSampleData, getBackupData, importBackupData, dataLoading: authLoading ? true : dataLoading, dataError: authLoading ? "" : dataError }}>{children}</AppContext.Provider>;
 }
 
 export const useApp = () => { const ctx = useContext(AppContext); if (!ctx) throw new Error("useApp must be used within AppProvider"); return ctx; };

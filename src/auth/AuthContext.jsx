@@ -397,6 +397,8 @@ export function AuthProvider({ children }) {
   };
 
   const activeMembership = memberships.find((m) => m.status === "active") || null;
+  const pendingMembership = memberships.find((m) => m.status === "pending") || null;
+  const suspendedMembership = memberships.find((m) => m.status === "suspended") || null;
   const activeOrganization = activeMembership?.organization_id || null;
   const activeRole = activeMembership?.role || "host_admin";
   const allowedPropertyIds = propertyAccess
@@ -418,8 +420,10 @@ export function AuthProvider({ children }) {
       authError,
       isApproved,
       memberships,
+      propertyAccess,
       activeOrganization,
       activeRole,
+      membershipState: activeMembership ? "active" : pendingMembership ? "pending" : suspendedMembership ? "suspended" : "none",
       allowedPropertyIds,
       isHostAdmin: hasRole("host_admin"),
       isPropertyManager: hasRole("property_manager"),
@@ -437,7 +441,7 @@ export function AuthProvider({ children }) {
       updateProfile,
       completeOnboarding,
     }),
-    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, activeOrganization, activeRole, allowedPropertyIds]
+    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, propertyAccess, activeOrganization, activeRole, allowedPropertyIds, pendingMembership, suspendedMembership]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

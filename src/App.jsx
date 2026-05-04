@@ -453,7 +453,7 @@ function AppDataGate({ children }) {
 }
 
 function AuthGate() {
-  const { user, session, profile, profileLoading, loading, authError, signOut } = useAuth();
+  const { user, session, profile, profileLoading, loading, authError, signOut, membershipState, isSupabaseConfigured } = useAuth();
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;
@@ -478,6 +478,25 @@ function AuthGate() {
         email={user.email}
         onSignOut={signOut}
       />
+    );
+  }
+
+  if (isSupabaseConfigured && membershipState === "pending") {
+    return <AccountStatusScreen status="pending" email={user.email} onSignOut={signOut} />;
+  }
+  if (isSupabaseConfigured && membershipState === "suspended") {
+    return <AccountStatusScreen status="suspended" email={user.email} onSignOut={signOut} />;
+  }
+  if (isSupabaseConfigured && membershipState === "none") {
+    return (
+      <div className="approval-shell">
+        <div className="approval-card">
+          <p className="approval-kicker">Organization setup</p>
+          <h1 className="approval-title">No organization found</h1>
+          <p className="approval-body">You are signed in, but this account is not linked to an active organization yet.</p>
+          <div className="approval-actions"><button type="button" className="btn" onClick={signOut}>Sign Out</button></div>
+        </div>
+      </div>
     );
   }
 
