@@ -81,7 +81,7 @@ export function Modal({ open, onClose, title, children, footer, wide }) {
       <div className={`modal ${wide ? "modal-wide" : ""}`} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <span className="modal-title">{title}</span>
-          <button type="button" className="btn-ghost" style={{ padding: 6 }} onClick={onClose} aria-label="Close modal">
+          <button type="button" className="btn-ghost modal-close-btn" onClick={onClose} aria-label="Close modal">
             <X size={18} />
           </button>
         </div>
@@ -95,7 +95,7 @@ export function Modal({ open, onClose, title, children, footer, wide }) {
 // ── FIELD ────────────────────────────────────────────────────
 export function Field({ label, helper, children, col2 }) {
   return (
-    <div className="field" style={col2 ? { gridColumn: "span 2" } : undefined}>
+    <div className={`field ${col2 ? "field-col2" : ""}`}>
       {label && <label className="field-label">{label}</label>}
       {children}
       {helper && <p className="field-helper">{helper}</p>}
