@@ -78,6 +78,31 @@ const parseSchemaCacheError = (error) => {
   }
   return "";
 };
+const CLEANING_BASE_COLUMNS = ["cleaning_id", "property_id", "booking_id", "checkout_date", "next_checkin_date", "cleaner_name", "cleaning_status", "linen_status", "damage_check", "supplies_restocked", "photos_uploaded", "time_completed", "cleaning_cost", "notes"];
+const TABLE_COLUMNS = {
+  properties: ["property_id", "property_name", "parish_town", "property_type", "bedrooms", "bathrooms", "max_guests", "owner_name", "owner_email", "default_nightly_rate", "default_cleaning_fee", "default_checkin_time", "default_checkout_time", "wifi_name", "wifi_password", "address", "active", "notes"],
+  bookings: ["booking_id", "property_id", "guest_id", "guest_name", "platform", "checkin_date", "checkout_date", "nightly_rate", "cleaning_fee", "extra_fees", "discounts", "payment_status", "booking_status", "source_notes"],
+  guests: ["guest_id", "guest_name", "country", "email", "phone", "review_left", "direct_followup_sent", "preferences", "notes", "last_contacted_date", "next_followup_date"],
+  cleaning_tasks: [...CLEANING_BASE_COLUMNS, "checklist"],
+  maintenance_issues: ["issue_id", "property_id", "issue_title", "property_area", "priority", "reported_by", "vendor", "estimated_cost", "actual_cost", "status", "reported_date", "completion_date", "photo_or_link", "notes"],
+  supplies: ["supply_id", "property_id", "item_name", "category", "current_quantity", "unit", "reorder_level", "unit_cost", "supplier", "last_restocked_date", "notes"],
+  expenses: ["expense_id", "property_id", "expense_date", "category", "vendor", "description", "amount", "reimbursable", "paid_by", "receipt_link", "notes"],
+  direct_booking_leads: ["lead_id", "lead_name", "source", "phone", "email", "property_interested", "dates_requested", "number_of_guests", "budget", "quote_sent", "followup_date", "status", "message_template_used", "notes"],
+};
+const sanitizeRows = (table, rows, { includeChecklist }) => {
+  const columns = table === "cleaning_tasks" && !includeChecklist ? CLEANING_BASE_COLUMNS : (TABLE_COLUMNS[table] || []);
+  return safeArray(rows).map((row) => {
+    const next = {};
+    columns.forEach((column) => {
+      if (column === "checklist") {
+        next.checklist = Array.isArray(row?.checklist) ? row.checklist : [];
+      } else if (row?.[column] !== undefined) {
+        next[column] = row[column];
+      }
+    });
+    return next;
+  });
+};
 
 const COLLECTIONS = {
   properties: { table: "properties", idField: "property_id", normalize: (v) => normalizeCollection(v, normalizeProperty) },
@@ -105,6 +130,7 @@ export function AppProvider({ children }) {
   const [photoProofs, setPhotoProofsRaw] = useState([]); const [ownerPortalShares, setOwnerPortalSharesRaw] = useState([]); const [damageDeposits, setDamageDepositsRaw] = useState([]);
   const [pricingNotes, setPricingNotesRaw] = useState([]); const [repeatCampaigns, setRepeatCampaignsRaw] = useState([]); const [taxPrepPacks, setTaxPrepPacksRaw] = useState([]); const [maintenanceApprovals, setMaintenanceApprovalsRaw] = useState([]);
   const [dataLoading, setDataLoading] = useState(true); const [dataError, setDataError] = useState("");
+  const [supportsCleaningChecklist, setSupportsCleaningChecklist] = useState(true);
 
   const persistCollection = async ({ table, idField, previousRows, nextRows }) => {
     if (!signedInUserId) return false;
@@ -217,17 +243,40 @@ export function AppProvider({ children }) {
     const next = normalizeImportedBackup(payload);
     try {
       if (signedInUserId) {
-        await Promise.all([
-          upsertUserRows("properties", next.properties, signedInUserId, "property_id"),
-          upsertUserRows("bookings", next.bookings, signedInUserId, "booking_id"),
-          upsertUserRows("guests", next.guests, signedInUserId, "guest_id"),
-          upsertUserRows("cleaning_tasks", next.cleaning, signedInUserId, "cleaning_id"),
-          upsertUserRows("maintenance_issues", next.maintenance, signedInUserId, "issue_id"),
-          upsertUserRows("supplies", next.supplies, signedInUserId, "supply_id"),
-          upsertUserRows("expenses", next.expenses, signedInUserId, "expense_id"),
-          upsertUserRows("direct_booking_leads", next.leads, signedInUserId, "lead_id"),
-          upsertUserSettings(signedInUserId, next.settings),
-        ]);
+        let includeChecklist = supportsCleaningChecklist;
+        if (includeChecklist) {
+          const { error: checklistCheckError } = await supabase.from("cleaning_tasks").select("checklist").limit(1);
+          if (checklistCheckError) {
+            if (parseSchemaCacheError(checklistCheckError)) {
+              includeChecklist = false;
+              setSupportsCleaningChecklist(false);
+            } else {
+              throw new Error(`Table "cleaning_tasks" failed: ${checklistCheckError.message}`);
+            }
+          }
+        }
+        const writes = [
+          ["properties", "property_id", sanitizeRows("properties", next.properties, { includeChecklist })],
+          ["bookings", "booking_id", sanitizeRows("bookings", next.bookings, { includeChecklist })],
+          ["guests", "guest_id", sanitizeRows("guests", next.guests, { includeChecklist })],
+          ["cleaning_tasks", "cleaning_id", sanitizeRows("cleaning_tasks", next.cleaning, { includeChecklist })],
+          ["maintenance_issues", "issue_id", sanitizeRows("maintenance_issues", next.maintenance, { includeChecklist })],
+          ["supplies", "supply_id", sanitizeRows("supplies", next.supplies, { includeChecklist })],
+          ["expenses", "expense_id", sanitizeRows("expenses", next.expenses, { includeChecklist })],
+          ["direct_booking_leads", "lead_id", sanitizeRows("direct_booking_leads", next.leads, { includeChecklist })],
+        ];
+        for (const [table, idField, rows] of writes) {
+          try {
+            await upsertUserRows(table, rows, signedInUserId, idField);
+          } catch (tableError) {
+            throw new Error(`Table "${table}" failed: ${tableError?.message || "Unknown Supabase error"}`);
+          }
+        }
+        try {
+          await upsertUserSettings(signedInUserId, next.settings);
+        } catch (settingsError) {
+          throw new Error(`Table "settings" failed: ${settingsError?.message || "Unknown Supabase error"}`);
+        }
       }
       setProperties(next.properties); setBookings(next.bookings); setGuests(next.guests); setCleaning(next.cleaning); setMaintenance(next.maintenance); setSupplies(next.supplies); setExpenses(next.expenses); setLeads(next.leads); setCalendarEvents(next.calendarEvents); setQuotes(next.quotes); setMessageHistory(next.messageHistory); setReviewTasks(next.reviewTasks); setMessageDrafts(next.messageDrafts); setCalendarFeeds(next.calendarFeeds); setImportedCalendarEvents(next.importedCalendarEvents); setPhotoProofs(next.photoProofs); setOwnerPortalShares(next.ownerPortalShares); setDamageDeposits(next.damageDeposits); setPricingNotes(next.pricingNotes); setRepeatCampaigns(next.repeatCampaigns); setTaxPrepPacks(next.taxPrepPacks); setMaintenanceApprovals(next.maintenanceApprovals); setSettings(next.settings);
       return next;
