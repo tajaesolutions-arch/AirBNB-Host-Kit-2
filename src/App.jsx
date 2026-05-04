@@ -342,7 +342,8 @@ function DashboardShell() {
 
 function AuthErrorView({ message, showSignOut }) {
   const { signOut } = useAuth();
-  const issueTitle = /database setup issue|schema|column/i.test(message || "")
+  const databaseIssue = /database setup issue|schema cache|could not find|column|relation|violates row-level security|invalid input syntax/i.test(message || "");
+  const issueTitle = databaseIssue
     ? "Database Setup Issue"
     : "Authentication Setup Issue";
 
@@ -359,7 +360,8 @@ function AuthErrorView({ message, showSignOut }) {
     <div className="auth-setup-error">
       <div>
         <strong>{issueTitle}</strong>
-        <p>{message}</p>
+        <p>{databaseIssue ? "The app could not save data because the Supabase database schema does not match the app data model." : message}</p>
+        {databaseIssue ? <pre style={{ whiteSpace: "pre-wrap" }}>{message}</pre> : null}
         <div className="row" style={{ gap: 8, marginTop: 12 }}>
           <button type="button" className="btn" onClick={() => window.location.reload()}>
             Retry
@@ -388,7 +390,7 @@ function AppDataGate({ children }) {
 }
 
 function AuthGate() {
-  const { user, session, profile, loading, profileLoading, authError } = useAuth();
+  const { user, session, profile, loading, authError } = useAuth();
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;
@@ -400,10 +402,6 @@ function AuthGate() {
 
   if (!user) {
     return <AuthScreen />;
-  }
-
-  if (user && profileLoading) {
-    return <LoadingScreen label="Loading your account..." />;
   }
 
   return (

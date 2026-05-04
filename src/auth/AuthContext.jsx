@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
   const [authError, setAuthError] = useState("");
 
   const profileRequestIdRef = useRef(0);
-  const PROFILE_TIMEOUT_MS = 10000;
+  const PROFILE_TIMEOUT_MS = 3000;
 
   const withTimeout = async (promise, timeoutMs) => {
     let timeoutId;
@@ -159,7 +159,7 @@ export function AuthProvider({ children }) {
         setUser(currentUser);
 
         if (currentUser) {
-          await loadUserProfile(currentUser, mountedRef);
+          void loadUserProfile(currentUser, mountedRef);
         } else {
           setProfile(null);
           setProfileLoading(false);
@@ -191,7 +191,7 @@ export function AuthProvider({ children }) {
           setUser(nextUser);
 
           if (nextUser) {
-            await loadUserProfile(nextUser, mountedRef);
+            void loadUserProfile(nextUser, mountedRef);
           } else {
             setProfile(null);
             setProfileLoading(false);
