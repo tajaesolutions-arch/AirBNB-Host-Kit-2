@@ -229,21 +229,23 @@ export const bookingRevenueInMonth = (booking, monthStr) => {
   return bookingTotal(booking) * ratio;
 };
 
-export const downloadCSV = (filename, data) => {
-  if (!data || data.length === 0) return;
+const sanitizeCsvCell = (value) => {
+  const text = String(value ?? "");
+  const escaped = text.replaceAll('"', '""');
+  const formulaDanger = /^[=+\-@]/.test(escaped);
+  const safeText = formulaDanger ? `'${escaped}` : escaped;
+  return `"${safeText}"`;
+};
 
-  const keys = Object.keys(data[0]);
+export const downloadCSV = (filename, data) => {
+  if (!Array.isArray(data) || data.length === 0) return;
+
+  const keys = Object.keys(data[0] || {});
+  if (keys.length === 0) return;
 
   const csv = [
-    keys.join(","),
-    ...data.map((row) =>
-      keys
-        .map((k) => {
-          const v = row[k] ?? "";
-          return typeof v === "string" && v.includes(",") ? `"${v}"` : v;
-        })
-        .join(",")
-    ),
+    keys.map((key) => sanitizeCsvCell(key)).join(","),
+    ...data.map((row) => keys.map((k) => sanitizeCsvCell(row?.[k])).join(",")),
   ].join("\n");
 
   const blob = new Blob([csv], { type: "text/csv" });
