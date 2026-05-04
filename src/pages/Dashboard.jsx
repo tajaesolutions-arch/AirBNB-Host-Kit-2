@@ -25,7 +25,6 @@ import {
   Package,
   Wrench,
   Sparkles,
-  Database,
   ArrowRight,
   CheckCircle2,
   PlusCircle,
@@ -116,7 +115,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
   const shouldShowSetupChecklist = incompleteSetupItems.length > 0;
 
   if (!properties.length) {
-    return <div className="page"><PageHeader title="Welcome to your Host Operations Kit" subtitle="Start with your first property or load sample data." actions={<><button className="btn-secondary" onClick={() => app.restoreSampleData?.()}><Database size={14}/>Restore Demo Data</button><button className="btn-primary" onClick={() => goToPage("settings")}><PlusCircle size={14}/>Add First Property</button></>} /></div>;
+    return <div className="page"><PageHeader title="Welcome to your Host Operations Kit" subtitle="Start with your first property to begin tracking your operations." actions={<button className="btn-primary" onClick={() => goToPage("settings")}><PlusCircle size={14}/>Add First Property</button>} /></div>;
   }
 
   const getWeekBucket = (dateString) => {

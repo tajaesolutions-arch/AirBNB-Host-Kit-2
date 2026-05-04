@@ -113,15 +113,9 @@ const safeSettings = (value) => {
   };
 };
 
-const isSampleDataCleared = () => {
-  try {
-    return localStorage.getItem(CLEARED_SAMPLE_DATA_FLAG) === "true";
-  } catch {
-    return false;
-  }
-};
-
 const load = (key, sampleFallback, blankFallback = []) => {
+  void sampleFallback;
+
   try {
     const raw = localStorage.getItem(key);
 
@@ -129,9 +123,9 @@ const load = (key, sampleFallback, blankFallback = []) => {
       return JSON.parse(raw);
     }
 
-    return isSampleDataCleared() ? clone(blankFallback) : clone(sampleFallback);
+    return clone(blankFallback);
   } catch {
-    return isSampleDataCleared() ? clone(blankFallback) : clone(sampleFallback);
+    return clone(blankFallback);
   }
 };
 
@@ -143,13 +137,9 @@ const loadSettings = () => {
       return normalizeSettings(safeSettings(JSON.parse(raw)));
     }
 
-    return isSampleDataCleared()
-      ? clone(BLANK_SETTINGS)
-      : normalizeSettings(safeSettings(DEFAULT_SETTINGS));
+    return clone(BLANK_SETTINGS);
   } catch {
-    return isSampleDataCleared()
-      ? clone(BLANK_SETTINGS)
-      : normalizeSettings(safeSettings(DEFAULT_SETTINGS));
+    return clone(BLANK_SETTINGS);
   }
 };
 
