@@ -20,7 +20,7 @@ import CleanerPortal from "./pages/CleanerPortal.jsx";
 import OwnerPortal from "./pages/OwnerPortal.jsx";
 
 import "./styles.css";
-import { canViewFinancials, canAccessPage as canAccessByPermissions } from "./utils/permissions.js";
+import { canAccessPage as canAccessByPermissions, getDefaultPageForRole } from "./utils/permissions.js";
 
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 
@@ -178,7 +178,7 @@ function LocalModeBanner() {
 function DashboardShell() {
   const { isSupabaseConfigured, effectiveRole, permissions, assignedPropertyIds, membershipsLoading, isHostLike } = useAuth();
   const role = effectiveRole || "host";
-  const roleDefaultPage = role === "cleaner" ? "cleaning" : role === "owner" ? "owner" : "dashboard";
+  const roleDefaultPage = getDefaultPageForRole(role);
   const [page, setPage] = useState(() => (canAccessByPermissions("dashboard", permissions || { role }) ? "dashboard" : roleDefaultPage));
   const [pageAction, setPageAction] = useState(null);
   const [monthFilter, setMonthFilter] = useState(currentMonth());
@@ -252,6 +252,10 @@ function DashboardShell() {
       setPage: goToPage,
       pageAction,
       onPageActionHandled: clearPageAction,
+      permissions,
+      effectiveRole: role,
+      assignedPropertyIds,
+      isHostLike,
     };
 
     switch (page) {
@@ -339,11 +343,14 @@ function DashboardShell() {
     }
   };
 
+  if (membershipsLoading) return <LoadingScreen label="Loading role access…" />;
+
   return (
       <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
         <Sidebar
           page={page}
           role={role}
+          permissions={permissions}
           setPage={goToPage}
           collapsed={sidebarCollapsed}
           onToggleCollapse={toggleSidebarCollapsed}
@@ -359,6 +366,7 @@ function DashboardShell() {
             <Sidebar
               page={page}
               role={role}
+              permissions={permissions}
               setPage={goToPage}
               collapsed={false}
               mobile
