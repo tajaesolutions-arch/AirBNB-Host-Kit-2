@@ -19,6 +19,9 @@ export default function Account() {
     sendPasswordReset,
     updatePassword,
     updateProfile,
+    effectiveRole,
+    assignedPropertyIds,
+    permissions,
   } = useAuth();
 
   const [message, setMessage] = useState("");
@@ -172,6 +175,17 @@ export default function Account() {
           <span>{error}</span>
         </div>
       )}
+
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))", gap: 12 }}>
+          <div><strong>Active role</strong><div>{effectiveRole || "host"}</div></div>
+          <div><strong>Assigned properties</strong><div>{assignedPropertyIds?.length || 0}</div></div>
+          <div><strong>Financial access</strong><div>{permissions?.can_view_financials || permissions?.isHostLike ? "Yes" : "No"}</div></div>
+          <div><strong>Edit operations</strong><div>{permissions?.can_edit_operations || permissions?.isHostLike ? "Yes" : "No"}</div></div>
+          <div><strong>Approve maintenance</strong><div>{permissions?.can_approve_maintenance || permissions?.isHostLike ? "Yes" : "No"}</div></div>
+        </div>
+      </div>
 
       <div className="account-grid">
         <section className="card account-card">

@@ -20,7 +20,7 @@ import CleanerPortal from "./pages/CleanerPortal.jsx";
 import OwnerPortal from "./pages/OwnerPortal.jsx";
 
 import "./styles.css";
-import { canAccessPage, getDefaultPageForRole, normalizePageKey } from "./utils/accessControl.js";
+import { canViewFinancials, canAccessPage as canAccessByPermissions } from "./utils/permissions.js";
 
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 
@@ -176,9 +176,10 @@ function LocalModeBanner() {
 }
 
 function DashboardShell() {
-  const { isSupabaseConfigured, profile } = useAuth();
-  const role = profile?.role || "host";
-  const [page, setPage] = useState(() => (canAccessPage(role, "dashboard") ? "dashboard" : getDefaultPageForRole(role)));
+  const { isSupabaseConfigured, effectiveRole, permissions, assignedPropertyIds, membershipsLoading, isHostLike } = useAuth();
+  const role = effectiveRole || "host";
+  const roleDefaultPage = role === "cleaner" ? "cleaning" : role === "owner" ? "owner" : "dashboard";
+  const [page, setPage] = useState(() => (canAccessByPermissions("dashboard", permissions || { role }) ? "dashboard" : roleDefaultPage));
   const [pageAction, setPageAction] = useState(null);
   const [monthFilter, setMonthFilter] = useState(currentMonth());
   const [propFilter, setPropFilter] = useState("ALL");
@@ -211,10 +212,10 @@ function DashboardShell() {
   };
 
   const goToPage = (nextPage, action = null) => {
-    const safePage = normalizePageKey(nextPage);
+    const safePage = nextPage;
 
-    if (!canAccessPage(role, safePage)) {
-      setPage(getDefaultPageForRole(role));
+    if (!canAccessByPermissions(safePage, permissions || { role })) {
+      setPage(roleDefaultPage);
       setPageAction({ type: "access-denied", requestedPage: safePage });
       closeMobileSidebar();
       return;
@@ -230,16 +231,16 @@ function DashboardShell() {
   };
 
   useEffect(() => {
-    if (!canAccessPage(role, page)) {
-      setPage(getDefaultPageForRole(role));
-      setPageAction({ type: "access-denied", requestedPage: normalizePageKey(page) });
+    if (!canAccessByPermissions(page, permissions || { role })) {
+      setPage(roleDefaultPage);
+      setPageAction({ type: "access-denied", requestedPage: page });
     }
-  }, [role, page]);
+  }, [role, page, permissions, roleDefaultPage]);
 
   const renderPage = () => {
-    const safeCurrentPage = normalizePageKey(page);
+    const safeCurrentPage = page;
 
-    if (!canAccessPage(profile?.role || "host", safeCurrentPage)) {
+    if (!canAccessByPermissions(safeCurrentPage, permissions || { role })) {
       return <Dashboard monthFilter={monthFilter} setMonthFilter={setMonthFilter} propFilter={propFilter} setPropFilter={setPropFilter} setPage={goToPage} pageAction={{ type: "access-denied", requestedPage: safeCurrentPage }} onPageActionHandled={clearPageAction} />;
     }
 
