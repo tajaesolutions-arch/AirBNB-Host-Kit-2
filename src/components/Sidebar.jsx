@@ -12,198 +12,58 @@ import {
   ClipboardList,
   Settings,
   WandSparkles,
+  ShieldCheck,
   ChevronLeft,
   ChevronRight,
   X,
 } from "lucide-react";
-import { getAllowedNavKeysForRole } from "../utils/accessControl.js";
+import { getAllowedNavItems } from "../utils/accessControl.js";
 
 const NAV_ITEMS = [
-  {
-    key: "dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    key: "bookings",
-    label: "Booking Calendar",
-    icon: CalendarDays,
-  },
-  {
-    key: "guests",
-    label: "Guest CRM",
-    icon: Users,
-  },
-  {
-    key: "cleaning",
-    label: "Cleaning Schedule",
-    // Sparkles is supported across lucide-react versions used in this project.
-    icon: Sparkles,
-  },
-  {
-    key: "maintenance",
-    label: "Maintenance",
-    icon: Wrench,
-  },
-  {
-    key: "supplies",
-    label: "Supplies",
-    icon: Package,
-  },
-  {
-    key: "revenue",
-    label: "Revenue & Profit",
-    icon: TrendingUp,
-  },
-  {
-    key: "leads",
-    label: "Direct Leads",
-    icon: MessageSquare,
-  },
-  {
-    key: "owner",
-    label: "Owner Report",
-    icon: FileText,
-  },
-  {
-    key: "tax",
-    label: "Tax Reserve",
-    icon: Calculator,
-  },
-  {
-    key: "sops",
-    label: "SOPs",
-    icon: ClipboardList,
-  },
-  {
-    key: "messages",
-    label: "Messages",
-    icon: MessageSquare,
-  },
-  {
-    key: "settings",
-    label: "Settings",
-    icon: Settings,
-  },
-  {
-    key: "smart-tools",
-    label: "Smart Tools",
-    icon: WandSparkles,
-  },
-  {
-    key: "account",
-    label: "My Account",
-    icon: Users,
-  },
+  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { key: "bookings", label: "Booking Calendar", icon: CalendarDays },
+  { key: "guests", label: "Guest CRM", icon: Users },
+  { key: "cleaning", label: "Cleaning Schedule", icon: Sparkles },
+  { key: "maintenance", label: "Maintenance", icon: Wrench },
+  { key: "supplies", label: "Supplies", icon: Package },
+  { key: "revenue", label: "Revenue & Profit", icon: TrendingUp },
+  { key: "leads", label: "Direct Leads", icon: MessageSquare },
+  { key: "owner", label: "Owner Report", icon: FileText },
+  { key: "tax", label: "Tax Reserve", icon: Calculator },
+  { key: "sops", label: "SOPs", icon: ClipboardList },
+  { key: "messages", label: "Messages", icon: MessageSquare },
+  { key: "settings", label: "Settings", icon: Settings },
+  { key: "smart-tools", label: "Smart Tools", icon: WandSparkles },
+  { key: "admin-users", label: "User Approvals", icon: ShieldCheck },
+  { key: "account", label: "My Account", icon: Users },
 ];
 
-function isActivePage(currentPage, itemKey) {
-  const groups = {
-    dashboard: ["dashboard"],
-    bookings: ["bookings", "booking-calendar"],
-    guests: ["guests", "guest-crm"],
-    cleaning: ["cleaning", "cleaning-schedule"],
-    maintenance: ["maintenance", "maintenance-tracker"],
-    supplies: ["supplies", "supplies-inventory"],
-    revenue: ["revenue", "revenue-profit"],
-    leads: ["leads", "direct-leads", "direct-booking"],
-    owner: ["owner", "owner-report", "owner-reports"],
-    tax: ["tax", "tax-reserve", "gct"],
-    sops: ["sops", "sop", "checklists"],
-    messages: ["messages", "templates", "guest-messages"],
-    settings: ["settings"],
-    "smart-tools": ["smart-tools", "smartTools"],
-  };
+export default function Sidebar({ page, setPage, collapsed = false, onToggleCollapse, mobile = false, onClose, role = "host" }) {
+  const allowedNav = new Set(getAllowedNavItems(role));
 
-  return groups[itemKey]?.includes(currentPage) || currentPage === itemKey;
-}
-
-export default function Sidebar({
-  page,
-  setPage,
-  collapsed = false,
-  onToggleCollapse,
-  mobile = false,
-  onClose,
-  role = "host",
-}) {
   const handleNavigate = (nextPage) => {
-    if (typeof setPage === "function") {
-      setPage(nextPage);
-    }
-
-    if (mobile && typeof onClose === "function") {
-      onClose();
-    }
+    if (typeof setPage === "function") setPage(nextPage);
+    if (mobile && typeof onClose === "function") onClose();
   };
-
-  const allowedNavKeys = getAllowedNavKeysForRole(role);
 
   return (
-    <aside
-      className={`sidebar ${collapsed ? "is-collapsed" : ""} ${
-        mobile ? "sidebar-mobile is-mobile mobile" : ""
-      }`}
-    >
+    <aside className={`sidebar ${collapsed ? "is-collapsed" : ""} ${mobile ? "sidebar-mobile is-mobile mobile" : ""}`}>
       <div className="sidebar-brand">
         <div className="sidebar-brand-main">
-          <div className="sidebar-brand-mark" aria-hidden="true">
-            HK
-          </div>
-
-          {!collapsed && (
-            <div className="sidebar-brand-copy">
-              <div className="sidebar-brand-title">Host Kit</div>
-              <div className="sidebar-brand-subtitle">AirBNB Host Kit</div>
-            </div>
-          )}
+          <div className="sidebar-brand-mark" aria-hidden="true">HK</div>
+          {!collapsed && <div className="sidebar-brand-copy"><div className="sidebar-brand-title">Host Kit</div><div className="sidebar-brand-subtitle">AirBNB Host Kit</div></div>}
         </div>
-
-        {mobile ? (
-          <button
-            type="button"
-            className="sidebar-collapse-btn"
-            style={{ minWidth: 44, minHeight: 44 }}
-            onClick={onClose}
-            aria-label="Close sidebar"
-            title="Close sidebar"
-          >
-            <X size={18} />
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="sidebar-collapse-btn"
-            onClick={onToggleCollapse}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </button>
-        )}
+        {mobile ? <button type="button" className="sidebar-collapse-btn" onClick={onClose} aria-label="Close sidebar"><X size={18} /></button> : <button type="button" className="sidebar-collapse-btn" onClick={onToggleCollapse} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}</button>}
       </div>
 
       <nav className="sidebar-nav" aria-label="Main navigation">
-        {NAV_ITEMS.filter((item) => allowedNavKeys.has(item.key)).map((item) => {
+        {NAV_ITEMS.filter((item) => allowedNav.has(item.key)).map((item) => {
           const Icon = item.icon;
-          const active = isActivePage(page, item.key);
-
-          const allowedNavKeys = getAllowedNavKeysForRole(role);
-
-  return (
-            <button
-              key={item.key}
-              type="button"
-              className={`sidebar-nav-item ${active ? "active" : ""}`}
-              onClick={() => handleNavigate(item.key)}
-              title={collapsed ? item.label : undefined}
-              aria-label={item.label}
-              aria-current={active ? "page" : undefined}
-            >
+          const active = page === item.key;
+          return (
+            <button key={item.key} type="button" className={`sidebar-nav-item ${active ? "active" : ""}`} onClick={() => handleNavigate(item.key)} title={collapsed ? item.label : undefined}>
               <Icon size={18} />
-              {!collapsed && (
-                <span className="sidebar-item-label">{item.label}</span>
-              )}
+              {!collapsed && <span className="sidebar-item-label">{item.label}</span>}
             </button>
           );
         })}

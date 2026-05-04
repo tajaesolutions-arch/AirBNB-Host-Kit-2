@@ -29,7 +29,10 @@ create table if not exists public.profiles (
   account_status text not null default 'pending',
   role text not null default 'host',
   approved_at timestamptz,
+  suspended_at timestamptz,
+  rejected_at timestamptz,
   approved_by uuid references auth.users(id),
+  rejection_reason text,
   onboarding_completed boolean not null default false,
   onboarding_choice text,
   onboarded_at timestamptz,
@@ -58,12 +61,16 @@ alter table public.profiles add column if not exists account_status text not nul
 alter table public.profiles add column if not exists role text not null default 'host';
 alter table public.profiles add column if not exists approved_at timestamptz;
 alter table public.profiles add column if not exists approved_by uuid references auth.users(id);
+alter table public.profiles add column if not exists suspended_at timestamptz;
+alter table public.profiles add column if not exists rejected_at timestamptz;
+alter table public.profiles add column if not exists rejection_reason text;
+alter table public.profiles add column if not exists updated_at timestamptz default now();
 
 alter table public.profiles drop constraint if exists profiles_account_status_check;
 alter table public.profiles add constraint profiles_account_status_check check (account_status in ('pending', 'approved', 'rejected', 'suspended'));
 
 alter table public.profiles drop constraint if exists profiles_role_check;
-alter table public.profiles add constraint profiles_role_check check (role in ('host', 'admin'));
+alter table public.profiles add constraint profiles_role_check check (role in ('admin', 'host', 'cleaner', 'owner'));
 
 create or replace function public.is_approved_user()
 returns boolean

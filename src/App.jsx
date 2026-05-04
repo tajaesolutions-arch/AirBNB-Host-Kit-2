@@ -14,9 +14,10 @@ import * as SuppliesRevenueLeadsModule from "./pages/SuppliesRevenuLeads.jsx";
 import * as OwnerTaxMessagesSettingsModule from "./pages/OwnerReportTaxSOPsMessagesSettings.jsx";
 import * as AccountModule from "./pages/Account.jsx";
 import * as SmartToolsModule from "./pages/SmartTools.jsx";
+import AdminUserApprovals from "./pages/AdminUserApprovals.jsx";
 
 import "./styles.css";
-import { isPageAllowedForRole, normalizePageKey } from "./utils/accessControl.js";
+import { canAccessPage, getDefaultPageForRole, normalizePageKey } from "./utils/accessControl.js";
 
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 
@@ -171,7 +172,7 @@ function LocalModeBanner() {
 function DashboardShell() {
   const { isSupabaseConfigured, profile } = useAuth();
   const role = profile?.role || "host";
-  const [page, setPage] = useState(() => (isPageAllowedForRole(role, "dashboard") ? "dashboard" : "account"));
+  const [page, setPage] = useState(() => (canAccessPage(role, "dashboard") ? "dashboard" : getDefaultPageForRole(role)));
   const [pageAction, setPageAction] = useState(null);
   const [monthFilter, setMonthFilter] = useState(currentMonth());
   const [propFilter, setPropFilter] = useState("ALL");
@@ -206,8 +207,8 @@ function DashboardShell() {
   const goToPage = (nextPage, action = null) => {
     const safePage = normalizePageKey(nextPage);
 
-    if (!isPageAllowedForRole(role, safePage)) {
-      setPage("account");
+    if (!canAccessPage(role, safePage)) {
+      setPage(getDefaultPageForRole(role));
       setPageAction({ type: "access-denied", requestedPage: safePage });
       closeMobileSidebar();
       return;
@@ -223,8 +224,8 @@ function DashboardShell() {
   };
 
   useEffect(() => {
-    if (!isPageAllowedForRole(role, page)) {
-      setPage("account");
+    if (!canAccessPage(role, page)) {
+      setPage(getDefaultPageForRole(role));
       setPageAction({ type: "access-denied", requestedPage: normalizePageKey(page) });
     }
   }, [role, page]);
@@ -303,6 +304,9 @@ function DashboardShell() {
       case "smart-tools":
       case "smartTools":
         return <SmartTools {...shared} />;
+
+      case "admin-users":
+        return <AdminUserApprovals {...shared} />;
 
       case "account":
       case "my-account":

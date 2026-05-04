@@ -1,12 +1,40 @@
-export const ROLE_PAGE_ACCESS = {
+export const ROLE_PERMISSIONS = {
   admin: [
-    "dashboard","bookings","guests","cleaning","maintenance","supplies","revenue","leads","owner","tax","sops","messages","settings","smart-tools","account",
+    "dashboard",
+    "bookings",
+    "guests",
+    "cleaning",
+    "maintenance",
+    "supplies",
+    "revenue",
+    "leads",
+    "owner",
+    "tax",
+    "sops",
+    "messages",
+    "settings",
+    "smart-tools",
+    "admin-users",
+    "account",
   ],
   host: [
-    "dashboard","bookings","guests","cleaning","maintenance","supplies","revenue","leads","owner","tax","sops","messages","settings","smart-tools","account",
+    "dashboard",
+    "bookings",
+    "guests",
+    "cleaning",
+    "maintenance",
+    "supplies",
+    "revenue",
+    "leads",
+    "owner",
+    "tax",
+    "sops",
+    "messages",
+    "settings",
+    "account",
   ],
   cleaner: ["cleaning", "account"],
-  owner: ["owner", "maintenance", "revenue", "account"],
+  owner: ["owner", "maintenance", "account"],
 };
 
 export const PAGE_ALIASES = {
@@ -45,6 +73,7 @@ export const PAGE_ALIASES = {
   settings: "settings",
   "smart-tools": "smart-tools",
   smartTools: "smart-tools",
+  "admin-users": "admin-users",
   account: "account",
   "my-account": "account",
 };
@@ -53,13 +82,25 @@ export function normalizePageKey(page) {
   return PAGE_ALIASES[page] || "dashboard";
 }
 
-export function isPageAllowedForRole(role, page) {
-  const normalizedRole = ROLE_PAGE_ACCESS[role] ? role : "host";
-  const normalizedPage = normalizePageKey(page);
-  return ROLE_PAGE_ACCESS[normalizedRole].includes(normalizedPage);
+function normalizeRole(role) {
+  return ROLE_PERMISSIONS[role] ? role : "host";
 }
 
+export function getDefaultPageForRole(role) {
+  return ROLE_PERMISSIONS[normalizeRole(role)][0] || "account";
+}
+
+export function canAccessPage(role, page) {
+  const normalizedPage = normalizePageKey(page);
+  return ROLE_PERMISSIONS[normalizeRole(role)].includes(normalizedPage);
+}
+
+export function getAllowedNavItems(role) {
+  return ROLE_PERMISSIONS[normalizeRole(role)];
+}
+
+// Backward-compatible aliases
+export const isPageAllowedForRole = canAccessPage;
 export function getAllowedNavKeysForRole(role) {
-  const normalizedRole = ROLE_PAGE_ACCESS[role] ? role : "host";
-  return new Set(ROLE_PAGE_ACCESS[normalizedRole]);
+  return new Set(getAllowedNavItems(role));
 }
