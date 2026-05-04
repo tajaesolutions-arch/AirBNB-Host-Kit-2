@@ -1,64 +1,50 @@
+export const ROLE_LABELS = {
+  host: "Host / Admin",
+  property_manager: "Property Manager",
+  cleaner: "Cleaner",
+  owner: "Owner",
+};
+
 export const ROLE_PAGE_ACCESS = {
   host: ["*"],
   admin: ["*"],
-  property_manager: ["dashboard", "bookings", "guests", "cleaning", "maintenance", "supplies", "leads", "settings", "account"],
-  cleaner: ["cleaning", "account", "settings"],
-  owner: ["dashboard", "owner", "maintenance", "account", "settings"],
+  property_manager: ["dashboard", "property-manager", "bookings", "guests", "cleaning", "maintenance", "supplies", "leads", "settings", "account", "revenue"],
+  cleaner: ["cleaner-portal", "cleaning", "account"],
+  owner: ["owner-portal", "owner", "maintenance", "account", "settings", "dashboard", "revenue"],
 };
 
-export function getAssignedPropertyIds(memberships = []) {
-  return [...new Set((memberships || []).filter((m) => m?.active !== false).map((m) => m?.property_id).filter(Boolean))];
+export function normalizeRole(role) {
+  const r = String(role || "").toLowerCase();
+  if (["admin", "host"].includes(r)) return "host";
+  if (["property_manager", "property manager", "manager"].includes(r)) return "property_manager";
+  if (["cleaner"].includes(r)) return "cleaner";
+  if (["owner"].includes(r)) return "owner";
+  return "";
 }
 
-export function getAssignedPropertyRecordIds(memberships = []) {
-  return [...new Set((memberships || []).filter((m) => m?.active !== false).map((m) => m?.property_record_id).filter(Boolean))];
-}
+export function getAssignedPropertyIds(memberships = []) { return [...new Set(memberships.filter((m) => m?.active !== false).map((m) => m?.property_id).filter(Boolean))]; }
+export function getAssignedPropertyRecordIds(memberships = []) { return [...new Set(memberships.filter((m) => m?.active !== false).map((m) => m?.property_record_id).filter(Boolean))]; }
 
-export function getEffectiveRole({ user, memberships = [], properties = [] }) {
-  const active = memberships.filter((m) => m?.active !== false);
-  const roles = new Set(active.map((m) => m?.access_role).filter(Boolean));
-  if (roles.has("host") || roles.has("admin")) return "host";
-  if (roles.has("property_manager")) return "property_manager";
-  if (roles.has("owner")) return "owner";
-  if (roles.has("cleaner")) return "cleaner";
-  const ownsProperties = Array.isArray(properties) && properties.some((p) => p?.user_id && user?.id && p.user_id === user.id);
-  return ownsProperties || active.length === 0 ? "host" : "cleaner";
+export function getAvailableRoles({ memberships = [], profile, user, properties = [] }) {
+  const roles = new Set();
+  memberships.filter((m) => m?.active !== false).forEach((m) => { const r = normalizeRole(m?.access_role); if (r) roles.add(r); });
+  const profileRole = normalizeRole(profile?.role || user?.user_metadata?.role);
+  if (profileRole === "host") roles.add("host");
+  const ownsProperties = properties.some((p) => p?.user_id && p?.user_id === user?.id);
+  if (ownsProperties) roles.add("host");
+  return Array.from(roles);
 }
 
 export function getPermissions({ memberships = [], effectiveRole = "host" }) {
   const isHostLike = effectiveRole === "host" || effectiveRole === "admin";
   if (isHostLike) return { role: effectiveRole, isHostLike: true, can_view_financials: true, can_edit_operations: true, can_approve_maintenance: true };
-  const rows = memberships.filter((m) => m?.active !== false && (m?.access_role || "") === effectiveRole);
-  return {
-    role: effectiveRole,
-    isHostLike: false,
-    can_view_financials: rows.some((m) => m?.can_view_financials),
-    can_edit_operations: rows.some((m) => m?.can_edit_operations),
-    can_approve_maintenance: rows.some((m) => m?.can_approve_maintenance),
-  };
+  const rows = memberships.filter((m) => normalizeRole(m?.access_role) === effectiveRole && m?.active !== false);
+  return { role: effectiveRole, isHostLike: false, can_view_financials: rows.some((m) => m?.can_view_financials), can_edit_operations: rows.some((m) => m?.can_edit_operations), can_approve_maintenance: rows.some((m) => m?.can_approve_maintenance) };
 }
 
 export const canAccessPage = (page, permissions = {}) => {
+  if (page === "revenue") return Boolean(permissions?.isHostLike || permissions?.can_view_financials);
   const allowed = ROLE_PAGE_ACCESS[permissions?.role] || [];
   return allowed.includes("*") || allowed.includes(page);
 };
-export const canViewFinancials = (permissions) => Boolean(permissions?.isHostLike || permissions?.can_view_financials);
-export const canEditOperations = (permissions) => Boolean(permissions?.isHostLike || permissions?.can_edit_operations);
-export const canApproveMaintenance = (permissions) => Boolean(permissions?.isHostLike || permissions?.can_approve_maintenance);
-
-export const getDefaultPageForRole = (role) => (role === "cleaner" ? "cleaning" : role === "owner" ? "owner" : "dashboard");
-
-export function filterPropertiesByMembership(properties = [], assignedPropertyIds = [], assignedPropertyRecordIds = [], isHostLike = false) {
-  if (isHostLike) return properties;
-  const ids = new Set(assignedPropertyIds || []);
-  const recIds = new Set(assignedPropertyRecordIds || []);
-  return properties.filter((p) => ids.has(p?.property_id) || recIds.has(p?.property_record_id) || recIds.has(p?.id));
-}
-
-export function filterRecordsByAssignedProperties(records = [], assignedPropertyIds = [], isHostLike = false) {
-  if (isHostLike) return records;
-  const ids = new Set(assignedPropertyIds || []);
-  return records.filter((r) => ids.has(r?.property_id));
-}
-
-export const filterByAssignedProperties = filterRecordsByAssignedProperties;
+export const getDefaultPageForRole = (role) => (role === "cleaner" ? "cleaner-portal" : role === "owner" ? "owner-portal" : role === "property_manager" ? "property-manager" : "dashboard");

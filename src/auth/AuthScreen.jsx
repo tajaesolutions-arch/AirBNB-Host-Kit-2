@@ -13,6 +13,7 @@ export default function AuthScreen() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [requestedRole, setRequestedRole] = useState("host");
 
   const isSignup = mode === "signup";
 
@@ -41,6 +42,7 @@ export default function AuthScreen() {
           password,
           businessName,
           hostName,
+          requestedRole,
         });
 
         if (result?.session) {
@@ -57,6 +59,7 @@ export default function AuthScreen() {
         await signIn({
           email,
           password,
+          requestedRole,
         });
       }
     } catch (err) {
@@ -205,6 +208,16 @@ export default function AuthScreen() {
                   </label>
                 </>
               )}
+
+
+            <label>
+              <span>{isSignup ? "What best describes you?" : "Continue as"}</span>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8}}>
+                {[ ["host","Host"],["property_manager","Property Manager"],["cleaner","Cleaner"],["owner","Owner"]].map(([value,label]) => (
+                  <button key={value} type="button" className={requestedRole===value?"btn":"btn-secondary"} aria-pressed={requestedRole===value} onClick={()=>setRequestedRole(value)}>{label}</button>
+                ))}
+              </div>
+            </label>
 
               <label>
                 <span>Email</span>

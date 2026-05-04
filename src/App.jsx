@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
 import AuthScreen from "./auth/AuthScreen.jsx";
+import RoleSelectionScreen from "./auth/RoleSelectionScreen.jsx";
 import { AppProvider, useApp } from "./context/AppContext.jsx";
 import FirstTimeSetup from "./components/FirstTimeSetup.jsx";
 import Sidebar from "./components/Sidebar.jsx";
@@ -363,6 +364,7 @@ function DashboardShell() {
           page={page}
           role={role}
           permissions={permissions}
+          assignedPropertyCount={assignedPropertyIds?.length || 0}
           setPage={goToPage}
           collapsed={sidebarCollapsed}
           onToggleCollapse={toggleSidebarCollapsed}
@@ -379,6 +381,7 @@ function DashboardShell() {
               page={page}
               role={role}
               permissions={permissions}
+              assignedPropertyCount={assignedPropertyIds?.length || 0}
               setPage={goToPage}
               collapsed={false}
               mobile
@@ -407,11 +410,11 @@ function DashboardShell() {
 }
 
 
-function AccountStatusScreen({ status, email, onSignOut }) {
+function AccountStatusScreen({ status, email, onSignOut, requestedRole, memberships=[] }) {
   const statusMap = {
     pending: {
       title: "Your account is pending approval",
-      body: "Thanks for signing up. Your host workspace is waiting for manual approval before access is enabled.",
+      body: "Thanks for signing up. Your workspace is waiting for approval before access is enabled.",
     },
     suspended: {
       title: "Your account is suspended",
@@ -434,7 +437,7 @@ function AccountStatusScreen({ status, email, onSignOut }) {
         <p className="approval-kicker">Account status</p>
         <h1 className="approval-title">{content.title}</h1>
         <p className="approval-body">{content.body}</p>
-        <p className="approval-meta">Signed in as: {email || "Unknown email"}</p>
+        <p className="approval-meta">Signed in as: {email || "Unknown email"}</p><p className="approval-meta">Requested role: {requestedRole || "Not provided"}</p><p className="approval-meta">Assigned roles: {[...new Set((memberships||[]).map((m)=>m.access_role))].join(", ") || "None yet"}</p>
         <div className="approval-actions">
           <button type="button" className="btn" onClick={onSignOut}>
             Sign Out
@@ -495,7 +498,7 @@ function AppDataGate({ children }) {
 }
 
 function AuthGate() {
-  const { user, session, profile, profileLoading, loading, authError, signOut } = useAuth();
+  const { user, session, profile, profileLoading, loading, authError, signOut, availableRoles, selectedPortalRole, setSelectedPortalRole, accessNotAssigned, memberships } = useAuth();
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;
@@ -519,8 +522,18 @@ function AuthGate() {
         status={profile.account_status}
         email={user.email}
         onSignOut={signOut}
+        requestedRole={profile?.requested_role || user?.user_metadata?.requested_role}
+        memberships={memberships}
       />
     );
+  }
+
+  if (accessNotAssigned) {
+    return <div className="approval-shell"><div className="approval-card"><h1 className="approval-title">Access not assigned</h1><p className="approval-body">The portal selected at login is not assigned to your account.</p><p className="approval-meta">Available roles: {availableRoles.join(", ") || "None"}</p><button className="btn" onClick={signOut}>Sign out</button></div></div>;
+  }
+
+  if (!selectedPortalRole && availableRoles.length > 1) {
+    return <RoleSelectionScreen availableRoles={availableRoles} memberships={memberships} onContinue={setSelectedPortalRole} onSignOut={signOut} />;
   }
 
   return (
