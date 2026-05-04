@@ -72,7 +72,7 @@ function SetupProgressCard({ checklist, onGoToPage, onMarkComplete, onMarkSkippe
   return <div className="card dashboard-overview dashboard-setup-card"><div className="dashboard-card-header"><h3>Setup Checklist</h3><div className="dashboard-setup-meta"><span>{completedCount}/{checklist.length} complete</span><button type="button" className="btn-ghost" onClick={toggle} aria-label="Toggle setup checklist">{isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button></div></div><div className="setup-bar"><div className="setup-fill" style={{ width: `${percent}%` }} /></div>{isOpen && <div className="dashboard-setup-items">{checklist.map((item) => <div key={item.id} className="dashboard-list-item"><span className="dashboard-setup-title">{item.completed ? <CheckCircle2 size={14} /> : <Circle size={14} />}{item.title}</span><div className="dashboard-setup-actions">{!item.completed && item.canManuallyComplete && <button type="button" className="btn-ghost setup-mini-btn" onClick={() => onMarkComplete(item.id)}>Done</button>}{!item.completed && item.canManuallyComplete && <button type="button" className="btn-ghost setup-mini-btn" onClick={() => onMarkSkipped(item.id)}>Skip</button>}<button type="button" className="btn-ghost setup-mini-btn" onClick={() => onGoToPage(item.page)}>{item.action}</button></div></div>)}</div>}</div>;
 }
 
-export default function Dashboard({ setPage, monthFilter, propFilter }) {
+export default function Dashboard({ setPage, monthFilter, propFilter, setPropFilter }) {
   const app = useApp();
   const bookings = safeArray(app.bookings); const expenses = safeArray(app.expenses); const maintenance = safeArray(app.maintenance); const supplies = safeArray(app.supplies); const cleaning = safeArray(app.cleaning); const properties = safeArray(app.properties); const settings = safeSettings(app.settings);
   const [savedSetupProgress, setSavedSetupProgress] = useState(() => loadSetupProgress());
@@ -104,6 +104,9 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
   }
 
   const subtitle = `${selectedMonth} · ${selectedPropFilter === "ALL" ? "All Properties" : properties.find((p) => p.property_id === selectedPropFilter)?.property_name || "Selected Property"}`;
+  const selectedPropertyName = selectedPropFilter === "ALL"
+    ? "All Properties"
+    : properties.find((property) => property.property_id === selectedPropFilter)?.property_name || "Selected Property";
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const upcoming = activeBookings
@@ -131,6 +134,35 @@ export default function Dashboard({ setPage, monthFilter, propFilter }) {
     </section>
 
     {checklist.some((item) => !item.completed) && <SetupProgressCard checklist={checklist} onGoToPage={goToPage} onMarkComplete={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:true,skipped:false}}; saveSetupProgress(n); return n;})} onMarkSkipped={(id)=>setSavedSetupProgress((p)=>{const n={...p,[id]:{done:false,skipped:true}}; saveSetupProgress(n); return n;})} />}
+
+    <div className="dashboard-filter-bar" aria-label="Dashboard filters">
+      <div className="dashboard-filter-copy">
+        <span className="dashboard-filter-kicker">Dashboard filters</span>
+        <strong>{selectedPropertyName}</strong>
+        <p>Metrics update based on the selected property and month.</p>
+      </div>
+
+      <div className="dashboard-filter-controls">
+        <label className="dashboard-filter-field">
+          <span>Property</span>
+          <select
+            value={selectedPropFilter}
+            onChange={(event) => {
+              if (typeof setPropFilter === "function") {
+                setPropFilter(event.target.value);
+              }
+            }}
+          >
+            <option value="ALL">All Properties</option>
+            {properties.map((property) => (
+              <option key={property.property_id} value={property.property_id}>
+                {property.property_name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </div>
 
     <section className="dashboard-kpi-grid">
       {[{ label: "Gross Revenue", value: fmtCurrency(grossRevenue, selectedCurrency), hint: `${monthBookings.length} bookings in period`, icon: <DollarSign size={16} /> }, { label: "Net Profit", value: fmtCurrency(netProfit, selectedCurrency), hint: netProfit >= 0 ? "Positive monthly margin" : "Needs expense review", icon: <TrendingUp size={16} /> }, { label: "Occupancy", value: fmtPct(occupancy), hint: `${bookedNights} nights booked`, icon: <Calendar size={16} /> }, { label: "Operations Health", value: `${operationsHealth}%`, hint: `${opsTotal} open operation flags`, icon: <ShieldCheck size={16} /> }].map((kpi) => <article key={kpi.label} className="dashboard-kpi-card card"><div className="dashboard-kpi-icon">{kpi.icon}</div><p>{kpi.label}</p><h3>{kpi.value}</h3><small>{kpi.hint}</small></article>)}
