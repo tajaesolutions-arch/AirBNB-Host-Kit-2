@@ -4852,13 +4852,14 @@ input, select, textarea { font-size: 16px; }
 
 .dashboard-filter-copy p {
     margin-top: 2px;
-    font-size: 13px;
     color: var(--muted);
+    font-size: 13px;
 }
 
 .dashboard-filter-controls {
     display: flex;
-    align-items: center;
+    align-items: end;
+    justify-content: flex-end;
     gap: 12px;
     flex-wrap: wrap;
 }
@@ -4866,7 +4867,11 @@ input, select, textarea { font-size: 16px; }
 .dashboard-filter-field {
     display: grid;
     gap: 6px;
-    min-width: 220px;
+    min-width: 180px;
+}
+
+.dashboard-filter-field--date {
+    min-width: 150px;
 }
 
 .dashboard-filter-field span {
@@ -4877,7 +4882,8 @@ input, select, textarea { font-size: 16px; }
     letter-spacing: .05em;
 }
 
-.dashboard-filter-field select {
+.dashboard-filter-field select,
+.dashboard-filter-field input {
     min-height: 40px;
     border-radius: 10px;
     border: 1px solid var(--line-strong);
@@ -4887,11 +4893,48 @@ input, select, textarea { font-size: 16px; }
     padding: 8px 12px;
 }
 
-@media (max-width: 768px) {
+.dashboard-filter-error {
+    width: 100%;
+    padding: 10px 12px;
+    margin: 0 0 16px;
+    background: var(--amber-soft);
+    border: 1px solid #EBD491;
+    color: var(--amber);
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+@media (max-width: 900px) {
     .dashboard-filter-bar {
-        align-items: stretch;
         flex-direction: column;
+        align-items: stretch;
     }
+
+    .dashboard-filter-controls {
+        justify-content: stretch;
+    }
+
+    .dashboard-filter-field,
+    .dashboard-filter-field--date {
+        min-width: min(100%, 220px);
+        flex: 1;
+    }
+}
+
+@media (max-width: 640px) {
+    .dashboard-filter-controls {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-filter-field,
+    .dashboard-filter-field--date {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
 
     .dashboard-filter-controls,
     .dashboard-filter-field {
