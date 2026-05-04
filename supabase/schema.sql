@@ -317,6 +317,20 @@ alter table if exists public.profiles add column if not exists tax_label text;
 alter table if exists public.profiles add column if not exists business_type text;
 alter table if exists public.profiles add column if not exists property_type text;
 alter table if exists public.profiles add column if not exists language text;
+alter table if exists public.profiles add column if not exists onboarding_completed boolean default false;
+alter table if exists public.profiles add column if not exists onboarding_choice text;
+alter table if exists public.profiles add column if not exists onboarded_at timestamptz;
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'profiles_onboarding_choice_check'
+  ) then
+    alter table public.profiles
+      add constraint profiles_onboarding_choice_check
+      check (onboarding_choice in ('fresh','sample') or onboarding_choice is null);
+  end if;
+end $$;
 
 alter table if exists public.properties add column if not exists airbnb_ical_url text;
 alter table if exists public.properties add column if not exists vrbo_ical_url text;

@@ -44,6 +44,9 @@ export function AuthProvider({ children }) {
         default_currency: "JMD",
         default_tax_reserve_percentage: 0.15,
         default_management_fee_percentage: 0.15,
+        onboarding_completed: false,
+        onboarding_choice: null,
+        onboarded_at: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -289,6 +292,15 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const completeOnboarding = async (choice) => {
+    if (!user) throw new Error("You must be logged in.");
+    return updateProfile({
+      onboarding_completed: true,
+      onboarding_choice: choice,
+      onboarded_at: new Date().toISOString(),
+    });
+  };
+
   const value = useMemo(
     () => ({
       session,
@@ -303,6 +315,7 @@ export function AuthProvider({ children }) {
       sendPasswordReset,
       updatePassword,
       updateProfile,
+      completeOnboarding,
     }),
     [session, user, profile, loading, authError]
   );

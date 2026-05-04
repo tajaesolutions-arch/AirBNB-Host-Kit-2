@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
 import AuthScreen from "./auth/AuthScreen.jsx";
 import { AppProvider } from "./context/AppContext.jsx";
+import FirstTimeSetup from "./pages/FirstTimeSetup.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { Menu } from "lucide-react";
+import { resetAccountToBlank, resetAccountToSampleData } from "./services/resetService.js";
 
 import * as DashboardModule from "./pages/Dashboard.jsx";
 import * as BookingsModule from "./pages/Bookings.jsx";
@@ -295,7 +297,6 @@ function DashboardShell() {
   };
 
   return (
-    <AppProvider>
       <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
         <Sidebar
           page={page}
@@ -337,12 +338,12 @@ function DashboardShell() {
           </main>
         </ErrorBoundary>
       </div>
-    </AppProvider>
   );
 }
 
 function AuthGate() {
-  const { user, loading, authError, isSupabaseConfigured } = useAuth();
+  const { user, profile, loading, authError, completeOnboarding } = useAuth();
+  const [onboardingBusy, setOnboardingBusy] = useState(false);
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;
@@ -363,7 +364,44 @@ function AuthGate() {
     return <AuthScreen />;
   }
 
-  return <DashboardShell />;
+  if (user && !profile) {
+    return <LoadingScreen label="Loading your account..." />;
+  }
+
+  const onboardingDone = profile?.onboarding_completed === true;
+
+  const handleFresh = async () => {
+    setOnboardingBusy(true);
+    try {
+      await resetAccountToBlank();
+      await completeOnboarding("fresh");
+    } finally {
+      setOnboardingBusy(false);
+    }
+  };
+  const handleSample = async () => {
+    setOnboardingBusy(true);
+    try {
+      await resetAccountToSampleData();
+      await completeOnboarding("sample");
+    } finally {
+      setOnboardingBusy(false);
+    }
+  };
+
+  return (
+    <AppProvider>
+      {!onboardingDone ? (
+        <FirstTimeSetup
+          loading={onboardingBusy}
+          onStartFresh={handleFresh}
+          onUseSampleData={handleSample}
+        />
+      ) : (
+        <DashboardShell />
+      )}
+    </AppProvider>
+  );
 }
 
 export default function App() {
