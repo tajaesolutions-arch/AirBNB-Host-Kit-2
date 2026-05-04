@@ -293,7 +293,7 @@ function DashboardShell() {
         {mobileSidebarOpen && (
           <>
             <div
-              className="sidebar-overlay mobile-sidebar-overlay open"
+              className="sidebar-overlay mobile-sidebar-overlay open" data-testid="sidebar-overlay"
               onClick={closeMobileSidebar}
             />
 
@@ -309,7 +309,7 @@ function DashboardShell() {
 
         {!mobileSidebarOpen && (
           <button
-            className="mobile-hamburger-tab"
+            className="mobile-hamburger-tab" data-testid="mobile-hamburger"
             onClick={() => setMobileSidebarOpen(true)}
             aria-label="Open navigation menu"
           >
