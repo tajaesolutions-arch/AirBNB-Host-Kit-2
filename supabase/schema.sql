@@ -44,7 +44,8 @@ create policy "Users can insert own profile" on public.profiles for insert with 
 drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile" on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
 
-create or replace trigger profiles_set_updated_at
+drop trigger if exists profiles_set_updated_at on public.profiles;
+create trigger profiles_set_updated_at
 before update on public.profiles
 for each row execute function public.set_updated_at();
 

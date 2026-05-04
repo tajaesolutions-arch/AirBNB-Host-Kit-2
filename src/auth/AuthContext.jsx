@@ -29,6 +29,7 @@ export function AuthProvider({ children }) {
         .maybeSingle();
 
       if (selectError && selectError.code !== "PGRST116") {
+        throw selectError;
       }
 
       if (existingProfile) {
@@ -58,13 +59,11 @@ export function AuthProvider({ children }) {
         .select("*")
         .single();
 
-      if (insertError) {
-        return newProfile;
-      }
+      if (insertError) throw insertError;
 
       return createdProfile;
     } catch (err) {
-      return null;
+      throw err;
     }
   };
 
@@ -105,12 +104,14 @@ export function AuthProvider({ children }) {
 
         if (currentUser) {
           setProfileLoading(true);
-          ensureProfile(currentUser).then((nextProfile) => {
+          try {
+            const nextProfile = await ensureProfile(currentUser);
             if (mounted) {
               setProfile(nextProfile);
-              setProfileLoading(false);
             }
-          });
+          } finally {
+            if (mounted) setProfileLoading(false);
+          }
         } else {
           setProfile(null);
           setProfileLoading(false);
@@ -149,12 +150,12 @@ export function AuthProvider({ children }) {
 
             if (nextUser) {
               setProfileLoading(true);
-              ensureProfile(nextUser).then((nextProfile) => {
-                if (mounted) {
-                  setProfile(nextProfile);
-                  setProfileLoading(false);
-                }
-              });
+              try {
+                const nextProfile = await ensureProfile(nextUser);
+                if (mounted) setProfile(nextProfile);
+              } finally {
+                if (mounted) setProfileLoading(false);
+              }
             } else {
               setProfile(null);
               setProfileLoading(false);
@@ -197,7 +198,12 @@ export function AuthProvider({ children }) {
     setUser(data.user);
 
     if (data.user) {
-      ensureProfile(data.user).then(setProfile);
+      setProfileLoading(true);
+      try {
+        setProfile(await ensureProfile(data.user));
+      } finally {
+        setProfileLoading(false);
+      }
     }
 
     return data;
@@ -222,7 +228,12 @@ export function AuthProvider({ children }) {
     if (error) throw error;
 
     if (data.user) {
-      ensureProfile(data.user).then(setProfile);
+      setProfileLoading(true);
+      try {
+        setProfile(await ensureProfile(data.user));
+      } finally {
+        setProfileLoading(false);
+      }
     }
 
     if (data.session) {
