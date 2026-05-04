@@ -13,7 +13,9 @@ import {
 } from "../components/index.jsx";
 import {
   bookingTotal,
-  calcNights,
+  bookingNightsInMonth,
+  bookingOverlapsMonth,
+  bookingRevenueInMonth,
   fmtCurrency,
   fmtPct,
   inSelectedMonth,
@@ -86,8 +88,7 @@ export function OwnerReport({ monthFilter }) {
     (booking) =>
       booking.property_id === selectedProp &&
       booking.booking_status !== "Cancelled" &&
-      (inSelectedMonth(booking.checkin_date, reportMonth) ||
-        inSelectedMonth(booking.checkout_date, reportMonth))
+      bookingOverlapsMonth(booking, reportMonth)
   );
 
   const propExpenses = expenses.filter(
@@ -107,13 +108,13 @@ export function OwnerReport({ monthFilter }) {
   );
 
   const grossRevenue = propBookings.reduce(
-    (sum, booking) => sum + bookingTotal(booking),
+    (sum, booking) => sum + bookingRevenueInMonth(booking, reportMonth),
     0
   );
 
   const airbnbRev = propBookings
     .filter((booking) => booking.platform === "Airbnb")
-    .reduce((sum, booking) => sum + bookingTotal(booking), 0);
+    .reduce((sum, booking) => sum + bookingRevenueInMonth(booking, reportMonth), 0);
 
   const directRev = propBookings
     .filter((booking) =>
@@ -121,7 +122,7 @@ export function OwnerReport({ monthFilter }) {
         booking.platform
       )
     )
-    .reduce((sum, booking) => sum + bookingTotal(booking), 0);
+    .reduce((sum, booking) => sum + bookingRevenueInMonth(booking, reportMonth), 0);
 
   const cleaningCost = propExpenses
     .filter((expense) => expense.category === "Cleaning")
@@ -173,7 +174,7 @@ export function OwnerReport({ monthFilter }) {
 
   const bookedNights = propBookings.reduce(
     (sum, booking) =>
-      sum + calcNights(booking.checkin_date, booking.checkout_date),
+      sum + bookingNightsInMonth(booking, reportMonth),
     0
   );
 
@@ -186,7 +187,7 @@ export function OwnerReport({ monthFilter }) {
           (sum, booking) =>
             sum +
             (Number(booking.nightly_rate) || 0) *
-              calcNights(booking.checkin_date, booking.checkout_date),
+              bookingNightsInMonth(booking, reportMonth),
           0
         ) / bookedNights
       : 0;

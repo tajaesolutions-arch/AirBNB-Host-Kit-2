@@ -186,6 +186,49 @@ export const daysInMonth = (monthStr) => {
   return new Date(y, m, 0).getDate();
 };
 
+const parseISODateUTC = (value) => {
+  if (!value) return null;
+  const [year, month, day] = String(value).slice(0, 10).split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(Date.UTC(year, month - 1, day));
+};
+
+export const getMonthRange = (monthStr) => {
+  const [year, month] = String(monthStr || "").split("-").map(Number);
+  if (!year || !month) return null;
+  const start = new Date(Date.UTC(year, month - 1, 1));
+  const end = new Date(Date.UTC(year, month, 1));
+  return { start, end };
+};
+
+export const bookingOverlapsMonth = (booking, monthStr) => {
+  const monthRange = getMonthRange(monthStr);
+  const checkin = parseISODateUTC(booking?.checkin_date);
+  const checkout = parseISODateUTC(booking?.checkout_date);
+  if (!monthRange || !checkin || !checkout || checkout <= checkin) return false;
+  return checkin < monthRange.end && checkout > monthRange.start;
+};
+
+export const bookingNightsInMonth = (booking, monthStr) => {
+  const monthRange = getMonthRange(monthStr);
+  const checkin = parseISODateUTC(booking?.checkin_date);
+  const checkout = parseISODateUTC(booking?.checkout_date);
+  if (!monthRange || !checkin || !checkout || checkout <= checkin) return 0;
+  const overlapStart = checkin > monthRange.start ? checkin : monthRange.start;
+  const overlapEnd = checkout < monthRange.end ? checkout : monthRange.end;
+  const nights = Math.round((overlapEnd - overlapStart) / 86400000);
+  return Math.max(0, nights);
+};
+
+export const bookingRevenueInMonth = (booking, monthStr) => {
+  const totalNights = calcNights(booking?.checkin_date, booking?.checkout_date);
+  if (totalNights <= 0) return 0;
+  const monthNights = bookingNightsInMonth(booking, monthStr);
+  if (monthNights <= 0) return 0;
+  const ratio = monthNights / totalNights;
+  return bookingTotal(booking) * ratio;
+};
+
 export const downloadCSV = (filename, data) => {
   if (!data || data.length === 0) return;
 

@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import { useApp } from "../context/AppContext.jsx";
 import { Chip, PageHeader } from "../components/index.jsx";
 import {
-  bookingTotal,
-  calcNights,
+  bookingNightsInMonth,
+  bookingOverlapsMonth,
+  bookingRevenueInMonth,
   fmtCurrency,
   fmtPct,
   fmtDateShort,
@@ -94,15 +95,15 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
   const selectedPropFilter = !propFilter || propFilter === "all" ? "ALL" : propFilter;
   const filterByProp = (arr, key = "property_id") => selectedPropFilter === "ALL" ? arr : arr.filter((x) => x?.[key] === selectedPropFilter || !x?.[key]);
   const activeBookings = filterByProp(bookings).filter((b) => b?.booking_status !== "Cancelled");
-  const monthBookings = activeBookings.filter((b) => inSelectedMonth(b?.checkin_date, selectedMonth) || inSelectedMonth(b?.checkout_date, selectedMonth));
+  const monthBookings = activeBookings.filter((b) => bookingOverlapsMonth(b, selectedMonth));
   const monthExpenses = filterByProp(expenses).filter((e) => inSelectedMonth(e?.expense_date, selectedMonth));
   const selectedCurrency = normalizeCurrency(settings.default_currency || "JMD");
-  const grossRevenue = monthBookings.reduce((s, b) => s + bookingTotal(b), 0);
+  const grossRevenue = monthBookings.reduce((s, b) => s + bookingRevenueInMonth(b, selectedMonth), 0);
   const totalExpenses = monthExpenses.reduce((s, e) => s + Number(e?.amount || 0), 0);
   const managementFee = grossRevenue * Number(settings.management_fee_percentage || 0);
   const taxReserve = grossRevenue * Number(settings.tax_reserve_percentage || 0);
   const netProfit = grossRevenue - totalExpenses - managementFee - taxReserve;
-  const bookedNights = monthBookings.reduce((s, b) => s + calcNights(b?.checkin_date, b?.checkout_date), 0);
+  const bookedNights = monthBookings.reduce((s, b) => s + bookingNightsInMonth(b, selectedMonth), 0);
   const occupancy = bookedNights / Math.max(1, daysInMonth(selectedMonth) * Math.max(1, selectedPropFilter === "ALL" ? properties.length : 1));
   const today = new Date(); today.setHours(0,0,0,0);
   const upcomingCheckins = activeBookings.filter((b) => { const d = parseDateSafe(b?.checkin_date); return d && d >= today; }).sort((a,b)=>parseDateSafe(a.checkin_date)-parseDateSafe(b.checkin_date)).slice(0,5);
@@ -136,7 +137,7 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
     if (!inSelectedMonth(booking?.checkin_date, selectedMonth)) return;
     const bucketIndex = getWeekBucket(booking?.checkin_date);
     if (bucketIndex < 0) return;
-    weekly[bucketIndex].revenue += bookingTotal(booking);
+    weekly[bucketIndex].revenue += bookingRevenueInMonth(booking, selectedMonth);
   });
   monthExpenses.forEach((expense) => {
     const bucketIndex = getWeekBucket(expense?.expense_date);
@@ -209,8 +210,8 @@ export default function Dashboard({ setPage, monthFilter, setMonthFilter, propFi
                   <td><Chip tone={platformTone(booking.platform)}>{booking.platform || "—"}</Chip></td>
                   <td className="num">{fmtDateShort(booking.checkin_date)}</td>
                   <td className="num">{fmtDateShort(booking.checkout_date)}</td>
-                  <td className="td-right num">{calcNights(booking.checkin_date, booking.checkout_date)}</td>
-                  <td className="td-right num dashboard-booking-primary">{fmtCurrency(bookingTotal(booking), selectedCurrency)}</td>
+                  <td className="td-right num">{bookingNightsInMonth(booking, selectedMonth)}</td>
+                  <td className="td-right num dashboard-booking-primary">{fmtCurrency(bookingRevenueInMonth(booking, selectedMonth), selectedCurrency)}</td>
                   <td><Chip tone={paymentStatusChip(booking.payment_status)}>{booking.payment_status || "—"}</Chip></td>
                   <td><Chip tone={bookingStatusChip(booking.booking_status)}>{booking.booking_status || "—"}</Chip></td>
                   <td className="td-right"><ArrowRight size={15} /></td>
