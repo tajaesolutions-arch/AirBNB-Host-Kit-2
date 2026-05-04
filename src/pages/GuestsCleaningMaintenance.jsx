@@ -10,6 +10,7 @@ import {
   ConfirmBar,
   Chip,
   CurrencyInput,
+  ConfirmDialog,
 } from "../components/index.jsx";
 import {
   uid,
@@ -400,6 +401,7 @@ export function Guests({ propFilter, pageAction, onPageActionHandled }) {
   const [selectedGuestId, setSelectedGuestId] = useState("");
   const [messageDraft, setMessageDraft] = useState("");
   const [detailStatus, setDetailStatus] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const cur = settings.default_currency || "JMD";
   const selectedPropFilter = propFilter || "ALL";
@@ -442,10 +444,7 @@ export function Guests({ propFilter, pageAction, onPageActionHandled }) {
   };
 
   const del = (id) => {
-    if (!window.confirm("Delete this guest record? This cannot be undone.")) return;
-    setGuests(guests.filter((guest) => guest.guest_id !== id));
-    if (selectedGuestId === id) setSelectedGuestId("");
-    setEditing(null);
+    setConfirmDeleteId(id);
   };
 
   const handleCopyMessage = async () => {
@@ -489,6 +488,21 @@ export function Guests({ propFilter, pageAction, onPageActionHandled }) {
   <aside className="guest-profile-panel"><div className="guest-profile-header"><InitialsAvatar name={selectedGuest.guest_name} /><div><h4>{selectedGuest.guest_name || "Guest"}</h4><p>{fallbackText(selectedGuest.country)}</p></div></div><div className="guest-stat-grid"><div className="guest-stat-card"><span>Total Bookings</span><strong>{selectedGuest.booking_count}</strong></div><div className="guest-stat-card"><span>Total Spent</span><strong>{fmtCurrency(selectedGuest.total_spent, cur)}</strong></div><div className="guest-stat-card"><span>Last Stay</span><strong>{fmtDateShort(selectedGuest.last_stay)}</strong></div><div className="guest-stat-card"><span>Next Follow-up</span><strong>{fmtDateShort(selectedGuest.next_followup_date)}</strong></div></div><div className="guest-notes-card"><h5>Preferences & Notes</h5><p>{fallbackText(selectedGuest.preferences)}</p><p>{fallbackText(selectedGuest.notes)}</p></div></aside></div></div>}
 
   {editing && <GuestForm record={editing} onClose={() => setEditing(null)} onSave={save} onDelete={del} />}
+  <ConfirmDialog
+    open={!!confirmDeleteId}
+    title="Delete guest?"
+    description="Delete this guest record? This cannot be undone."
+    confirmLabel="Delete Guest"
+    cancelLabel="Cancel"
+    destructive
+    onCancel={() => setConfirmDeleteId(null)}
+    onConfirm={() => {
+      setGuests(guests.filter((guest) => guest.guest_id !== confirmDeleteId));
+      if (selectedGuestId === confirmDeleteId) setSelectedGuestId("");
+      setEditing(null);
+      setConfirmDeleteId(null);
+    }}
+  />
   </div>);
 }
 
@@ -715,6 +729,7 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
 
   const [editing, setEditing] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const cur = settings.default_currency || "JMD";
   const selectedPropFilter = propFilter || "ALL";
@@ -771,14 +786,7 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
   };
 
   const del = (id) => {
-    const confirmed = window.confirm(
-      "Delete this cleaning task? This cannot be undone."
-    );
-
-    if (!confirmed) return;
-
-    setCleaning(cleaning.filter((task) => task.cleaning_id !== id));
-    setEditing(null);
+    setConfirmDeleteId(id);
   };
 
   const getProp = (id) =>
@@ -990,6 +998,20 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
           currency={cur}
         />
       )}
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        title="Delete cleaning task?"
+        description="Delete this cleaning task? This cannot be undone."
+        confirmLabel="Delete Cleaning Task"
+        cancelLabel="Cancel"
+        destructive
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          setCleaning(cleaning.filter((task) => task.cleaning_id !== confirmDeleteId));
+          setEditing(null);
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }
@@ -1240,6 +1262,7 @@ export function Maintenance({ propFilter, setPage, pageAction, onPageActionHandl
 
   const [editing, setEditing] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const cur = settings.default_currency || "JMD";
   const selectedPropFilter = propFilter || "ALL";
@@ -1299,14 +1322,7 @@ export function Maintenance({ propFilter, setPage, pageAction, onPageActionHandl
   };
 
   const del = (id) => {
-    const confirmed = window.confirm(
-      "Delete this maintenance issue? This cannot be undone."
-    );
-
-    if (!confirmed) return;
-
-    setMaintenance(maintenance.filter((issue) => issue.issue_id !== id));
-    setEditing(null);
+    setConfirmDeleteId(id);
   };
 
   const getProp = (id) =>
@@ -1521,6 +1537,20 @@ export function Maintenance({ propFilter, setPage, pageAction, onPageActionHandl
           currency={cur}
         />
       )}
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        title="Delete maintenance issue?"
+        description="Delete this maintenance issue? This cannot be undone."
+        confirmLabel="Delete Issue"
+        cancelLabel="Cancel"
+        destructive
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          setMaintenance(maintenance.filter((issue) => issue.issue_id !== confirmDeleteId));
+          setEditing(null);
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }

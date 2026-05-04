@@ -38,7 +38,8 @@ body {
     color: var(--ink);
     font-size: 14px;
     line-height: 1.5;
-    -webkit-font-smoothing: antialiased
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 
 .app-layout {
@@ -3141,7 +3142,7 @@ textarea:focus-visible,
 
 
 /* SaaS shell polish + responsive regression fixes */
-:root { --header-h: 116px; --app-bg: #f7f5f0; }
+:root { --app-bg: #f7f5f0; }
 body { background: var(--app-bg); }
 .app-shell { display: flex; min-height: 100vh; }
 .main-content { background: var(--app-bg); }
@@ -3587,8 +3588,13 @@ body { background: var(--app-bg); }
 }
 
 /* Dashboard header/topbar cleanup overrides */
-.topbar { display: none !important; height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; border: 0 !important; }
 .main-content { padding-top: 0 !important; }
+
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
 
 .mobile-menu-trigger {
   display: none;

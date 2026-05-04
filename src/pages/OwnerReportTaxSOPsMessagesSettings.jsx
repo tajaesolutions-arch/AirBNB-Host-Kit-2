@@ -10,6 +10,7 @@ import {
   Modal,
   ConfirmBar,
   CurrencyInput,
+  ConfirmDialog,
 } from "../components/index.jsx";
 import {
   bookingTotal,
@@ -639,6 +640,7 @@ export function Settings() {
   const [propForm, setPropForm] = useState(null);
   const [newCleaner, setNewCleaner] = useState({ name: "", phone: "" });
   const [newVendor, setNewVendor] = useState({ name: "", category: "" });
+  const [confirmState, setConfirmState] = useState({ open: false });
 
   const updateSetting = (key, value) =>
     setSettings((previousSettings) => ({
@@ -708,15 +710,19 @@ export function Settings() {
   };
 
   const deleteProp = (id) => {
-    const confirmed = window.confirm(
-      "Delete this property? Existing bookings and records attached to this property may lose their property reference."
-    );
-
-    if (!confirmed) return;
-
-    setProperties(properties.filter((property) => property.property_id !== id));
-    setEditingProp(null);
-    setPropForm(null);
+    setConfirmState({
+      open: true,
+      title: "Delete property?",
+      description: "Existing bookings and records attached to this property may lose their property reference.",
+      confirmLabel: "Delete Property",
+      destructive: true,
+      onConfirm: () => {
+        setProperties(properties.filter((property) => property.property_id !== id));
+        setEditingProp(null);
+        setPropForm(null);
+        setConfirmState({ open: false });
+      },
+    });
   };
 
   const addCleaner = () => {
@@ -1015,6 +1021,42 @@ export function Settings() {
         </div>
       </div>
 
+      <div className="card" style={{ padding: 22, marginBottom: 22 }}>
+        <SectionTitle>Cleaners & Vendors</SectionTitle>
+        <div className="form-grid-2">
+          <div>
+            <div className="field-label" style={{ marginBottom: 8 }}>Cleaners</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+              {cleaners.length === 0 && <p className="text-muted text-small">No cleaners added yet.</p>}
+              {cleaners.map((cleaner, index) => (
+                <div key={`${cleaner.name}-${index}`} style={{ display: "flex", justifyContent: "space-between", gap: 8, border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px" }}>
+                  <div><strong>{cleaner.name}</strong><div className="text-muted text-small">{cleaner.phone || "No phone"}</div></div>
+                  <button className="btn-ghost" onClick={() => removeCleaner(index)}>Remove</button>
+                </div>
+              ))}
+            </div>
+            <div className="field"><label className="field-label">Cleaner Name</label><input value={newCleaner.name} onChange={(e)=>setNewCleaner((c)=>({...c,name:e.target.value}))} /></div>
+            <div className="field"><label className="field-label">Phone</label><input value={newCleaner.phone} onChange={(e)=>setNewCleaner((c)=>({...c,phone:e.target.value}))} /></div>
+            <button className="btn-primary" onClick={addCleaner}>Add Cleaner</button>
+          </div>
+          <div>
+            <div className="field-label" style={{ marginBottom: 8 }}>Vendors</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+              {vendors.length === 0 && <p className="text-muted text-small">No vendors added yet.</p>}
+              {vendors.map((vendor, index) => (
+                <div key={`${vendor.name}-${index}`} style={{ display: "flex", justifyContent: "space-between", gap: 8, border: "1px solid var(--line)", borderRadius: 8, padding: "8px 10px" }}>
+                  <div><strong>{vendor.name}</strong><div className="text-muted text-small">{vendor.category || "No category"}</div></div>
+                  <button className="btn-ghost" onClick={() => removeVendor(index)}>Remove</button>
+                </div>
+              ))}
+            </div>
+            <div className="field"><label className="field-label">Vendor Name</label><input value={newVendor.name} onChange={(e)=>setNewVendor((v)=>({...v,name:e.target.value}))} /></div>
+            <div className="field"><label className="field-label">Category</label><input value={newVendor.category} onChange={(e)=>setNewVendor((v)=>({...v,category:e.target.value}))} /></div>
+            <button className="btn-primary" onClick={addVendor}>Add Vendor</button>
+          </div>
+        </div>
+      </div>
+
       <BackupDataCard />
 
       <ResetDashboardDataCard />
@@ -1189,6 +1231,18 @@ export function Settings() {
           </div>
         </Modal>
       )}
+      <ConfirmDialog
+        open={!!confirmState.open}
+        title={confirmState.title || "Confirm action"}
+        description={confirmState.description || ""}
+        confirmLabel={confirmState.confirmLabel || "Confirm"}
+        cancelLabel="Cancel"
+        destructive={!!confirmState.destructive}
+        onCancel={() => setConfirmState({ open: false })}
+        onConfirm={() => {
+          confirmState.onConfirm?.();
+        }}
+      />
     </div>
   );
 }
@@ -1245,11 +1299,7 @@ function BackupDataCard() {
 
     if (!file) return;
 
-    const confirmed = window.confirm(
-      "Importing this backup will replace your current dashboard records. Continue?"
-    );
-
-    if (!confirmed) {
+    if (!window.__confirmImportBackup) {
       event.target.value = "";
       return;
     }
@@ -1359,47 +1409,56 @@ function ResetDashboardDataCard() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
   const [resetError, setResetError] = useState("");
+  const [confirmDialog, setConfirmDialog] = useState({ open: false });
 
   const handleResetBlank = () => {
-    const confirmed = window.confirm(
-      "This will permanently clear all dashboard records and blank out the workspace for this account. Continue?"
-    );
-
-    if (!confirmed) return;
-
-    setResetLoading(true);
-    setResetMessage("");
-    setResetError("");
-
-    try {
-      resetToBlankData();
-      setResetMessage("Your dashboard is now blank.");
-    } catch (error) {
-      setResetError(error?.message || "Could not reset account data.");
-    } finally {
-      setResetLoading(false);
-    }
+    setConfirmDialog({
+      open: true,
+      title: "Reset to blank template?",
+      description:
+        "This will permanently clear all dashboard records and blank out the workspace for this account.",
+      confirmLabel: "Reset to Blank",
+      destructive: true,
+      onConfirm: () => {
+        setResetLoading(true);
+        setResetMessage("");
+        setResetError("");
+        try {
+          resetToBlankData();
+          setResetMessage("Your dashboard is now blank.");
+        } catch (error) {
+          setResetError(error?.message || "Could not reset account data.");
+        } finally {
+          setResetLoading(false);
+          setConfirmDialog({ open: false });
+        }
+      },
+    });
   };
 
   const handleResetSample = () => {
-    const confirmed = window.confirm(
-      "This will replace your current dashboard records with sample data. Continue?"
-    );
-
-    if (!confirmed) return;
-
-    setResetLoading(true);
-    setResetMessage("");
-    setResetError("");
-
-    try {
-      restoreSampleData();
-      setResetMessage("Sample data has been reloaded.");
-    } catch (error) {
-      setResetError(error?.message || "Could not reload sample data.");
-    } finally {
-      setResetLoading(false);
-    }
+    setConfirmDialog({
+      open: true,
+      title: "Reset to sample data?",
+      description:
+        "This will replace your current dashboard records with sample data.",
+      confirmLabel: "Load Sample Data",
+      destructive: true,
+      onConfirm: () => {
+        setResetLoading(true);
+        setResetMessage("");
+        setResetError("");
+        try {
+          restoreSampleData();
+          setResetMessage("Sample data has been reloaded.");
+        } catch (error) {
+          setResetError(error?.message || "Could not reload sample data.");
+        } finally {
+          setResetLoading(false);
+          setConfirmDialog({ open: false });
+        }
+      },
+    });
   };
 
   return (
@@ -1455,6 +1514,16 @@ function ResetDashboardDataCard() {
           </button>
         </div>
       </div>
+      <ConfirmDialog
+        open={!!confirmDialog.open}
+        title={confirmDialog.title || "Confirm action"}
+        description={confirmDialog.description || ""}
+        confirmLabel={confirmDialog.confirmLabel || "Confirm"}
+        cancelLabel="Cancel"
+        destructive={!!confirmDialog.destructive}
+        onCancel={() => setConfirmDialog({ open: false })}
+        onConfirm={() => confirmDialog.onConfirm?.()}
+      />
     </div>
   );
 }
