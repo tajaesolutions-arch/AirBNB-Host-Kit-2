@@ -70,7 +70,7 @@ alter table public.profiles drop constraint if exists profiles_account_status_ch
 alter table public.profiles add constraint profiles_account_status_check check (account_status in ('pending', 'approved', 'rejected', 'suspended'));
 
 alter table public.profiles drop constraint if exists profiles_role_check;
-alter table public.profiles add constraint profiles_role_check check (role in ('admin', 'host', 'cleaner', 'owner'));
+alter table public.profiles add constraint profiles_role_check check (role in ('admin', 'host', 'property_manager', 'cleaner', 'owner'));
 
 create or replace function public.is_approved_user()
 returns boolean
