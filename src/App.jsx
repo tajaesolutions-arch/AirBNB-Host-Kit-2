@@ -340,22 +340,59 @@ function DashboardShell() {
   );
 }
 
+function AuthErrorView({ message, showSignOut }) {
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      window.location.reload();
+    } catch {
+      window.location.reload();
+    }
+  };
+
+  return (
+    <div className="auth-setup-error">
+      <div>
+        <strong>Authentication Setup Issue</strong>
+        <p>{message}</p>
+        <div className="row" style={{ gap: 8, marginTop: 12 }}>
+          <button type="button" className="btn" onClick={() => window.location.reload()}>
+            Retry
+          </button>
+          {showSignOut ? (
+            <button type="button" className="btn-ghost" onClick={handleSignOut}>
+              Sign out
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AppDataGate({ children }) {
+  const { dataLoading, dataError } = useApp();
+
+  if (dataLoading) return <LoadingScreen label="Loading your workspace…" />;
+
+  if (dataError) {
+    return <AuthErrorView message={dataError} showSignOut />;
+  }
+
+  return children;
+}
+
 function AuthGate() {
-  const { user, profile, loading, profileLoading, authError } = useAuth();
+  const { user, session, profile, loading, profileLoading, authError } = useAuth();
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;
   }
 
   if (authError) {
-    return (
-      <div className="auth-setup-error">
-        <div>
-          <strong>Authentication Setup Issue</strong>
-          <p>{authError}</p>
-        </div>
-      </div>
-    );
+    return <AuthErrorView message={authError} showSignOut={Boolean(user || session)} />;
   }
 
   if (!user) {
@@ -368,7 +405,9 @@ function AuthGate() {
 
   return (
     <AppProvider>
-      <OnboardingGate profile={profile} />
+      <AppDataGate>
+        <OnboardingGate profile={profile} />
+      </AppDataGate>
     </AppProvider>
   );
 }

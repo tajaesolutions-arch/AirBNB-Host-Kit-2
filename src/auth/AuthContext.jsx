@@ -3,6 +3,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
@@ -18,10 +19,48 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState("");
 
+  const profileRequestIdRef = useRef(0);
+  const PROFILE_TIMEOUT_MS = 10000;
+
+  const withTimeout = async (promise, timeoutMs) => {
+    let timeoutId;
+
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = window.setTimeout(() => {
+        reject(new Error("PROFILE_LOAD_TIMEOUT"));
+      }, timeoutMs);
+    });
+
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  };
+
+  const formatProfileError = (err) => {
+    const message = err?.message || "";
+    const code = err?.code || "";
+    const looksLikeSchemaIssue =
+      code === "PGRST204" ||
+      code === "42P01" ||
+      /schema|cache|column|relation|profiles/i.test(message);
+
+    if (message === "PROFILE_LOAD_TIMEOUT") {
+      return "Your account profile could not be loaded. Please refresh or contact support.";
+    }
+
+    if (looksLikeSchemaIssue) {
+      return `Developer action required: Supabase profiles schema/cache issue (${code || "unknown_code"}) - ${message}`;
+    }
+
+    return message || "Your account profile could not be loaded. Please refresh or contact support.";
+  };
+
   const ensureProfile = async (authUser) => {
     if (!supabase || !authUser) return null;
 
-    try {
+    const fetchOrCreateProfile = async () => {
       const { data: existingProfile, error: selectError } = await supabase
         .from("profiles")
         .select("*")
@@ -32,10 +71,9 @@ export function AuthProvider({ children }) {
         throw selectError;
       }
 
-      if (existingProfile) {
-        return existingProfile;
-      }
+      if (existingProfile) return existingProfile;
 
+      const now = new Date().toISOString();
       const newProfile = {
         id: authUser.id,
         email: authUser.email,
@@ -49,8 +87,8 @@ export function AuthProvider({ children }) {
         onboarding_completed: false,
         onboarding_choice: null,
         onboarded_at: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        created_at: now,
+        updated_at: now,
       };
 
       const { data: createdProfile, error: insertError } = await supabase
@@ -62,19 +100,38 @@ export function AuthProvider({ children }) {
       if (insertError) throw insertError;
 
       return createdProfile;
+    };
+
+    return withTimeout(fetchOrCreateProfile(), PROFILE_TIMEOUT_MS);
+  };
+
+  const loadUserProfile = async (authUser, mountedRef) => {
+    const requestId = ++profileRequestIdRef.current;
+
+    if (mountedRef.current) {
+      setProfileLoading(true);
+      setAuthError("");
+    }
+
+    try {
+      const nextProfile = await ensureProfile(authUser);
+
+      if (mountedRef.current && requestId === profileRequestIdRef.current) {
+        setProfile(nextProfile);
+      }
     } catch (err) {
-      throw err;
+      if (mountedRef.current && requestId === profileRequestIdRef.current) {
+        setAuthError(formatProfileError(err));
+      }
+    } finally {
+      if (mountedRef.current && requestId === profileRequestIdRef.current) {
+        setProfileLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    let mounted = true;
-
-    const safetyTimer = window.setTimeout(() => {
-      if (mounted) {
-        setLoading(false);
-      }
-    }, 5000);
+    const mountedRef = { current: true };
 
     const loadSession = async () => {
       try {
@@ -85,33 +142,24 @@ export function AuthProvider({ children }) {
           setSession(null);
           setUser(LOCAL_MODE_USER);
           setProfile(null);
+          setProfileLoading(false);
           return;
         }
 
         const { data, error } = await supabase.auth.getSession();
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         const currentSession = data?.session || null;
         const currentUser = currentSession?.user || null;
 
-        if (!mounted) return;
+        if (!mountedRef.current) return;
 
         setSession(currentSession);
         setUser(currentUser);
 
         if (currentUser) {
-          setProfileLoading(true);
-          try {
-            const nextProfile = await ensureProfile(currentUser);
-            if (mounted) {
-              setProfile(nextProfile);
-            }
-          } finally {
-            if (mounted) setProfileLoading(false);
-          }
+          await loadUserProfile(currentUser, mountedRef);
         } else {
           setProfile(null);
           setProfileLoading(false);
@@ -119,19 +167,12 @@ export function AuthProvider({ children }) {
       } catch (err) {
         console.error("Auth session error:", err?.message || err);
 
-        if (mounted) {
-          setAuthError(
-            err?.message || "Could not check your login session. Please refresh."
-          );
-          setSession(null);
-          setUser(null);
-          setProfile(null);
+        if (mountedRef.current) {
+          setAuthError(err?.message || "Could not check your login session. Please refresh.");
           setProfileLoading(false);
         }
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mountedRef.current) setLoading(false);
       }
     };
 
@@ -140,44 +181,38 @@ export function AuthProvider({ children }) {
     let subscription;
 
     if (supabase) {
-      const { data } = supabase.auth.onAuthStateChange(
-        async (_event, nextSession) => {
-          try {
-            const nextUser = nextSession?.user || null;
+      const { data } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+        if (!mountedRef.current) return;
 
-            setSession(nextSession);
-            setUser(nextUser);
+        try {
+          const nextUser = nextSession?.user || null;
 
-            if (nextUser) {
-              setProfileLoading(true);
-              try {
-                const nextProfile = await ensureProfile(nextUser);
-                if (mounted) setProfile(nextProfile);
-              } finally {
-                if (mounted) setProfileLoading(false);
-              }
-            } else {
-              setProfile(null);
-              setProfileLoading(false);
-            }
+          setSession(nextSession);
+          setUser(nextUser);
 
+          if (nextUser) {
+            await loadUserProfile(nextUser, mountedRef);
+          } else {
+            setProfile(null);
+            setProfileLoading(false);
             setAuthError("");
-          } catch (err) {
-            console.error("Auth state change error:", err?.message || err);
+          }
+        } catch (err) {
+          console.error("Auth state change error:", err?.message || err);
+          if (mountedRef.current) {
             setAuthError(err?.message || "Authentication error.");
             setProfileLoading(false);
-          } finally {
-            setLoading(false);
           }
+        } finally {
+          if (mountedRef.current) setLoading(false);
         }
-      );
+      });
 
       subscription = data?.subscription;
     }
 
     return () => {
-      mounted = false;
-      window.clearTimeout(safetyTimer);
+      mountedRef.current = false;
       subscription?.unsubscribe();
     };
   }, []);
