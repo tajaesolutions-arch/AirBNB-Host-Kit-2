@@ -1,4 +1,4 @@
-import { LayoutDashboard, CalendarDays, Users, Sparkles, Wrench, Package, BarChart3, MessageSquare, FileText, Calculator, ClipboardList, Settings, Home } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, Sparkles, Wrench, Package, BarChart3, MessageSquare, FileText, Calculator, ClipboardList, Settings, Home, ShieldCheck } from "lucide-react";
 
 export const ROLE_KEYS = {
   ADMIN: "admin",
@@ -33,6 +33,7 @@ export const NAV_ITEMS = [
   { key: "cleaner-dashboard", label: "Cleaner Dashboard", icon: Sparkles },
   { key: "maintenance-dashboard", label: "Maintenance Dashboard", icon: Wrench },
   { key: "properties", label: "Properties", icon: Home },
+  { key: "users-access", label: "Users & Access", icon: ShieldCheck },
   { key: "bookings", label: "Booking Calendar", icon: CalendarDays },
   { key: "guests", label: "Guest CRM", icon: Users },
   { key: "cleaning", label: "My Cleaning Tasks", icon: Sparkles },
