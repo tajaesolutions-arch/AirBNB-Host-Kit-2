@@ -28,6 +28,9 @@ create table if not exists public.profiles (
   default_management_fee_percentage numeric default 0.15,
   account_status text not null default 'pending',
   role text not null default 'host',
+  assigned_property_ids jsonb default '[]'::jsonb,
+  assigned_cleaner_name text,
+  assigned_vendor_name text,
   approved_at timestamptz,
   suspended_at timestamptz,
   rejected_at timestamptz,
@@ -593,3 +596,8 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
+
+
+alter table public.profiles add column if not exists assigned_property_ids jsonb default '[]'::jsonb;
+alter table public.profiles add column if not exists assigned_cleaner_name text;
+alter table public.profiles add column if not exists assigned_vendor_name text;
