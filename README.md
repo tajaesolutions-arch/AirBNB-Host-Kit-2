@@ -257,3 +257,31 @@ This product is for the buyer's personal or business use only. Resale or redistr
 
 *Built for Airbnb hosts, villa owners, co-hosts, diaspora property owners, and property managers worldwide.*  
 *Run your rental operations like a real business.*
+
+## SaaS Launch Readiness Notes
+
+### Test account pattern
+Create approved users in Supabase Auth using these emails (no hardcoded frontend credentials):
+- admin@test.hostkit.local
+- host@test.hostkit.local
+- manager@test.hostkit.local
+- owner@test.hostkit.local
+- cleaner@test.hostkit.local
+- maintenance@test.hostkit.local
+
+After signup, use Admin User Approvals to set each role and approve status.
+
+### Email approval environment variables
+The approval flow works without email, but to send approval emails configure:
+- `RESEND_API_KEY` (or provider API key used by your edge function)
+- `APPROVAL_FROM_EMAIL`
+- `APPROVAL_REPLY_TO_EMAIL` (optional)
+- `APP_BASE_URL` (optional, for deep links)
+
+If these are not configured, user approval still succeeds and should show a non-blocking warning.
+
+### Demo seed data
+A test-only seed starter is provided at:
+- `supabase/seed/launch_readiness_demo.sql`
+
+Run it only in non-production projects. It creates core demo properties keyed to `@test.hostkit.local` users.
