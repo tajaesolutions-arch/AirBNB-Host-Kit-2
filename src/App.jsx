@@ -549,7 +549,7 @@ function AppDataGate({ children }) {
 }
 
 function AuthGate() {
-  const { user, session, profile, profileLoading, loading, authError, signOut, memberships, effectiveRole, approvedWorkspaceMemberships, hasSuspendedWorkspaceMembership, workspaceMembershipsEnabled, workspaceMembershipsError } = useAuth();
+  const { user, session, profile, profileLoading, loading, authError, signOut, memberships, effectiveRole, workspaceMembershipsEnabled, workspaceMembershipsError } = useAuth();
   const path = window.location.pathname;
 
   if (loading) {
@@ -592,14 +592,16 @@ function AuthGate() {
     );
   }
 
-  if (hasSuspendedWorkspaceMembership) {
-    if (path !== "/suspended") window.history.replaceState({}, "", "/suspended");
-    return <AccountStatusScreen status="suspended" email={user.email} onSignOut={signOut} memberships={memberships} workspaceMembershipsEnabled={workspaceMembershipsEnabled} workspaceMembershipsError={workspaceMembershipsError} />;
-  }
 
-  if (workspaceMembershipsEnabled && !approvedWorkspaceMemberships?.length) {
-    if (path !== "/pending-approval") window.history.replaceState({}, "", "/pending-approval");
-    return <AccountStatusScreen status="pending" email={user.email} onSignOut={signOut} memberships={memberships} workspaceMembershipsEnabled={workspaceMembershipsEnabled} workspaceMembershipsError={workspaceMembershipsError} />;
+  const finalRoute = getDefaultPageForRole(effectiveRole);
+  if (import.meta.env.DEV) {
+    console.debug("[AuthGate] access decision", {
+      userId: user?.id || null,
+      email: user?.email || null,
+      accountStatus: profile?.account_status || null,
+      assignedRoles: [...new Set((memberships || []).map((m) => normalizeRole(m?.access_role)).filter(Boolean))],
+      selectedRoute: finalRoute,
+    });
   }
 
   if (window.location.pathname === "/worker-login" && !["cleaner","maintenance_crew"].includes(effectiveRole)) {
