@@ -21,6 +21,7 @@ import OwnerPortal from "./pages/OwnerPortal.jsx";
 import CleanerDashboard from "./pages/roleDashboards/CleanerDashboard.jsx";
 import MaintenanceDashboard from "./pages/roleDashboards/MaintenanceDashboard.jsx";
 import OwnerDashboard from "./pages/OwnerDashboard.jsx";
+import PropertySetup from "./pages/PropertySetup.jsx";
 
 import "./styles.css";
 import { canAccessPage as canAccessByPermissions, getDefaultPageForRole } from "./utils/permissions.js";
@@ -36,6 +37,7 @@ const PAGE_TITLES = {
   "maintenance-dashboard": "Maintenance Dashboard",
   "owner-portal": "Owner Portal",
   "owner-dashboard": "Owner Dashboard",
+  properties: "Property Setup",
   bookings: "Booking Calendar",
   guests: "Guest CRM",
   cleaning: "Cleaning Schedule",
@@ -304,6 +306,9 @@ function DashboardShell() {
 
       case "owner-portal":
         return <OwnerPortal {...shared} />;
+
+      case "properties":
+        return <PropertySetup {...shared} />;
 
       case "bookings":
       case "booking-calendar":
