@@ -5105,3 +5105,63 @@ input, select, textarea { font-size: 16px; }
         font-size: 24px
     }
 }
+
+/* Compact dashboard refinements */
+.dashboard-overview { display: grid; gap: 12px; }
+.dashboard-hero.compact { padding: 16px; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.dashboard-hero.compact .page-title { font-size: 24px; line-height: 1.1; }
+.dashboard-hero.compact .page-subtitle { margin-top: 2px; font-size: 12.5px; }
+.dashboard-actions { gap: 8px; }
+.dashboard-actions .btn-secondary { min-height: 36px; padding: 8px 12px; }
+
+.dashboard-filter-bar.compact { display: flex; justify-content: space-between; gap: 10px; align-items: flex-end; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+.dashboard-filter-copy { min-width: 0; }
+.dashboard-filter-kicker { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; display: block; }
+.dashboard-filter-copy p { margin-top: 2px; font-size: 12px; color: var(--muted); }
+.dashboard-filter-controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.dashboard-filter-field { display: grid; gap: 2px; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.dashboard-filter-field select,.dashboard-filter-field input { height: 40px; min-width: 150px; padding: 0 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); text-transform: none; letter-spacing: normal; font-size: 13px; color: var(--ink); }
+
+.metric-grid.compact { gap: 12px; margin-bottom: 8px; }
+.metric-card.compact { padding: 14px; border-radius: 14px; display: grid; gap: 4px; min-height: 132px; }
+.metric-card.compact p { margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 700; }
+.metric-card.compact h3 { margin: 0; font-size: 24px; line-height: 1.15; }
+.metric-card.compact small { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.dashboard-content-grid { gap: 12px; }
+.dashboard-card { padding: 16px; border-radius: 14px; }
+.dashboard-card-header { margin-bottom: 8px; }
+.dashboard-card-title { font-size: 14px; }
+.dashboard-list { gap: 6px; }
+.dashboard-list-item { padding: 9px 0; align-items: center; }
+.dashboard-stat-list { gap: 8px; }
+.dashboard-stat-row { padding: 6px 0; }
+.dashboard-health-score { font-size: 28px; margin-bottom: 8px; }
+.dashboard-mini-chart { gap: 10px; padding-top: 2px; }
+.dashboard-mini-chart div span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.dashboard-mini-chart div strong { font-size: 18px; }
+.dashboard-cleaning-row { padding: 6px 0; }
+.dashboard-alert-button { padding: 8px 0; }
+
+.dashboard-setup-card { padding: 14px 16px; }
+.dashboard-setup-card-header { margin-bottom: 6px; }
+.dashboard-setup-meta { display: flex; align-items: center; gap: 6px; }
+.dashboard-setup-meta span { font-size: 12px; color: var(--muted); }
+.dashboard-setup-item-row { padding: 8px 0; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.dashboard-setup-title { font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+.dashboard-setup-actions { display: inline-flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.setup-mini-btn { min-height: 30px; padding: 4px 8px; font-size: 12px; }
+
+@media (max-width: 1024px) {
+  .dashboard-filter-bar.compact { align-items: stretch; }
+  .dashboard-filter-controls { justify-content: flex-start; }
+  .dashboard-kpi-grid.metric-grid.compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .dashboard-hero.compact { padding: 12px; flex-direction: column; align-items: flex-start; }
+  .dashboard-filter-bar.compact { padding: 12px; flex-direction: column; align-items: stretch; }
+  .dashboard-filter-field select,.dashboard-filter-field input { width: 100%; min-width: 0; }
+  .dashboard-kpi-grid.metric-grid.compact { grid-template-columns: 1fr; }
+  .dashboard-card { padding: 12px; }
+  .dashboard-setup-card { padding: 12px; }
+}
