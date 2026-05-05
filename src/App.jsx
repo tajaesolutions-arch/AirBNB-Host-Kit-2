@@ -15,7 +15,7 @@ import * as SuppliesRevenueLeadsModule from "./pages/SuppliesRevenuLeads.jsx";
 import * as OwnerTaxMessagesSettingsModule from "./pages/OwnerReportTaxSOPsMessagesSettings.jsx";
 import * as AccountModule from "./pages/Account.jsx";
 import * as SmartToolsModule from "./pages/SmartTools.jsx";
-import AdminUserApprovals from "./pages/AdminUserApprovals.jsx";
+import UsersAccess from "./pages/UsersAccess.jsx";
 import PropertyManagerPortal from "./pages/PropertyManagerPortal.jsx";
 import CleanerPortal from "./pages/CleanerPortal.jsx";
 import OwnerPortal from "./pages/OwnerPortal.jsx";
@@ -333,8 +333,9 @@ function DashboardShell() {
       case "smartTools":
         return <SmartTools {...shared} />;
 
+      case "users-access":
       case "admin-users":
-        return <AdminUserApprovals {...shared} />;
+        return <UsersAccess {...shared} />;
 
       case "account":
       case "my-account":
