@@ -23,7 +23,7 @@ export default function UsersAccess({ permissions }) {
     const [{ data: usersData, error: usersError }, { data: membershipsData, error: membershipsError }, { data: propertiesData, error: propertiesError }] = await Promise.all([
       supabase.rpc("admin_list_users"),
       supabase.rpc("admin_list_memberships"),
-      supabase.from("properties").select("id, property_id, name").order("created_at", { ascending: false }),
+      supabase.rpc("admin_list_assignable_properties"),
     ]);
     if (usersError || membershipsError || propertiesError) {
       setError(usersError?.message || membershipsError?.message || propertiesError?.message || "Failed to load data");
@@ -45,9 +45,14 @@ export default function UsersAccess({ permissions }) {
   }), [users, search, statusFilter, roleFilter]);
 
   const runRpc = async (fn, params) => {
+    setError("");
     const { error: rpcError } = await supabase.rpc(fn, params);
-    if (rpcError) throw rpcError;
+    if (rpcError) {
+      setError(rpcError.message || "Action failed");
+      return false;
+    }
     await load();
+    return true;
   };
 
   if (!permissions?.isHostLike) return <div className="page"><p>Access denied.</p></div>;
@@ -70,7 +75,7 @@ export default function UsersAccess({ permissions }) {
       {loading ? <p>Loading...</p> : <table className="table" style={{ width:"100%" }}><thead><tr><th>User</th><th>Status</th><th>Role</th><th>Created</th><th>Assigned</th><th>Actions</th></tr></thead><tbody>
         {filteredUsers.map((u)=><tr key={u.user_id}><td><div>{u.email}</div><small>Requested: {u.requested_role || "—"}</small></td><td>{u.account_status}</td><td>{u.role || "—"}</td><td>{u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}</td><td>{u.membership_count || 0}</td>
         <td><div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-          <button className="btn" onClick={()=>{ setApproveUser(u); setApproveRole(u.requested_role || "host"); }}>Approve</button>
+          <button className="btn" disabled={u.account_status === "approved"} onClick={()=>{ setApproveUser(u); setApproveRole(u.requested_role || "host"); }}>Approve</button>
           {u.account_status === "suspended" ? <button className="btn-secondary" onClick={()=>runRpc("admin_restore_user", { target_user_id: u.user_id })}>Restore</button> : <button className="btn-secondary" onClick={()=>runRpc("admin_suspend_user", { target_user_id: u.user_id })}>Suspend</button>}
           <button className="btn-ghost" onClick={()=>setManageUser(u)}>Manage Access</button>
         </div></td></tr>)}
@@ -79,7 +84,7 @@ export default function UsersAccess({ permissions }) {
 
     {approveUser ? <div className="modal-overlay"><div className="modal card" style={{ padding:16, maxWidth:520 }}><h3>Approve user</h3><p>{approveUser.email}</p><select value={approveRole} onChange={(e)=>setApproveRole(e.target.value)}>{ROLE_OPTIONS.map((r)=><option key={r} value={r}>{r}</option>)}</select>
       {approveRole !== "host" ? <p style={{ fontSize:12 }}>This role still needs property assignment after approval.</p> : null}
-      <div style={{ display:"flex", gap:8 }}><button className="btn" onClick={async()=>{ await runRpc("admin_approve_user", { target_user_id: approveUser.user_id, approved_role: approveRole }); setApproveUser(null); }}>Confirm</button><button className="btn-ghost" onClick={()=>setApproveUser(null)}>Cancel</button></div></div></div> : null}
+      <div style={{ display:"flex", gap:8 }}><button className="btn" onClick={async()=>{ const ok = await runRpc("admin_approve_user", { target_user_id: approveUser.user_id, approved_role: approveRole }); if (ok) setApproveUser(null); }}>Confirm</button><button className="btn-ghost" onClick={()=>setApproveUser(null)}>Cancel</button></div></div></div> : null}
 
     {manageUser ? <ManageAccessModal user={manageUser} memberships={memberships.filter((m)=>m.member_user_id===manageUser.user_id)} properties={properties} onClose={()=>setManageUser(null)} onMutate={runRpc} /> : null}
   </div>;
@@ -88,7 +93,7 @@ export default function UsersAccess({ permissions }) {
 function ManageAccessModal({ user, memberships, properties, onClose, onMutate }) {
   const [form, setForm] = useState({ property_record_id:"", access_role:"property_manager", can_view_financials:false, can_edit_operations:true, can_approve_maintenance:false });
   return <div className="modal-overlay"><div className="modal card" style={{ maxWidth:900, padding:16 }}>
-    <h3><ShieldCheck size={18} /> Manage Access</h3><p>{user.email} · {user.account_status} · {user.role || "—"}</p>
+    <h3 style={{ display:"flex", alignItems:"center", gap:8 }}><ShieldCheck size={18} /> Manage Access</h3><p>{user.email} · {user.account_status} · {user.role || "—"}</p>
     <table className="table" style={{ width:"100%" }}><thead><tr><th>Property</th><th>Role</th><th>Permissions</th><th>Active</th><th>Actions</th></tr></thead><tbody>{memberships.map((m)=><tr key={m.id}><td>{m.property_name || m.property_id}</td><td>{m.access_role}</td><td>{m.can_view_financials?"F ":""}{m.can_edit_operations?"Ops ":""}{m.can_approve_maintenance?"Maint": ""}</td><td>{String(m.active)}</td><td><button className="btn-secondary" onClick={()=>onMutate("admin_update_property_membership", { membership_id:m.id, target_access_role:m.access_role, target_can_view_financials:m.can_view_financials, target_can_edit_operations:m.can_edit_operations, target_can_approve_maintenance:m.can_approve_maintenance, target_active:!m.active })}>Toggle</button><button className="btn-ghost" onClick={()=>onMutate("admin_delete_or_deactivate_membership", { membership_id:m.id })}>Deactivate</button></td></tr>)}</tbody></table>
     <h4>Add assignment</h4>
     <div style={{ display:"grid", gridTemplateColumns:"repeat(3,minmax(0,1fr))", gap:8 }}>

@@ -1,3 +1,19 @@
+-- Ensure property_memberships exists
+create table if not exists public.property_memberships (
+  id uuid primary key default gen_random_uuid(),
+  host_user_id uuid not null references auth.users(id) on delete cascade,
+  member_user_id uuid not null references auth.users(id) on delete cascade,
+  property_record_id uuid references public.properties(id) on delete cascade,
+  property_id text not null,
+  access_role text not null,
+  can_view_financials boolean default false,
+  can_edit_operations boolean default false,
+  can_approve_maintenance boolean default false,
+  active boolean default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- Admin Users & Access management hardening
 
 alter table if exists public.profiles
@@ -92,6 +108,7 @@ declare updated_profile public.profiles;
 begin
   if not public.is_admin_user() then raise exception 'not authorized'; end if;
   if approved_role not in ('host','property_manager','cleaner','owner','admin') then raise exception 'invalid role'; end if;
+  if target_user_id = auth.uid() then raise exception 'cannot approve self'; end if;
   update public.profiles set account_status='approved', role=approved_role, approved_at=now(), suspended_at=null, updated_at=now() where id=target_user_id returning * into updated_profile;
   return updated_profile;
 end $$;
@@ -102,6 +119,7 @@ language plpgsql security definer set search_path = public
 as $$ declare updated_profile public.profiles;
 begin
   if not public.is_admin_user() then raise exception 'not authorized'; end if;
+  if target_user_id = auth.uid() then raise exception 'cannot suspend self'; end if;
   update public.profiles set account_status='suspended', suspended_at=now(), updated_at=now() where id=target_user_id returning * into updated_profile;
   update public.property_memberships set active=false, updated_at=now() where member_user_id=target_user_id and active=true;
   return updated_profile;
@@ -113,6 +131,7 @@ language plpgsql security definer set search_path = public
 as $$ declare updated_profile public.profiles;
 begin
   if not public.is_admin_user() then raise exception 'not authorized'; end if;
+  if target_user_id = auth.uid() then raise exception 'cannot restore self'; end if;
   update public.profiles set account_status='approved', suspended_at=null, updated_at=now() where id=target_user_id returning * into updated_profile;
   return updated_profile;
 end $$;
@@ -182,7 +201,6 @@ alter table if exists public.property_memberships enable row level security;
 drop policy if exists "Users can view own profile" on public.profiles;
 create policy "Users can view own profile" on public.profiles for select using (auth.uid() = id or public.is_admin_user());
 
-revoke insert, update, delete on public.property_memberships from authenticated;
 grant execute on function public.admin_list_users() to authenticated;
 grant execute on function public.admin_approve_user(uuid,text) to authenticated;
 grant execute on function public.admin_suspend_user(uuid) to authenticated;
@@ -191,3 +209,4 @@ grant execute on function public.admin_assign_property_membership(uuid,uuid,text
 grant execute on function public.admin_update_property_membership(uuid,text,boolean,boolean,boolean,boolean) to authenticated;
 grant execute on function public.admin_delete_or_deactivate_membership(uuid) to authenticated;
 grant execute on function public.admin_list_memberships() to authenticated;
+grant execute on function public.admin_list_assignable_properties() to authenticated;
