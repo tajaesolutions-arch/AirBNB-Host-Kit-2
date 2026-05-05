@@ -19,9 +19,9 @@ export const ROLE_LABELS = {
 };
 
 const NAV = {
-  admin: ["dashboard","properties","bookings","guests","cleaning","maintenance","supplies","revenue","leads","owner","tax","sops","messages","settings","users-access","smart-tools","account","owner-dashboard","cleaner-dashboard","maintenance-dashboard","property-manager"],
-  host: ["dashboard","properties","bookings","guests","cleaning","maintenance","supplies","revenue","leads","owner","tax","sops","messages","settings"],
-  property_manager: ["dashboard","properties","bookings","guests","cleaning","maintenance","supplies","revenue","leads","owner","tax","sops","messages","settings"],
+  admin: ["dashboard","properties","bookings","guests","cleaning","maintenance","supplies","reports","revenue","leads","owner","tax","sops","messages","settings","users-access","smart-tools","account","owner-dashboard","cleaner-dashboard","maintenance-dashboard","property-manager"],
+  host: ["dashboard","properties","bookings","guests","cleaning","maintenance","supplies","reports","revenue","leads","owner","tax","sops","messages","settings"],
+  property_manager: ["dashboard","properties","bookings","guests","cleaning","maintenance","supplies","reports","revenue","leads","owner","tax","sops","messages","settings"],
   owner: ["owner-dashboard","bookings","revenue","maintenance","owner","messages"],
   cleaner: ["cleaner-dashboard","cleaning","sops","messages"],
   maintenance: ["maintenance-dashboard","maintenance","sops","messages"],
@@ -39,6 +39,7 @@ export const NAV_ITEMS = [
   { key: "cleaning", label: "My Cleaning Tasks", icon: Sparkles },
   { key: "maintenance", label: "My Work Orders", icon: Wrench },
   { key: "supplies", label: "Supplies", icon: Package },
+  { key: "reports", label: "Reports", icon: FileText },
   { key: "revenue", label: "Revenue Summary", icon: BarChart3 },
   { key: "leads", label: "Direct Leads", icon: MessageSquare },
   { key: "owner", label: "Owner Report", icon: FileText },

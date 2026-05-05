@@ -11,6 +11,7 @@ import * as DashboardModule from "./pages/Dashboard.jsx";
 import * as BookingsModule from "./pages/Bookings.jsx";
 import * as GuestCleaningMaintenanceModule from "./pages/GuestsCleaningMaintenance.jsx";
 import * as SuppliesRevenueLeadsModule from "./pages/SuppliesRevenuLeads.jsx";
+import Reports from "./pages/Reports.jsx";
 import * as OwnerTaxMessagesSettingsModule from "./pages/OwnerReportTaxSOPsMessagesSettings.jsx";
 import * as AccountModule from "./pages/Account.jsx";
 import * as SmartToolsModule from "./pages/SmartTools.jsx";
@@ -43,6 +44,7 @@ const PAGE_TITLES = {
   cleaning: "Cleaning Schedule",
   maintenance: "Maintenance",
   supplies: "Supplies",
+  reports: "Reports",
   revenue: "Revenue & Profit",
   leads: "Direct Leads",
   owner: "Owner Report",
@@ -329,6 +331,9 @@ function DashboardShell() {
       case "supplies":
       case "supplies-inventory":
         return <Supplies {...shared} />;
+
+      case "reports":
+        return <Reports {...shared} />;
 
       case "revenue":
       case "revenue-profit":
