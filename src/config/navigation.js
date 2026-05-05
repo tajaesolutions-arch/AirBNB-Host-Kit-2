@@ -1,0 +1,45 @@
+import {
+  LayoutDashboard,
+  Home,
+  CalendarDays,
+  Sparkles,
+  Wrench,
+  ShieldCheck,
+  Users,
+  Package,
+  FileText,
+  BarChart3,
+  MessageSquare,
+  Calculator,
+  Settings,
+} from "lucide-react";
+
+export const NAV_ITEMS = {
+  dashboard: { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  properties: { key: "properties", label: "Properties", icon: Home },
+  bookings: { key: "bookings", label: "Bookings", icon: CalendarDays },
+  cleaning: { key: "cleaning", label: "Cleaning", icon: Sparkles },
+  maintenance: { key: "maintenance", label: "Maintenance", icon: Wrench },
+  usersAccess: { key: "users-access", label: "Users & Access", icon: ShieldCheck },
+  bookingCalendar: { key: "booking-calendar", label: "Booking Calendar", icon: CalendarDays },
+  guestCrm: { key: "guest-crm", label: "Guest CRM", icon: Users },
+  supplies: { key: "supplies", label: "Supplies", icon: Package },
+  suppliesRequests: { key: "supplies", label: "Supplies Requests", icon: Package },
+  reports: { key: "reports", label: "Reports", icon: FileText },
+  revenue: { key: "revenue", label: "Revenue Summary", icon: BarChart3 },
+  leads: { key: "leads", label: "Direct Leads", icon: MessageSquare },
+  ownerReports: { key: "owner", label: "Owner Reports", icon: FileText },
+  taxReserve: { key: "tax", label: "Tax Reserve", icon: Calculator },
+  myCleaningTasks: { key: "cleaner-dashboard", label: "My Cleaning Tasks", icon: Sparkles },
+  myWorkOrders: { key: "maintenance-dashboard", label: "My Work Orders", icon: Wrench },
+  settings: { key: "settings", label: "Settings", icon: Settings },
+};
+
+export const NAV_BY_ROLE = {
+  admin: ["dashboard","properties","bookings","cleaning","maintenance","users-access","booking-calendar","guest-crm","supplies","reports","revenue","leads","owner","tax","settings"],
+  host: ["dashboard","properties","bookings","cleaning","maintenance","booking-calendar","guest-crm","supplies","reports","revenue","leads","owner","settings"],
+  property_manager: ["dashboard","properties","bookings","cleaning","maintenance","booking-calendar","guest-crm","supplies","reports","revenue","leads","owner","settings"],
+  owner: ["dashboard","properties","bookings","maintenance","owner","revenue","settings"],
+  cleaner: ["cleaner-dashboard","properties","supplies","settings"],
+  maintenance: ["maintenance-dashboard","properties","settings"],
+};
