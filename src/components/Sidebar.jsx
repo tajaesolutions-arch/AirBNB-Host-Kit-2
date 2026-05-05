@@ -5,11 +5,9 @@ import {
   Sparkles,
   Wrench,
   Package,
-  TrendingUp,
   BarChart3,
   Building2,
   Home,
-  Shield,
   MessageSquare,
   FileText,
   Calculator,
@@ -41,7 +39,7 @@ const NAV_ITEMS = [
   { key: "messages", label: "Messages", icon: MessageSquare },
   { key: "settings", label: "Settings", icon: Settings },
   { key: "smart-tools", label: "Smart Tools", icon: WandSparkles },
-  { key: "admin-users", label: "User Approvals", icon: Shield },
+  { key: "users-access", label: "Users & Access", icon: ShieldCheck },
   { key: "account", label: "My Account", icon: Users },
 ];
 
