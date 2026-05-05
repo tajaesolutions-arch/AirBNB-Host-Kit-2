@@ -1,6 +1,7 @@
 import { LayoutDashboard, CalendarDays, Users, Sparkles, Wrench, Package, BarChart3, MessageSquare, FileText, Calculator, ClipboardList, Settings, Home } from "lucide-react";
 
 export const ROLE_KEYS = {
+  ADMIN: "admin",
   PROPERTY_MANAGER: "property_manager",
   HOST: "host",
   OWNER: "owner",
@@ -9,6 +10,7 @@ export const ROLE_KEYS = {
 };
 
 export const ROLE_LABELS = {
+  [ROLE_KEYS.ADMIN]: "Admin",
   [ROLE_KEYS.HOST]: "Host",
   [ROLE_KEYS.PROPERTY_MANAGER]: "Property Manager",
   [ROLE_KEYS.OWNER]: "Owner",
@@ -17,6 +19,7 @@ export const ROLE_LABELS = {
 };
 
 const NAV = {
+  admin: ["dashboard","bookings","guests","cleaning","maintenance","supplies","revenue","leads","owner","tax","sops","messages","settings","users-access","smart-tools","account","owner-dashboard","cleaner-dashboard","maintenance-dashboard","property-manager"],
   host: ["dashboard","bookings","guests","cleaning","maintenance","supplies","revenue","leads","owner","tax","sops","messages","settings"],
   property_manager: ["dashboard","bookings","guests","cleaning","maintenance","supplies","revenue","leads","owner","tax","sops","messages","settings"],
   owner: ["owner-dashboard","bookings","revenue","maintenance","owner","messages"],
@@ -45,7 +48,8 @@ export const NAV_ITEMS = [
 
 export const normalizeRole = (role) => {
   const r = String(role || "").toLowerCase().trim();
-  if (["admin", "host"].includes(r)) return "host";
+  if (r === "admin") return "admin";
+  if (r === "host") return "host";
   if (["property_manager", "property manager", "manager", "cohost", "co-host"].includes(r)) return "property_manager";
   if (["cleaner", "cleaning"].includes(r)) return "cleaner";
   if (["owner", "property_owner", "property owner"].includes(r)) return "owner";
@@ -53,6 +57,6 @@ export const normalizeRole = (role) => {
   return "host";
 };
 
-export const getDefaultPageForRole = (role) => ({ host:"dashboard", property_manager:"dashboard", owner:"owner-dashboard", cleaner:"cleaner-dashboard", maintenance:"maintenance-dashboard" }[normalizeRole(role)] || "dashboard");
+export const getDefaultPageForRole = (role) => ({ admin:"dashboard", host:"dashboard", property_manager:"dashboard", owner:"owner-dashboard", cleaner:"cleaner-dashboard", maintenance:"maintenance-dashboard" }[normalizeRole(role)] || "dashboard");
 export const getNavigationForRole = (role) => NAV[normalizeRole(role)] || NAV.host;
-export const canAccessPage = (role, pageKey) => getNavigationForRole(role).includes(pageKey) || ["account","users-access","smart-tools"].includes(pageKey);
+export const canAccessPage = (role, pageKey) => normalizeRole(role) === "admin" || getNavigationForRole(role).includes(pageKey) || ["account","smart-tools"].includes(pageKey);
