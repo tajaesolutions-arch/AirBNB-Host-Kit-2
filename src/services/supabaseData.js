@@ -6,21 +6,24 @@ function requireSupabase() {
   }
 }
 
-export async function fetchUserTable(tableName, userId) {
+export async function fetchUserTable(tableName, userId, workspaceId = null) {
   requireSupabase();
-  const { data, error } = await supabase
+  let query = supabase
     .from(tableName)
     .select("*")
     .eq("user_id", userId);
+  if (workspaceId) query = query.eq("workspace_id", workspaceId);
+  const { data, error } = await query;
   if (error) throw error;
   return data || [];
 }
 
-export async function upsertUserRows(tableName, rows, userId, conflictColumn) {
+export async function upsertUserRows(tableName, rows, userId, conflictColumn, workspaceId = null) {
   requireSupabase();
   const payload = (rows || []).map((row) => ({
     ...sanitizeTableRow(tableName, row),
     user_id: userId,
+    workspace_id: workspaceId || row?.workspace_id || null,
   }));
   if (payload.length === 0) return [];
   const { data, error } = await supabase
