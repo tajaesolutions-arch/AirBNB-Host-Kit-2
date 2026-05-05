@@ -518,6 +518,7 @@ function CleaningForm({
   properties,
   cleaners,
   currency,
+  canDelete = true,
 }) {
   const [c, setC] = useState({ ...record });
   const [errors, setErrors] = useState([]);
@@ -576,10 +577,11 @@ function CleaningForm({
       wide
       footer={
         <>
-          {record.cleaning_id && (
+          {record.cleaning_id && canDelete && (
             <button
               className="btn-danger"
               onClick={() => onDelete(record.cleaning_id)}
+              type="button"
             >
               <Trash2 size={13} />
               Delete
@@ -714,7 +716,15 @@ function CleaningForm({
   );
 }
 
-export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled }) {
+export function Cleaning({
+  propFilter,
+  setPage,
+  pageAction,
+  onPageActionHandled,
+  effectiveRole = "host",
+  permissions = {},
+  assignedPropertyIds = [],
+}) {
   const {
     cleaning: rawCleaning,
     setCleaning,
@@ -726,6 +736,19 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
   const properties = safeArray(rawProperties);
   const settings = safeSettings(rawSettings);
   const cleaners = safeArray(settings.cleaners);
+  const isCleanerView =
+    effectiveRole === "cleaner" || permissions?.role === "cleaner";
+  const canManageCleaningTasks =
+    !isCleanerView || Boolean(permissions?.can_edit_operations);
+  const assignedIds = Array.isArray(assignedPropertyIds) ? assignedPropertyIds : [];
+  const scopedProperties =
+    isCleanerView && !assignedIds.includes("*")
+      ? properties.filter((property) => assignedIds.includes(property.property_id))
+      : properties;
+  const scopedCleaning =
+    isCleanerView && !assignedIds.includes("*")
+      ? cleaning.filter((task) => assignedIds.includes(task.property_id))
+      : cleaning;
 
   const [editing, setEditing] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -733,19 +756,19 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
 
   const cur = settings.default_currency || "JMD";
   const selectedPropFilter = propFilter || "ALL";
-  const hasProperties = properties.length > 0;
-  const hasCleaningTasks = cleaning.length > 0;
+  const hasProperties = scopedProperties.length > 0;
+  const hasCleaningTasks = scopedCleaning.length > 0;
 
   const filtered = (selectedPropFilter === "ALL"
-    ? cleaning
-    : cleaning.filter((task) => task.property_id === selectedPropFilter)
+    ? scopedCleaning
+    : scopedCleaning.filter((task) => task.property_id === selectedPropFilter)
   )
     .filter((task) => statusFilter === "ALL" || task.cleaning_status === statusFilter)
     .sort((a, b) => new Date(a.checkout_date) - new Date(b.checkout_date));
 
   const empty = {
     cleaning_id: "",
-    property_id: properties[0]?.property_id || "",
+    property_id: scopedProperties[0]?.property_id || "",
     booking_id: "",
     checkout_date: todayISO(),
     next_checkin_date: "",
@@ -761,15 +784,19 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
   };
 
   const startNewTask = () => {
-    if (!hasProperties) return;
+    if (!hasProperties || !canManageCleaningTasks) return;
     setEditing(empty);
   };
 
   useEffect(() => {
     if (pageAction !== "addCleaning") return;
+    if (!canManageCleaningTasks || !hasProperties) {
+      onPageActionHandled?.();
+      return;
+    }
     setEditing(empty);
     onPageActionHandled?.();
-  }, [pageAction]);
+  }, [pageAction, canManageCleaningTasks, hasProperties]);
 
   const save = (task) => {
     if (!task.cleaning_id) {
@@ -819,19 +846,22 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
         subtitle="Track every turnover — assign cleaners, verify linen, damage check, and restock."
         helper="Use this page after every checkout. A clean, inspected, restocked property means better reviews and fewer problems."
         actions={
-          <button
-            className="btn-primary"
-            onClick={startNewTask}
-            disabled={!hasProperties}
-            title={
-              !hasProperties
-                ? "Add a property before creating cleaning tasks"
-                : "Add cleaning task"
-            }
-          >
-            <Plus size={14} />
-            Add Cleaning Task
-          </button>
+          canManageCleaningTasks ? (
+            <button
+              className="btn-primary"
+              onClick={startNewTask}
+              disabled={!hasProperties}
+              title={
+                !hasProperties
+                  ? "Add a property before creating cleaning tasks"
+                  : "Add cleaning task"
+              }
+              type="button"
+            >
+              <Plus size={14} />
+              Add Cleaning Task
+            </button>
+          ) : null
         }
       />
 
@@ -848,8 +878,8 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
               icon={Sparkles}
               title="No cleaning tasks yet"
               body="Add your first cleaning task after a checkout, inspection, or scheduled turnover. This helps you track cleaner assignment, linen status, damage checks, restocking, and photos."
-              buttonLabel="Add First Cleaning Task"
-              onClick={startNewTask}
+              buttonLabel={canManageCleaningTasks ? "Add First Cleaning Task" : null}
+              onClick={canManageCleaningTasks ? startNewTask : null}
             />
           )}
 
@@ -917,8 +947,10 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
                     filtered.map((task) => (
                       <tr
                         key={task.cleaning_id}
-                        className="tr-clickable"
-                        onClick={() => setEditing(task)}
+                        className={canManageCleaningTasks ? "tr-clickable" : undefined}
+                        onClick={
+                          canManageCleaningTasks ? () => setEditing(task) : undefined
+                        }
                       >
                         <td className="fw-bold">
                           {getProp(task.property_id)?.property_name || "—"}
@@ -993,9 +1025,10 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
           onClose={() => setEditing(null)}
           onSave={save}
           onDelete={del}
-          properties={properties}
+          properties={scopedProperties}
           cleaners={cleaners}
           currency={cur}
+          canDelete={canManageCleaningTasks}
         />
       )}
       <ConfirmDialog
