@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { key: "bookings", label: "Booking Calendar", icon: CalendarDays },
   { key: "property-manager", label: "Property Manager", icon: Building2 },
-  { key: "cleaner-portal", label: "Cleaner Portal", icon: Sparkles },
+  { key: "cleaner-portal", label: "Dashboard", icon: Sparkles },
   { key: "owner-portal", label: "Owner Portal", icon: Home },
   { key: "guests", label: "Guest CRM", icon: Users },
   { key: "cleaning", label: "Cleaning Schedule", icon: Sparkles },
@@ -43,9 +43,15 @@ const NAV_ITEMS = [
   { key: "account", label: "My Account", icon: Users },
 ];
 
-export default function Sidebar({ page, setPage, collapsed = false, onToggleCollapse, mobile = false, onClose, role = "host", permissions, assignedPropertyCount = 0 }) {
+const toDisplayName = ({ profile, user, role }) => {
+  const emailName = String(user?.email || "").split("@")[0];
+  return profile?.display_name || profile?.host_name || user?.user_metadata?.host_name || user?.user_metadata?.full_name || emailName || ROLE_LABELS[role] || role;
+};
+
+export default function Sidebar({ page, setPage, collapsed = false, onToggleCollapse, mobile = false, onClose, role = "host", permissions, assignedPropertyCount = 0, assignedTaskCount = 0, user, profile }) {
   const perm = permissions || { role };
-  const allowedNavItems = NAV_ITEMS.filter((item) => canAccessPage(item.key, perm));
+  const allowedNavItems = NAV_ITEMS.filter((item) => canAccessPage(item.key, perm)).filter((item) => !(role === "cleaner" && item.key === "account"));
+  const displayName = toDisplayName({ profile, user, role });
 
   const handleNavigate = (nextPage) => {
     if (typeof setPage === "function") setPage(nextPage);
@@ -74,7 +80,9 @@ export default function Sidebar({ page, setPage, collapsed = false, onToggleColl
           );
         })}
       </nav>
-      <div style={{padding:12,borderTop:"1px solid #e5e7eb",fontSize:12}} title={collapsed?`Logged in as ${ROLE_LABELS[role]||role}`:undefined}>{collapsed?"●":<><div><strong>Logged in as {ROLE_LABELS[role]||role}</strong></div><div>{assignedPropertyCount} properties</div></>}</div>
+      <button type="button" className="sidebar-account-footer" onClick={() => handleNavigate("account")} aria-label="Open account page" title={collapsed ? `Logged in as ${displayName}` : undefined}>
+        {collapsed ? "●" : <><div><strong>Logged in as {displayName}</strong></div><div>{role === "cleaner" ? `${assignedTaskCount} assigned tasks` : `${assignedPropertyCount} properties`}</div></>}
+      </button>
     </aside>
   );
 }

@@ -31,6 +31,8 @@ export default function Account() {
   const [error, setError] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [saving, setSaving] = useState(false);
+  const isCleaner = (selectedPortalRole || effectiveRole) === "cleaner";
+  const displayName = profile?.display_name || profile?.host_name || user?.user_metadata?.host_name || user?.user_metadata?.full_name || String(user?.email || "").split("@")[0] || "Cleaner";
 
   const [businessName, setBusinessName] = useState(
     profile?.business_name || ""
@@ -182,16 +184,21 @@ export default function Account() {
 
       <div className="card" style={{ marginBottom: 16 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))", gap: 12 }}>
-          <div><strong>Logged in as</strong><div>{user?.email || "-"}</div></div><div><strong>Active portal role</strong><div>{selectedPortalRole || effectiveRole || "host"}</div></div><div><strong>Available roles</strong><div>{(availableRoles||[]).join(", ") || "None"}</div></div><div><strong>Requested role</strong><div>{profile?.requested_role || "-"}</div></div><div><strong>Account status</strong><div>{profile?.account_status || "-"}</div></div>
+          <div><strong>Email</strong><div>{user?.email || "-"}</div></div>
+          <div><strong>Name</strong><div>{displayName}</div></div>
+          <div><strong>Active portal role</strong><div>{selectedPortalRole || effectiveRole || "host"}</div></div>
+          {!isCleaner && <div><strong>Available roles</strong><div>{(availableRoles||[]).join(", ") || "None"}</div></div>}
+          {!isCleaner && <div><strong>Requested role</strong><div>{profile?.requested_role || "-"}</div></div>}
+          <div><strong>Account status</strong><div>{profile?.account_status || "-"}</div></div>
           <div><strong>Assigned properties</strong><div>{assignedPropertyIds?.length || 0}</div></div>
-          <div><strong>Financial access</strong><div>{permissions?.can_view_financials || permissions?.isHostLike ? "Yes" : "No"}</div></div>
+          {!isCleaner && <><div><strong>Financial access</strong><div>{permissions?.can_view_financials || permissions?.isHostLike ? "Yes" : "No"}</div></div>
           <div><strong>Edit operations</strong><div>{permissions?.can_edit_operations || permissions?.isHostLike ? "Yes" : "No"}</div></div>
-          <div><strong>Approve maintenance</strong><div>{permissions?.can_approve_maintenance || permissions?.isHostLike ? "Yes" : "No"}</div></div>
+          <div><strong>Approve maintenance</strong><div>{permissions?.can_approve_maintenance || permissions?.isHostLike ? "Yes" : "No"}</div></div></>}
         </div>
       </div>
 
       <div className="account-grid">
-        <section className="card account-card">
+        {!isCleaner && <section className="card account-card">
           <div className="account-card-header">
             <UserRound size={20} />
             <div>
@@ -229,9 +236,9 @@ export default function Account() {
             Use the Account ID only for support or troubleshooting. Do not share
             sensitive dashboard data publicly.
           </p>
-        </section>
+        </section>}
 
-        <section className="card account-card">
+        {!isCleaner && <section className="card account-card">
           <div className="account-card-header">
             <Mail size={20} />
             <div>
@@ -272,7 +279,7 @@ export default function Account() {
               Save Profile
             </button>
           </form>
-        </section>
+        </section>}
 
         <section className="card account-card">
           <div className="account-card-header">
