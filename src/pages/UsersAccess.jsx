@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { supabase, isSupabaseConfigured } from "../lib/supabaseClient.js";
 
-const ROLE_OPTIONS = ["host", "property_manager", "cleaner", "owner"];
+const ROLE_OPTIONS = ["host", "property_manager", "owner", "cleaner", "maintenance"];
+const APPROVAL_ROLE_OPTIONS = ["admin", ...ROLE_OPTIONS];
 
 export default function UsersAccess({ permissions }) {
   const [users, setUsers] = useState([]);
@@ -55,7 +56,7 @@ export default function UsersAccess({ permissions }) {
     return true;
   };
 
-  if (!permissions?.isHostLike) return <div className="page"><p>Access denied.</p></div>;
+  if (permissions?.role !== "admin") return <div className="page"><p>Access denied.</p></div>;
 
   return <div className="page"><div className="page-header"><h1 className="page-title">Users &amp; Access</h1><p className="page-subtitle">Approve users, assign portal roles, and control property-level permissions.</p></div>
     <div style={{ display:"flex", gap:12, marginBottom:12 }}><button className="btn" onClick={load}>Refresh</button><button className="btn-ghost" disabled>Invite User (Coming soon)</button></div>
@@ -69,14 +70,15 @@ export default function UsersAccess({ permissions }) {
       <div style={{ display:"flex", gap:8, marginBottom:12 }}>
         <input placeholder="Search by email" value={search} onChange={(e)=>setSearch(e.target.value)} />
         <select value={statusFilter} onChange={(e)=>setStatusFilter(e.target.value)}><option value="all">All Status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="suspended">Suspended</option></select>
-        <select value={roleFilter} onChange={(e)=>setRoleFilter(e.target.value)}><option value="all">All Roles</option>{ROLE_OPTIONS.map((r)=><option key={r} value={r}>{r}</option>)}</select>
+        <select value={roleFilter} onChange={(e)=>setRoleFilter(e.target.value)}><option value="all">All Roles</option>{APPROVAL_ROLE_OPTIONS.map((r)=><option key={r} value={r}>{r}</option>)}</select>
       </div>
       {error ? <div className="auth-setup-error"><p>{error}</p><button className="btn" onClick={load}>Retry</button></div> : null}
       {loading ? <p>Loading...</p> : <table className="table" style={{ width:"100%" }}><thead><tr><th>User</th><th>Status</th><th>Role</th><th>Created</th><th>Assigned</th><th>Actions</th></tr></thead><tbody>
         {filteredUsers.map((u)=><tr key={u.user_id}><td><div>{u.email}</div><small>Requested: {u.requested_role || "—"}</small></td><td>{u.account_status}</td><td>{u.role || "—"}</td><td>{u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}</td><td>{u.membership_count || 0}</td>
         <td><div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
           <button className="btn" disabled={u.account_status === "approved"} onClick={()=>{ setApproveUser(u); setApproveRole(u.requested_role || "host"); }}>Approve</button>
-          {u.account_status === "suspended" ? <button className="btn-secondary" onClick={()=>runRpc("admin_restore_user", { target_user_id: u.user_id })}>Restore</button> : <button className="btn-secondary" onClick={()=>runRpc("admin_suspend_user", { target_user_id: u.user_id })}>Suspend</button>}
+          {u.account_status === "suspended" || u.account_status === "rejected" ? <button className="btn-secondary" onClick={()=>runRpc("admin_restore_user", { target_user_id: u.user_id })}>Restore</button> : <button className="btn-secondary" onClick={()=>runRpc("admin_suspend_user", { target_user_id: u.user_id })}>Suspend</button>}
+          <button className="btn-ghost" onClick={()=>runRpc("admin_reject_user", { target_user_id: u.user_id, reason: "Rejected by admin" })}>Reject</button>
           <button className="btn-ghost" onClick={()=>setManageUser(u)}>Manage Access</button>
         </div></td></tr>)}
       </tbody></table>}
@@ -97,7 +99,7 @@ function ManageAccessModal({ user, memberships, properties, onClose, onMutate })
     <table className="table" style={{ width:"100%" }}><thead><tr><th>Property</th><th>Role</th><th>Permissions</th><th>Active</th><th>Actions</th></tr></thead><tbody>{memberships.map((m)=><tr key={m.id}><td>{m.property_name || m.property_id}</td><td>{m.access_role}</td><td>{m.can_view_financials?"F ":""}{m.can_edit_operations?"Ops ":""}{m.can_approve_maintenance?"Maint": ""}</td><td>{String(m.active)}</td><td><button className="btn-secondary" onClick={()=>onMutate("admin_update_property_membership", { membership_id:m.id, target_access_role:m.access_role, target_can_view_financials:m.can_view_financials, target_can_edit_operations:m.can_edit_operations, target_can_approve_maintenance:m.can_approve_maintenance, target_active:!m.active })}>Toggle</button><button className="btn-ghost" onClick={()=>onMutate("admin_delete_or_deactivate_membership", { membership_id:m.id })}>Deactivate</button></td></tr>)}</tbody></table>
     <h4>Add assignment</h4>
     <div style={{ display:"grid", gridTemplateColumns:"repeat(3,minmax(0,1fr))", gap:8 }}>
-      <select value={form.property_record_id} onChange={(e)=>setForm((s)=>({ ...s, property_record_id:e.target.value }))}><option value="">Select property</option>{properties.map((p)=><option key={p.id} value={p.id}>{p.name || p.property_id}</option>)}</select>
+      <select value={form.property_record_id} onChange={(e)=>setForm((s)=>({ ...s, property_record_id:e.target.value }))}><option value="">Select property</option>{properties.map((p)=><option key={p.id} value={p.id}>{p.property_name || p.property_id}</option>)}</select>
       <select value={form.access_role} onChange={(e)=>setForm((s)=>({ ...s, access_role:e.target.value }))}>{ROLE_OPTIONS.map((r)=><option key={r} value={r}>{r}</option>)}</select>
       <label><input type="checkbox" checked={form.can_view_financials} onChange={(e)=>setForm((s)=>({ ...s, can_view_financials:e.target.checked }))} /> can_view_financials</label>
       <label><input type="checkbox" checked={form.can_edit_operations} onChange={(e)=>setForm((s)=>({ ...s, can_edit_operations:e.target.checked }))} /> can_edit_operations</label>
