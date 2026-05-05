@@ -19,12 +19,12 @@ export const ROLE_LABELS = {
 };
 
 const NAV = {
-  admin: ["dashboard","properties","bookings","guests","cleaning","maintenance","supplies","reports","revenue","leads","owner","tax","sops","messages","settings","users-access","smart-tools","account","owner-dashboard","cleaner-dashboard","maintenance-dashboard","property-manager"],
-  host: ["dashboard","properties","bookings","guests","cleaning","maintenance","supplies","reports","revenue","leads","owner","tax","sops","messages","settings"],
-  property_manager: ["dashboard","properties","bookings","guests","cleaning","maintenance","supplies","reports","revenue","leads","owner","tax","sops","messages","settings"],
-  owner: ["owner-dashboard","bookings","revenue","maintenance","owner","messages"],
-  cleaner: ["cleaner-dashboard","cleaning","sops","messages"],
-  maintenance: ["maintenance-dashboard","maintenance","sops","messages"],
+  admin: ["dashboard","properties","bookings","cleaning","maintenance","users-access","booking-calendar","guest-crm","supplies","reports","revenue","leads","owner","tax","settings"],
+  host: ["dashboard","properties","bookings","cleaning","maintenance","booking-calendar","guest-crm","supplies","reports","revenue","leads","owner","settings"],
+  property_manager: ["dashboard","properties","bookings","cleaning","maintenance","booking-calendar","guest-crm","supplies","reports","revenue","leads","owner","settings"],
+  owner: ["dashboard","properties","bookings","maintenance","owner","revenue","settings"],
+  cleaner: ["cleaner-dashboard","properties","supplies","settings"],
+  maintenance: ["maintenance-dashboard","properties","settings"],
 };
 
 export const NAV_ITEMS = [
@@ -34,10 +34,11 @@ export const NAV_ITEMS = [
   { key: "maintenance-dashboard", label: "Maintenance Dashboard", icon: Wrench },
   { key: "properties", label: "Properties", icon: Home },
   { key: "users-access", label: "Users & Access", icon: ShieldCheck },
-  { key: "bookings", label: "Booking Calendar", icon: CalendarDays },
-  { key: "guests", label: "Guest CRM", icon: Users },
-  { key: "cleaning", label: "My Cleaning Tasks", icon: Sparkles },
-  { key: "maintenance", label: "My Work Orders", icon: Wrench },
+  { key: "bookings", label: "Bookings", icon: CalendarDays },
+  { key: "booking-calendar", label: "Booking Calendar", icon: CalendarDays },
+  { key: "guest-crm", label: "Guest CRM", icon: Users },
+  { key: "cleaning", label: "Cleaning", icon: Sparkles },
+  { key: "maintenance", label: "Maintenance", icon: Wrench },
   { key: "supplies", label: "Supplies", icon: Package },
   { key: "reports", label: "Reports", icon: FileText },
   { key: "revenue", label: "Revenue Summary", icon: BarChart3 },
@@ -60,6 +61,6 @@ export const normalizeRole = (role) => {
   return "host";
 };
 
-export const getDefaultPageForRole = (role) => ({ admin:"dashboard", host:"dashboard", property_manager:"dashboard", owner:"owner-dashboard", cleaner:"cleaner-dashboard", maintenance:"maintenance-dashboard" }[normalizeRole(role)] || "dashboard");
+export const getDefaultPageForRole = (role) => ({ admin:"dashboard", host:"dashboard", property_manager:"dashboard", owner:"dashboard", cleaner:"cleaner-dashboard", maintenance:"maintenance-dashboard" }[normalizeRole(role)] || "dashboard");
 export const getNavigationForRole = (role) => NAV[normalizeRole(role)] || NAV.host;
 export const canAccessPage = (role, pageKey) => normalizeRole(role) === "admin" || getNavigationForRole(role).includes(pageKey) || ["account","smart-tools"].includes(pageKey);
