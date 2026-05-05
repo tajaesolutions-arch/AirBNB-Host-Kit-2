@@ -458,10 +458,19 @@ export function AuthProvider({ children }) {
   const approvedWorkspaceMemberships = workspaceMemberships.filter((m) => (m?.account_status || m?.status) === "approved");
   const suspendedWorkspaceMemberships = workspaceMemberships.filter((m) => (m?.account_status || m?.status) === "suspended");
   const activeWorkspaceMembership = approvedWorkspaceMemberships[0] || null;
-  const availableRoles = useMemo(() => getAvailableRoles({ memberships, profile, user }), [memberships, profile, user]);
+  const availableRoles = useMemo(() => {
+    const baseRoles = getAvailableRoles({ memberships, profile, user });
+    const workspaceRoles = workspaceMemberships
+      .filter((m) => (m?.account_status || m?.status) === "approved")
+      .map((m) => normalizeRole(m?.role))
+      .filter(Boolean);
+    return [...new Set([...baseRoles, ...workspaceRoles])];
+  }, [memberships, profile, user, workspaceMemberships]);
 
+  const ROLE_PRIORITY = ["admin", "property_manager", "host", "owner", "cleaner", "maintenance_crew"];
   const authoritativeProfileRole = normalizeRole(profile?.role);
-  const effectiveRole = authoritativeProfileRole || availableRoles[0] || "host";
+  const prioritizedAssignedRole = ROLE_PRIORITY.find((roleKey) => availableRoles.includes(roleKey)) || null;
+  const effectiveRole = authoritativeProfileRole || prioritizedAssignedRole || "host";
   const scopedMemberships = useMemo(() => memberships.filter((m) => effectiveRole === "host" ? true : normalizeRole(m?.access_role) === effectiveRole), [memberships, effectiveRole]);
   const assignedPropertyIds = useMemo(() => getAssignedPropertyIds(scopedMemberships), [scopedMemberships]);
   const assignedPropertyRecordIds = useMemo(() => getAssignedPropertyRecordIds(scopedMemberships), [scopedMemberships]);
