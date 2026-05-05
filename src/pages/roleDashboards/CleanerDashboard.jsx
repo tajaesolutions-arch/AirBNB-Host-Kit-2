@@ -1,40 +1,17 @@
-import { useMemo } from "react";
-import { Camera, CheckCircle2, Clock3, Sparkles } from "lucide-react";
-import { Chip, MetricCard, PageHeader } from "../../components/index.jsx";
-import { useApp } from "../../context/AppContext.jsx";
-import { useAuth } from "../../auth/AuthContext.jsx";
-import { cleaningStatusChip, fmtDateShort } from "../../utils/helpers.js";
+import { Camera, CheckCircle, ClipboardList, AlertTriangle, Clock3 } from 'lucide-react';
+import { DashboardHeader, DataTable, KpiCard, StatusBadge } from '../../components/opsDashboard.jsx';
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
-const monthISO = () => new Date().toISOString().slice(0, 7);
-const normalize = (value) => String(value || "").toLowerCase();
+const noop = (label) => () => console.info(`${label} clicked`);
 
-export default function CleanerDashboard({ setPage }) {
-  const { cleaning = [], properties = [] } = useApp();
-  const { profile, loading, profileLoading } = useAuth();
-  const assignedCleaner = (profile?.assigned_cleaner_name || "").trim();
-  const propertyName = (propertyId) => properties.find((property) => property.property_id === propertyId)?.property_name || propertyId || "Unassigned property";
-
-  const assignedTasks = useMemo(() => assignedCleaner ? cleaning.filter((task) => normalize(task.cleaner_name) === normalize(assignedCleaner)) : [], [cleaning, assignedCleaner]);
-  const today = todayISO(); const month = monthISO();
-  const activeTasks = assignedTasks.filter((task) => !["completed", "cancelled"].includes(normalize(task.cleaning_status)));
-  const todayTasks = assignedTasks.filter((task) => (task.checkout_date || task.cleaning_date || "").slice(0, 10) === today);
-  const overdueTasks = activeTasks.filter((task) => (task.checkout_date || task.cleaning_date || "") < today);
-  const completedThisMonth = assignedTasks.filter((task) => normalize(task.cleaning_status) === "completed" && String(task.time_completed || task.checkout_date || "").slice(0, 7) === month);
-  const missingPhotos = activeTasks.filter((task) => !task.photos_uploaded);
-
-  if (loading || profileLoading) return <div className="page"><p className="dashboard-empty">Loading cleaner dashboard…</p></div>;
-  if (!assignedCleaner) return <div className="page"><p className="dashboard-empty">No cleaning tasks assigned to your profile yet.</p></div>;
-
-  return <div className="page role-dashboard-grid"><PageHeader title="Cleaner Dashboard" subtitle="Your assigned turnovers and cleaning readiness." actions={<button type="button" className="btn-secondary" onClick={() => setPage?.("cleaning")}><Sparkles size={14} />Open Cleaning Schedule</button>} />
-    <section className="role-kpi-grid"> 
-      <MetricCard label="Assigned Today" value={todayTasks.length} icon={Clock3} />
-      <MetricCard label="Overdue" value={overdueTasks.length} icon={Clock3} tone={overdueTasks.length?"danger":"default"} />
-      <MetricCard label="Completed This Month" value={completedThisMonth.length} icon={CheckCircle2} />
-      <MetricCard label="Missing Photos" value={missingPhotos.length} icon={Camera} />
-    </section>
-    <article className="card role-dashboard-card"><h3>Assigned tasks</h3>
-      <div className="table-wrap"><table className="table role-work-table"><thead><tr><th>Property</th><th>Checkout</th><th>Next Check-in</th><th>Status</th><th>Linen</th><th>Damage</th><th>Supplies</th><th>Photos</th></tr></thead><tbody>
-      {assignedTasks.length===0?<tr><td colSpan="8">No assigned cleaning tasks found.</td></tr>:assignedTasks.map((task)=><tr key={task.cleaning_id}><td>{propertyName(task.property_id)}</td><td>{fmtDateShort(task.checkout_date)}</td><td>{fmtDateShort(task.next_checkin_date)}</td><td><Chip tone={cleaningStatusChip(task.cleaning_status)}>{task.cleaning_status||"Scheduled"}</Chip></td><td>{task.linen_status||"—"}</td><td>{task.damage_check||"—"}</td><td>{task.supply_restock_status||"—"}</td><td>{task.photos_uploaded?"Uploaded":"Missing"}</td></tr>)}
-      </tbody></table></div></article></div>;
+export default function CleanerDashboard() {
+  const columns = [{ key: 'property', label: 'Property' }, { key: 'unit', label: 'Unit / Room' }, { key: 'checkout', label: 'Check-out' }, { key: 'checkin', label: 'Next Check-in' }, { key: 'window', label: 'Cleaning Window' }, { key: 'priority', label: 'Priority' }, { key: 'status', label: 'Status' }, { key: 'action', label: 'Action', align: 'right' }];
+  const rows = [
+    { property: 'Ocean View Villa', unit: 'Main Suite', checkout: '11:00 AM', checkin: '4:00 PM', window: '11:30 AM – 3:00 PM', priority: <StatusBadge status='Same-Day Turnover' />, status: <StatusBadge status='In Progress' />, action: <button className='btn-primary' onClick={noop('Continue')}>Continue</button> },
+    { property: 'Palm Studio', unit: 'Unit 2', checkout: '10:00 AM', checkin: '3:00 PM', window: '10:30 AM – 2:30 PM', priority: <StatusBadge status='Urgent' />, status: <StatusBadge status='Not Started' />, action: <button className='btn-primary' onClick={noop('Start')}>Start</button> },
+    { property: 'Blue Haven Apartment', unit: 'Unit 5B', checkout: '12:00 PM', checkin: 'Tomorrow', window: '12:30 PM – 4:00 PM', priority: <StatusBadge status='Normal' />, status: <StatusBadge status='Pending' />, action: <button className='btn-secondary' onClick={noop('View')}>View</button> }
+  ];
+  return <div className='page ops-page'><DashboardHeader title='Cleaner Dashboard' subtitle="Today’s assigned turnovers and property readiness" searchPlaceholder='Search properties, tasks…' controls={['May 12, 2024']} userName='Maria Lopez' userRole='Cleaner' notificationCount={2} />
+    <section className='ops-kpi-grid'>{[['Today’s Cleanings', 6, '6 assigned for today', ClipboardList, 'blue'], ['Pending', 3, '3 awaiting start', Clock3, 'orange'], ['In Progress', 1, '1 currently in progress', Clock3, 'blue'], ['Completed Today', 2, '2 completed so far', CheckCircle, 'green'], ['Issues Reported', 1, '1 requires attention', AlertTriangle, 'red']].map(([l, v, s, i, t]) => <KpiCard key={l} label={l} value={v} subtitle={s} icon={i} tone={t} />)}</section>
+    <section className='split'><article className='ops-card'><h3>Today’s Cleaning Queue</h3><DataTable columns={columns} rows={rows} /></article><article className='ops-card'><h3>Active Cleaning Job</h3><p><strong>Ocean View Villa</strong></p><p>Status: <StatusBadge status='Cleaning in Progress' /></p><p>Deadline: 3:00 PM</p><p>Next Check-in: 4:00 PM</p><div className='btn-row'><button className='btn-primary' onClick={noop('Ready for inspection')}>Mark Ready for Inspection</button><button className='btn-secondary' onClick={noop('Report issue')}>Report Issue</button><button className='btn-secondary' onClick={noop('Upload photos')}><Camera size={14} /> Upload Photos</button></div></article></section>
+  </div>;
 }
