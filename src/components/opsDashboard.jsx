@@ -48,16 +48,16 @@ export function DashboardHeader({ title, subtitle, propertyOptions = [], selecte
     { key: 'signout', label: 'Sign Out', icon: LogOut },
   ]), []);
 
-  return <header className="ops-header"><div><h1>{title}</h1>{subtitle ? <p>{subtitle}</p> : null}</div><div className="ops-header-right" style={{ flexWrap: 'wrap', gap: 8 }}>
-    <div ref={searchRef} style={{ position: 'relative', flex: '1 1 240px', minWidth: 220 }}>
+  return <header className="ops-header"><div><h1>{title}</h1>{subtitle ? <p>{subtitle}</p> : null}</div><div className="ops-header-right">
+    <div ref={searchRef} className="header-search">
       <label className="search-wrap"><Search size={14} /><input aria-label="Search properties" placeholder={searchPlaceholder} value={searchValue} onFocus={() => setSearchFocused(true)} onChange={(e) => onSearchChange?.(e.target.value)} onKeyDown={onSearchKeyDown} /></label>
       {(searchFocused && suggestionsOpen) ? <div className="ops-card" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 20, padding: 6, border: '1px solid #e5e7eb', borderRadius: 12, background: '#fff' }}>{suggestions.length ? suggestions.map((s, i) => <button key={s.property_id} type="button" className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', marginBottom: i === suggestions.length - 1 ? 0 : 4 }} onClick={() => { onSuggestionSelect?.(s); setSearchFocused(false); }}>{s.property_name}</button>) : <p style={{ margin: '4px 8px', color: '#6b7280', fontSize: 12 }}>No matching properties found</p>}</div> : null}
     </div>
-    <select className="btn-filter" value={selectedPropertyId} onChange={(e) => onPropertyChange?.(e.target.value)} style={{ minWidth: 180 }}>
+    <select className="btn-filter property-filter" value={selectedPropertyId} onChange={(e) => onPropertyChange?.(e.target.value)}>
       <option value="ALL">All Properties</option>
       {propertyOptions.map((p) => <option key={p.property_id} value={p.property_id}>{p.property_name}</option>)}
     </select>
-    <select className="btn-filter" value={selectedDatePreset} onChange={(e) => onDateChange?.(e.target.value)} style={{ minWidth: 160 }}>
+    <select className="btn-filter date-filter" value={selectedDatePreset} onChange={(e) => onDateChange?.(e.target.value)}>
       {dateOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
     <button type="button" className="icon-btn" aria-label="Notifications"><Bell size={16} />{notificationCount ? <span className="notif">{notificationCount}</span> : null}</button>
