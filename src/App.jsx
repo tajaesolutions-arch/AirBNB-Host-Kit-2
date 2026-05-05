@@ -25,7 +25,7 @@ import OwnerDashboard from "./pages/OwnerDashboard.jsx";
 import PropertySetup from "./pages/PropertySetup.jsx";
 
 import "./styles.css";
-import { canAccessPage as canAccessByPermissions, getDefaultPageForRole } from "./utils/permissions.js";
+import { ROLE_LABELS, normalizeRole, canAccessPage as canAccessByPermissions, getDefaultPageForRole } from "./utils/permissions.js";
 
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 
@@ -453,7 +453,7 @@ function DashboardShell() {
 }
 
 
-function AccountStatusScreen({ status, email, onSignOut, requestedRole, memberships=[] }) {
+function AccountStatusScreen({ status, email, onSignOut, requestedRole, memberships=[], workspaceMembershipsEnabled=true, workspaceMembershipsError="" }) {
   const statusMap = {
     pending: {
       title: "Waiting for approval",
@@ -484,7 +484,11 @@ function AccountStatusScreen({ status, email, onSignOut, requestedRole, membersh
         <p className="approval-kicker">Account status</p>
         <h1 className="approval-title">{content.title}</h1>
         <p className="approval-body">{content.body}</p>
-        <p className="approval-meta">Signed in as: {email || "Unknown email"}</p><p className="approval-meta">Requested role: {requestedRole || "Not provided"}</p><p className="approval-meta">Assigned roles: {[...new Set((memberships||[]).map((m)=>m.access_role))].join(", ") || "None yet"}</p>
+        <p className="approval-meta">Signed in as: {email || "Unknown email"}</p>
+        {requestedRole ? <p className="approval-meta">Requested role: {ROLE_LABELS[normalizeRole(requestedRole)] || requestedRole}</p> : <p className="approval-meta">Requested role: No role request submitted</p>}
+        <p className="approval-meta">Assigned roles: {[...new Set((memberships||[]).map((m)=>ROLE_LABELS[normalizeRole(m?.access_role)] || m?.access_role).filter(Boolean))].join(", ") || "None yet"}</p>
+        {workspaceMembershipsEnabled ? null : <p className="approval-meta">Workspace membership checks are unavailable in this environment.</p>}
+        {workspaceMembershipsError ? <p className="approval-meta" role="alert">Workspace membership error: {workspaceMembershipsError}</p> : null}
         <div className="approval-actions">
           <button type="button" className="btn" onClick={onSignOut}>
             Sign Out
@@ -545,7 +549,7 @@ function AppDataGate({ children }) {
 }
 
 function AuthGate() {
-  const { user, session, profile, profileLoading, loading, authError, signOut, memberships, effectiveRole, approvedWorkspaceMemberships, hasSuspendedWorkspaceMembership } = useAuth();
+  const { user, session, profile, profileLoading, loading, authError, signOut, memberships, effectiveRole, approvedWorkspaceMemberships, hasSuspendedWorkspaceMembership, workspaceMembershipsEnabled, workspaceMembershipsError } = useAuth();
   const path = window.location.pathname;
 
   if (loading) {
@@ -564,7 +568,7 @@ function AuthGate() {
     return <LoadingScreen label="Checking account approval…" />;
   }
   if (!profile) {
-    return <AccountStatusScreen status="missing" email={user.email} onSignOut={signOut} requestedRole={user?.user_metadata?.requested_role} memberships={memberships} />;
+    return <AccountStatusScreen status="missing" email={user.email} onSignOut={signOut} requestedRole={user?.user_metadata?.requested_role} memberships={memberships} workspaceMembershipsEnabled={workspaceMembershipsEnabled} workspaceMembershipsError={workspaceMembershipsError} />;
   }
 
   if (path === "/workspace-setup") {
@@ -582,18 +586,20 @@ function AuthGate() {
         onSignOut={signOut}
         requestedRole={profile?.requested_role || user?.user_metadata?.requested_role}
         memberships={memberships}
+        workspaceMembershipsEnabled={workspaceMembershipsEnabled}
+        workspaceMembershipsError={workspaceMembershipsError}
       />
     );
   }
 
   if (hasSuspendedWorkspaceMembership) {
     if (path !== "/suspended") window.history.replaceState({}, "", "/suspended");
-    return <AccountStatusScreen status="suspended" email={user.email} onSignOut={signOut} memberships={memberships} />;
+    return <AccountStatusScreen status="suspended" email={user.email} onSignOut={signOut} memberships={memberships} workspaceMembershipsEnabled={workspaceMembershipsEnabled} workspaceMembershipsError={workspaceMembershipsError} />;
   }
 
-  if (!approvedWorkspaceMemberships?.length) {
+  if (workspaceMembershipsEnabled && !approvedWorkspaceMemberships?.length) {
     if (path !== "/pending-approval") window.history.replaceState({}, "", "/pending-approval");
-    return <AccountStatusScreen status="pending" email={user.email} onSignOut={signOut} memberships={memberships} />;
+    return <AccountStatusScreen status="pending" email={user.email} onSignOut={signOut} memberships={memberships} workspaceMembershipsEnabled={workspaceMembershipsEnabled} workspaceMembershipsError={workspaceMembershipsError} />;
   }
 
   if (window.location.pathname === "/worker-login" && !["cleaner","maintenance_crew"].includes(effectiveRole)) {

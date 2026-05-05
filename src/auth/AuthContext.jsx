@@ -28,6 +28,8 @@ export function AuthProvider({ children }) {
   const [authError, setAuthError] = useState("");
   const [memberships, setMemberships] = useState([]);
   const [workspaceMemberships, setWorkspaceMemberships] = useState([]);
+  const [workspaceMembershipsEnabled, setWorkspaceMembershipsEnabled] = useState(true);
+  const [workspaceMembershipsError, setWorkspaceMembershipsError] = useState("");
   const [membershipsLoading, setMembershipsLoading] = useState(false);
   const [membershipsError, setMembershipsError] = useState("");
   const [requestedRole, setRequestedRole] = useState("");
@@ -61,9 +63,19 @@ export function AuthProvider({ children }) {
       .select("*, workspace:workspaces(*)")
       .eq("user_id", authUser.id);
     if (error) {
+      const missingTable = ["PGRST205", "42P01"].includes(error.code) || /workspace_members|relation|does not exist/i.test(error.message || "");
+      if (missingTable) {
+        setWorkspaceMembershipsEnabled(false);
+        setWorkspaceMembershipsError("");
+      } else {
+        setWorkspaceMembershipsEnabled(true);
+        setWorkspaceMembershipsError(error.message || "Failed to load workspace memberships.");
+      }
       setWorkspaceMemberships([]);
       return [];
     }
+    setWorkspaceMembershipsEnabled(true);
+    setWorkspaceMembershipsError("");
     const rows = Array.isArray(data) ? data : [];
     setWorkspaceMemberships(rows);
     return rows;
@@ -443,8 +455,8 @@ export function AuthProvider({ children }) {
   };
 
   const isApproved = profile?.account_status === "approved";
-  const approvedWorkspaceMemberships = workspaceMemberships.filter((m) => m?.account_status === "approved");
-  const suspendedWorkspaceMemberships = workspaceMemberships.filter((m) => m?.account_status === "suspended");
+  const approvedWorkspaceMemberships = workspaceMemberships.filter((m) => (m?.account_status || m?.status) === "approved");
+  const suspendedWorkspaceMemberships = workspaceMemberships.filter((m) => (m?.account_status || m?.status) === "suspended");
   const activeWorkspaceMembership = approvedWorkspaceMemberships[0] || null;
   const availableRoles = useMemo(() => getAvailableRoles({ memberships, profile, user }), [memberships, profile, user]);
 
@@ -468,6 +480,8 @@ export function AuthProvider({ children }) {
       isSupabaseConfigured,
       memberships, membershipsLoading, membershipsError, requestedRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike,
       workspaceMemberships,
+      workspaceMembershipsEnabled,
+      workspaceMembershipsError,
       approvedWorkspaceMemberships,
       activeWorkspaceMembership,
       hasSuspendedWorkspaceMembership: suspendedWorkspaceMemberships.length > 0,
@@ -489,7 +503,7 @@ export function AuthProvider({ children }) {
           workspace_id: workspace.id,
           user_id: user.id,
           role: "admin",
-          account_status: "approved",
+          status: "approved",
           approved_at: now,
           approved_by: user.id,
           created_at: now,
@@ -510,7 +524,7 @@ export function AuthProvider({ children }) {
           workspace_id: targetWorkspaceId,
           user_id: user.id,
           role: normalizedRole,
-          account_status: "pending",
+          status: "pending",
           created_at: now,
           updated_at: now,
         }, { onConflict: "workspace_id,user_id" });
@@ -526,7 +540,7 @@ export function AuthProvider({ children }) {
       updateProfile,
       completeOnboarding,
     }),
-    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, membershipsLoading, membershipsError, requestedRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike, workspaceMemberships]
+    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, membershipsLoading, membershipsError, requestedRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike, workspaceMemberships, workspaceMembershipsEnabled, workspaceMembershipsError]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
