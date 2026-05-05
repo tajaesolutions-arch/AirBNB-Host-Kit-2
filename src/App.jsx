@@ -256,7 +256,7 @@ function DashboardShell() {
       case "maintenance-dashboard":
         return <MaintenanceDashboard {...sharedProps} />;
       case "owner-dashboard":
-        return <OwnerDashboard {...sharedProps} />;
+        return <Dashboard {...sharedProps} />;
       default:
         return <Dashboard {...sharedProps} />;
     }
