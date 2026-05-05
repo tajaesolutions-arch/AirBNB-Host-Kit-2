@@ -106,19 +106,6 @@ export function AuthProvider({ children }) {
       }
 
       if (existingProfile) {
-        const normalizedRole = normalizeRole(existingProfile.role) || requestedProfileRole;
-        const normalizedStatus = existingProfile.account_status || "pending";
-        if (existingProfile.role !== normalizedRole || existingProfile.account_status !== normalizedStatus) {
-          const { data: patchedProfile, error: patchError } = await supabase
-            .from("profiles")
-            .update({ role: normalizedRole, account_status: normalizedStatus, updated_at: new Date().toISOString() })
-            .eq("id", authUser.id)
-            .select("*")
-            .single();
-
-          if (patchError) throw patchError;
-          return patchedProfile;
-        }
         return existingProfile;
       }
 
