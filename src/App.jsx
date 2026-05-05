@@ -456,12 +456,12 @@ function DashboardShell() {
 function AccountStatusScreen({ status, email, onSignOut, requestedRole, memberships=[] }) {
   const statusMap = {
     pending: {
-      title: "Your account is pending approval",
-      body: "Thanks for signing up. Your workspace is waiting for approval before access is enabled.",
+      title: "Waiting for approval",
+      body: "Your workspace access request has been received. An admin, host, or property manager must approve your account before you can continue.",
     },
     suspended: {
-      title: "Your account is suspended",
-      body: "This account currently cannot access the dashboard. Contact support if you believe this is a mistake.",
+      title: "Account suspended",
+      body: "Your account access has been suspended. Contact your workspace admin if you believe this is a mistake.",
     },
     rejected: {
       title: "Access was not approved",
@@ -545,7 +545,8 @@ function AppDataGate({ children }) {
 }
 
 function AuthGate() {
-  const { user, session, profile, profileLoading, loading, authError, signOut, memberships, effectiveRole } = useAuth();
+  const { user, session, profile, profileLoading, loading, authError, signOut, memberships, effectiveRole, approvedWorkspaceMemberships, hasSuspendedWorkspaceMembership } = useAuth();
+  const path = window.location.pathname;
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;
@@ -566,7 +567,14 @@ function AuthGate() {
     return <AccountStatusScreen status="missing" email={user.email} onSignOut={signOut} requestedRole={user?.user_metadata?.requested_role} memberships={memberships} />;
   }
 
+  if (path === "/workspace-setup") {
+    return <WorkspaceSetupScreen />;
+  }
+
   if (profile.account_status !== "approved") {
+    if (path !== "/pending-approval" && path !== "/suspended") {
+      window.history.replaceState({}, "", profile.account_status === "suspended" ? "/suspended" : "/pending-approval");
+    }
     return (
       <AccountStatusScreen
         status={profile.account_status}
@@ -578,7 +586,17 @@ function AuthGate() {
     );
   }
 
-  if (window.location.pathname === "/worker-login" && !["cleaner","maintenance"].includes(effectiveRole)) {
+  if (hasSuspendedWorkspaceMembership) {
+    if (path !== "/suspended") window.history.replaceState({}, "", "/suspended");
+    return <AccountStatusScreen status="suspended" email={user.email} onSignOut={signOut} memberships={memberships} />;
+  }
+
+  if (!approvedWorkspaceMemberships?.length) {
+    if (path !== "/pending-approval") window.history.replaceState({}, "", "/pending-approval");
+    return <AccountStatusScreen status="pending" email={user.email} onSignOut={signOut} memberships={memberships} />;
+  }
+
+  if (window.location.pathname === "/worker-login" && !["cleaner","maintenance_crew"].includes(effectiveRole)) {
     return <div className="approval-shell"><div className="approval-card"><h1 className="approval-title">Worker portal only</h1><p className="approval-body">This login is for worker accounts only. Please use the main login.</p><button className="btn" onClick={signOut}>Sign out</button></div></div>;
   }
 
@@ -589,6 +607,36 @@ function AuthGate() {
       </AppDataGate>
     </AppProvider>
   );
+}
+
+function WorkspaceSetupScreen() {
+  const { createWorkspace, requestWorkspaceJoin, signOut } = useAuth();
+  const [mode, setMode] = useState("create");
+  const [workspaceName, setWorkspaceName] = useState("");
+  const [workspaceId, setWorkspaceId] = useState("");
+  const [role, setRole] = useState("host");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const onCreate = async () => {
+    setLoading(true); setError("");
+    try { await createWorkspace(workspaceName); window.history.replaceState({}, "", "/dashboard"); window.location.reload(); }
+    catch (e) { setError(e?.message || "Failed to create workspace."); }
+    finally { setLoading(false); }
+  };
+  const onJoin = async () => {
+    setLoading(true); setError("");
+    try { await requestWorkspaceJoin({ workspaceId, role }); window.history.replaceState({}, "", "/pending-approval"); window.location.reload(); }
+    catch (e) { setError(e?.message || "Failed to request access."); }
+    finally { setLoading(false); }
+  };
+
+  return <div className="approval-shell"><div className="approval-card"><h1 className="approval-title">Workspace setup</h1>
+    <div className="row" style={{ gap: 8, marginBottom: 12 }}><button className="btn" onClick={() => setMode("create")}>Create workspace</button><button className="btn-ghost" onClick={() => setMode("join")}>Join workspace</button></div>
+    {mode === "create" ? <label><span>Workspace name</span><input value={workspaceName} onChange={(e)=>setWorkspaceName(e.target.value)} /></label> : <><label><span>Workspace ID</span><input value={workspaceId} onChange={(e)=>setWorkspaceId(e.target.value)} /></label><label><span>Requested role</span><select value={role} onChange={(e)=>setRole(e.target.value)}><option value="host">Host</option><option value="property_manager">Property Manager</option><option value="owner">Owner</option><option value="cleaner">Cleaner</option><option value="maintenance_crew">Maintenance Crew</option></select></label></>}
+    {error ? <p className="approval-body" role="alert">{error}</p> : null}
+    <div className="approval-actions"><button className="btn" disabled={loading} onClick={mode === "create" ? onCreate : onJoin}>{loading ? "Please wait..." : mode === "create" ? "Create" : "Request access"}</button><button className="btn-ghost" onClick={signOut}>Sign out</button></div>
+  </div></div>;
 }
 
 function OnboardingGate({ profile }) {

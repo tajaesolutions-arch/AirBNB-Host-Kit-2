@@ -27,6 +27,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState("");
   const [memberships, setMemberships] = useState([]);
+  const [workspaceMemberships, setWorkspaceMemberships] = useState([]);
   const [membershipsLoading, setMembershipsLoading] = useState(false);
   const [membershipsError, setMembershipsError] = useState("");
   const [requestedRole, setRequestedRole] = useState("");
@@ -47,6 +48,24 @@ export function AuthProvider({ children }) {
     if (error) { setMembershipsError(error.message || "Failed to load memberships."); setMemberships([]); setMembershipsLoading(false); return []; }
     const rows = Array.isArray(data) ? data : [];
     setMemberships(rows); setMembershipsLoading(false);
+    return rows;
+  };
+
+  const fetchWorkspaceMemberships = async (authUser) => {
+    if (!supabase || !authUser?.id) {
+      setWorkspaceMemberships([]);
+      return [];
+    }
+    const { data, error } = await supabase
+      .from("workspace_members")
+      .select("*, workspace:workspaces(*)")
+      .eq("user_id", authUser.id);
+    if (error) {
+      setWorkspaceMemberships([]);
+      return [];
+    }
+    const rows = Array.isArray(data) ? data : [];
+    setWorkspaceMemberships(rows);
     return rows;
   };
 
@@ -201,6 +220,7 @@ export function AuthProvider({ children }) {
         if (currentUser) {
           void loadUserProfile(currentUser, mountedRef);
           void fetchMemberships(currentUser);
+          void fetchWorkspaceMemberships(currentUser);
         } else {
           setProfile(null);
     setMemberships([]);
@@ -237,6 +257,7 @@ export function AuthProvider({ children }) {
           if (nextUser) {
             void loadUserProfile(nextUser, mountedRef);
             void fetchMemberships(nextUser);
+            void fetchWorkspaceMemberships(nextUser);
           } else {
             setProfile(null);
             setMemberships([]);
@@ -283,6 +304,7 @@ export function AuthProvider({ children }) {
 
     if (data.user) {
       void fetchMemberships(data.user);
+      void fetchWorkspaceMemberships(data.user);
       setProfileLoading(true);
       try {
         setProfile(await ensureProfile(data.user));
@@ -316,6 +338,7 @@ export function AuthProvider({ children }) {
 
     if (data.user) {
       void fetchMemberships(data.user);
+      void fetchWorkspaceMemberships(data.user);
       setProfileLoading(true);
       try {
         setProfile(await ensureProfile(data.user, signupRole));
@@ -345,6 +368,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     setProfile(null);
     setMemberships([]);
+    setWorkspaceMemberships([]);
     setRequestedRole("");
   };
 
@@ -419,6 +443,9 @@ export function AuthProvider({ children }) {
   };
 
   const isApproved = profile?.account_status === "approved";
+  const approvedWorkspaceMemberships = workspaceMemberships.filter((m) => m?.account_status === "approved");
+  const suspendedWorkspaceMemberships = workspaceMemberships.filter((m) => m?.account_status === "suspended");
+  const activeWorkspaceMembership = approvedWorkspaceMemberships[0] || null;
   const availableRoles = useMemo(() => getAvailableRoles({ memberships, profile, user }), [memberships, profile, user]);
 
   const authoritativeProfileRole = normalizeRole(profile?.role);
@@ -440,8 +467,57 @@ export function AuthProvider({ children }) {
       isApproved,
       isSupabaseConfigured,
       memberships, membershipsLoading, membershipsError, requestedRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike,
+      workspaceMemberships,
+      approvedWorkspaceMemberships,
+      activeWorkspaceMembership,
+      hasSuspendedWorkspaceMembership: suspendedWorkspaceMemberships.length > 0,
       setRequestedRole,
       refetchMemberships: () => fetchMemberships(user),
+      refetchWorkspaceMemberships: () => fetchWorkspaceMemberships(user),
+      createWorkspace: async (name) => {
+        if (!user?.id) throw new Error("You must be logged in.");
+        const workspaceName = String(name || "").trim();
+        if (!workspaceName) throw new Error("Workspace name is required.");
+        const now = new Date().toISOString();
+        const { data: workspace, error: workspaceError } = await supabase
+          .from("workspaces")
+          .insert({ name: workspaceName, created_by: user.id, created_at: now, updated_at: now })
+          .select("*")
+          .single();
+        if (workspaceError) throw workspaceError;
+        const { error: memberError } = await supabase.from("workspace_members").insert({
+          workspace_id: workspace.id,
+          user_id: user.id,
+          role: "admin",
+          account_status: "approved",
+          approved_at: now,
+          approved_by: user.id,
+          created_at: now,
+          updated_at: now,
+        });
+        if (memberError) throw memberError;
+        await updateProfile({ account_status: "approved", default_workspace_id: workspace.id });
+        await fetchWorkspaceMemberships(user);
+        return workspace;
+      },
+      requestWorkspaceJoin: async ({ workspaceId, role }) => {
+        if (!user?.id) throw new Error("You must be logged in.");
+        const targetWorkspaceId = String(workspaceId || "").trim();
+        if (!targetWorkspaceId) throw new Error("Workspace ID is required.");
+        const normalizedRole = normalizeRole(role) || "host";
+        const now = new Date().toISOString();
+        const { error } = await supabase.from("workspace_members").upsert({
+          workspace_id: targetWorkspaceId,
+          user_id: user.id,
+          role: normalizedRole,
+          account_status: "pending",
+          created_at: now,
+          updated_at: now,
+        }, { onConflict: "workspace_id,user_id" });
+        if (error) throw error;
+        if (profile?.account_status !== "approved") await updateProfile({ account_status: "pending" });
+        await fetchWorkspaceMemberships(user);
+      },
       signIn,
       signUp,
       signOut,
@@ -450,7 +526,7 @@ export function AuthProvider({ children }) {
       updateProfile,
       completeOnboarding,
     }),
-    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, membershipsLoading, membershipsError, requestedRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike]
+    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, membershipsLoading, membershipsError, requestedRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike, workspaceMemberships]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

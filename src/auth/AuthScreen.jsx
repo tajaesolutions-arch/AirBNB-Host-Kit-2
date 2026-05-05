@@ -7,7 +7,7 @@ const SIGNUP_ROLES = [
   { value: "property_manager", label: "Property Manager", icon: Building2 },
   { value: "owner", label: "Property Owner", icon: ShieldCheck },
   { value: "cleaner", label: "Cleaner", icon: Sparkles },
-  { value: "maintenance", label: "Maintenance", icon: Wrench },
+  { value: "maintenance_crew", label: "Maintenance Crew", icon: Wrench },
 ];
 
 export default function AuthScreen() {
