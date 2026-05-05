@@ -30,8 +30,6 @@ export function AuthProvider({ children }) {
   const [membershipsLoading, setMembershipsLoading] = useState(false);
   const [membershipsError, setMembershipsError] = useState("");
   const [requestedRole, setRequestedRole] = useState("");
-  const [selectedPortalRole, setSelectedPortalRole] = useState("");
-  const [accessNotAssigned, setAccessNotAssigned] = useState(false);
 
   const fetchMemberships = async (authUser) => {
     if (!supabase || !authUser?.id) {
@@ -281,9 +279,7 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const signIn = async ({ email, password, requestedRole: nextRequestedRole }) => {
-    setRequestedRole(normalizeRole(nextRequestedRole));
-    setAccessNotAssigned(false);
+  const signIn = async ({ email, password }) => {
     if (!supabase || !isSupabaseConfigured) {
       throw new Error("Supabase is not configured.");
     }
@@ -302,7 +298,7 @@ export function AuthProvider({ children }) {
       void fetchMemberships(data.user);
       setProfileLoading(true);
       try {
-        setProfile(await ensureProfile(data.user, nextRequestedRole));
+        setProfile(await ensureProfile(data.user));
       } finally {
         setProfileLoading(false);
       }
@@ -363,8 +359,6 @@ export function AuthProvider({ children }) {
     setProfile(null);
     setMemberships([]);
     setRequestedRole("");
-    setSelectedPortalRole("");
-    setAccessNotAssigned(false);
   };
 
   const sendPasswordReset = async (email) => {
@@ -372,7 +366,7 @@ export function AuthProvider({ children }) {
       throw new Error("Supabase is not configured.");
     }
 
-    const redirectTo = window.location.origin;
+    const redirectTo = `${window.location.origin}/reset-password`;
 
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo,
@@ -440,22 +434,8 @@ export function AuthProvider({ children }) {
   const isApproved = profile?.account_status === "approved";
   const availableRoles = useMemo(() => getAvailableRoles({ memberships, profile, user }), [memberships, profile, user]);
 
-  useEffect(() => {
-    if (!user) return;
-    const profileRole = normalizeRole(profile?.role);
-    if (profileRole && selectedPortalRole !== profileRole) {
-      setSelectedPortalRole(profileRole);
-      setAccessNotAssigned(false);
-      return;
-    }
-    if (!selectedPortalRole && availableRoles.length) {
-      setSelectedPortalRole(availableRoles.includes(requestedRole) ? requestedRole : availableRoles[0]);
-      setAccessNotAssigned(false);
-    }
-  }, [requestedRole, availableRoles, selectedPortalRole, user, profile?.role]);
-
   const authoritativeProfileRole = normalizeRole(profile?.role);
-  const effectiveRole = authoritativeProfileRole || selectedPortalRole || availableRoles[0] || "host";
+  const effectiveRole = authoritativeProfileRole || availableRoles[0] || "host";
   const scopedMemberships = useMemo(() => memberships.filter((m) => effectiveRole === "host" ? true : normalizeRole(m?.access_role) === effectiveRole), [memberships, effectiveRole]);
   const assignedPropertyIds = useMemo(() => getAssignedPropertyIds(scopedMemberships), [scopedMemberships]);
   const assignedPropertyRecordIds = useMemo(() => getAssignedPropertyRecordIds(scopedMemberships), [scopedMemberships]);
@@ -472,8 +452,8 @@ export function AuthProvider({ children }) {
       authError,
       isApproved,
       isSupabaseConfigured,
-      memberships, membershipsLoading, membershipsError, requestedRole, selectedPortalRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike, accessNotAssigned,
-      setSelectedPortalRole, setRequestedRole,
+      memberships, membershipsLoading, membershipsError, requestedRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike,
+      setRequestedRole,
       refetchMemberships: () => fetchMemberships(user),
       signIn,
       signUp,
@@ -483,7 +463,7 @@ export function AuthProvider({ children }) {
       updateProfile,
       completeOnboarding,
     }),
-    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, membershipsLoading, membershipsError, requestedRole, selectedPortalRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike, accessNotAssigned]
+    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, membershipsLoading, membershipsError, requestedRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

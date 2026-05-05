@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "./auth/AuthContext.jsx";
 import AuthScreen from "./auth/AuthScreen.jsx";
-import RoleSelectionScreen from "./auth/RoleSelectionScreen.jsx";
 import { AppProvider, useApp } from "./context/AppContext.jsx";
 import FirstTimeSetup from "./components/FirstTimeSetup.jsx";
 import Sidebar from "./components/Sidebar.jsx";
@@ -458,6 +457,10 @@ function AccountStatusScreen({ status, email, onSignOut, requestedRole, membersh
       title: "Access was not approved",
       body: "This account has not been approved for access to the beta.",
     },
+    missing: {
+      title: "Profile not found",
+      body: "We could not find a workspace profile for this account. Contact support.",
+    },
   };
 
   const content = statusMap[status] || {
@@ -532,7 +535,7 @@ function AppDataGate({ children }) {
 }
 
 function AuthGate() {
-  const { user, session, profile, profileLoading, loading, authError, signOut, availableRoles, selectedPortalRole, setSelectedPortalRole, accessNotAssigned, memberships } = useAuth();
+  const { user, session, profile, profileLoading, loading, authError, signOut, memberships, effectiveRole } = useAuth();
 
   if (loading) {
     return <LoadingScreen label="Checking your secure session…" />;
@@ -546,8 +549,11 @@ function AuthGate() {
     return <AuthScreen />;
   }
 
-  if (profileLoading || !profile) {
+  if (profileLoading) {
     return <LoadingScreen label="Checking account approval…" />;
+  }
+  if (!profile) {
+    return <AccountStatusScreen status="missing" email={user.email} onSignOut={signOut} requestedRole={user?.user_metadata?.requested_role} memberships={memberships} />;
   }
 
   if (profile.account_status !== "approved") {
@@ -562,12 +568,8 @@ function AuthGate() {
     );
   }
 
-  if (accessNotAssigned) {
-    return <div className="approval-shell"><div className="approval-card"><h1 className="approval-title">Access not assigned</h1><p className="approval-body">The portal selected at login is not assigned to your account.</p><p className="approval-meta">Available roles: {availableRoles.join(", ") || "None"}</p><button className="btn" onClick={signOut}>Sign out</button></div></div>;
-  }
-
-  if (!selectedPortalRole && availableRoles.length > 1) {
-    return <RoleSelectionScreen availableRoles={availableRoles} memberships={memberships} onContinue={setSelectedPortalRole} onSignOut={signOut} />;
+  if (window.location.pathname === "/worker-login" && !["cleaner","maintenance"].includes(effectiveRole)) {
+    return <div className="approval-shell"><div className="approval-card"><h1 className="approval-title">Worker portal only</h1><p className="approval-body">This login is for worker accounts only. Please use the main login.</p><button className="btn" onClick={signOut}>Sign out</button></div></div>;
   }
 
   return (
@@ -580,12 +582,13 @@ function AuthGate() {
 }
 
 function OnboardingGate({ profile }) {
-  const { completeOnboarding } = useAuth();
+  const { completeOnboarding, effectiveRole } = useAuth();
   const { resetToBlankData, restoreSampleData } = useApp();
   const [onboardingBusy, setOnboardingBusy] = useState("");
   const [onboardingError, setOnboardingError] = useState("");
 
-  const onboardingDone = profile?.onboarding_completed === true;
+  const onboardingEligible = ["admin","host","property_manager"].includes(effectiveRole);
+  const onboardingDone = !onboardingEligible || profile?.onboarding_completed === true;
 
   const handleFresh = async () => {
     if (onboardingBusy) return;
