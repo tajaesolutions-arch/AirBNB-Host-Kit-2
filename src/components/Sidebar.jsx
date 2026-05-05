@@ -6,7 +6,6 @@ import {
   Wrench,
   Package,
   BarChart3,
-  Building2,
   Home,
   MessageSquare,
   FileText,
@@ -19,33 +18,34 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
-import { canAccessPage, ROLE_LABELS } from "../utils/permissions.js";
+import { canAccessPage, normalizeRole, ROLE_LABELS } from "../utils/permissions.js";
 
 const NAV_ITEMS = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { key: "bookings", label: "Booking Calendar", icon: CalendarDays },
-  { key: "property-manager", label: "Property Manager", icon: Building2 },
-  { key: "cleaner-portal", label: "Cleaner Portal", icon: Sparkles },
-  { key: "owner-portal", label: "Owner Portal", icon: Home },
-  { key: "guests", label: "Guest CRM", icon: Users },
-  { key: "cleaning", label: "Cleaning Schedule", icon: Sparkles },
-  { key: "maintenance", label: "Maintenance", icon: Wrench },
-  { key: "supplies", label: "Supplies", icon: Package },
-  { key: "revenue", label: "Revenue & Profit", icon: BarChart3 },
-  { key: "leads", label: "Direct Leads", icon: MessageSquare },
-  { key: "owner", label: "Owner Report", icon: FileText },
-  { key: "tax", label: "Tax Reserve", icon: Calculator },
-  { key: "sops", label: "SOPs", icon: ClipboardList },
-  { key: "messages", label: "Messages", icon: MessageSquare },
-  { key: "settings", label: "Settings", icon: Settings },
-  { key: "smart-tools", label: "Smart Tools", icon: WandSparkles },
-  { key: "users-access", label: "Users & Access", icon: ShieldCheck },
-  { key: "account", label: "My Account", icon: Users },
+  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["host", "property_manager"] },
+  { key: "owner-dashboard", label: "Owner Dashboard", icon: Home, roles: ["owner"] },
+  { key: "cleaner-dashboard", label: "Cleaner Dashboard", icon: Sparkles, roles: ["cleaner"] },
+  { key: "maintenance-dashboard", label: "Maintenance Dashboard", icon: Wrench, roles: ["maintenance"] },
+  { key: "bookings", label: "Booking Calendar", icon: CalendarDays, roles: ["host", "property_manager", "owner"] },
+  { key: "guests", label: "Guest CRM", icon: Users, roles: ["host", "property_manager"] },
+  { key: "cleaning", label: "Cleaning Schedule", icon: Sparkles, roles: ["host", "property_manager", "cleaner"] },
+  { key: "maintenance", label: "Maintenance Tracker", icon: Wrench, roles: ["host", "property_manager", "owner", "maintenance"] },
+  { key: "supplies", label: "Supplies", icon: Package, roles: ["host", "property_manager"] },
+  { key: "revenue", label: "Revenue Summary", icon: BarChart3, roles: ["host", "property_manager", "owner"] },
+  { key: "leads", label: "Direct Leads", icon: MessageSquare, roles: ["host", "property_manager"] },
+  { key: "owner", label: "Owner Report", icon: FileText, roles: ["host", "property_manager", "owner"] },
+  { key: "tax", label: "Tax Reserve", icon: Calculator, roles: ["host", "property_manager"] },
+  { key: "sops", label: "SOPs", icon: ClipboardList, roles: ["host", "property_manager", "cleaner", "maintenance"] },
+  { key: "messages", label: "Messages", icon: MessageSquare, roles: ["host", "property_manager", "owner", "cleaner", "maintenance"] },
+  { key: "settings", label: "Settings", icon: Settings, roles: ["host", "property_manager", "owner", "cleaner", "maintenance"] },
+  { key: "smart-tools", label: "Smart Tools", icon: WandSparkles, roles: ["host", "property_manager"] },
+  { key: "users-access", label: "Users & Access", icon: ShieldCheck, roles: ["host", "property_manager"] },
+  { key: "account", label: "My Account", icon: Users, roles: ["host", "property_manager", "owner", "cleaner", "maintenance"] },
 ];
 
 export default function Sidebar({ page, setPage, collapsed = false, onToggleCollapse, mobile = false, onClose, role = "host", permissions, assignedPropertyCount = 0 }) {
-  const perm = permissions || { role };
-  const allowedNavItems = NAV_ITEMS.filter((item) => canAccessPage(item.key, perm));
+  const normalizedRole = normalizeRole(role) || "host";
+  const perm = permissions || { role: normalizedRole };
+  const allowedNavItems = NAV_ITEMS.filter((item) => (!item.roles || item.roles.includes(normalizedRole)) && canAccessPage(item.key, perm));
 
   const handleNavigate = (nextPage) => {
     if (typeof setPage === "function") setPage(nextPage);
@@ -74,7 +74,7 @@ export default function Sidebar({ page, setPage, collapsed = false, onToggleColl
           );
         })}
       </nav>
-      <div style={{padding:12,borderTop:"1px solid #e5e7eb",fontSize:12}} title={collapsed?`Logged in as ${ROLE_LABELS[role]||role}`:undefined}>{collapsed?"●":<><div><strong>Logged in as {ROLE_LABELS[role]||role}</strong></div><div>{assignedPropertyCount} properties</div></>}</div>
+      <div style={{padding:12,borderTop:"1px solid #e5e7eb",fontSize:12}} title={collapsed?`Logged in as ${ROLE_LABELS[normalizedRole]||normalizedRole}`:undefined}>{collapsed?"●":<><div><strong>Logged in as {ROLE_LABELS[normalizedRole]||normalizedRole}</strong></div><div>{assignedPropertyCount} properties</div></>}</div>
     </aside>
   );
 }

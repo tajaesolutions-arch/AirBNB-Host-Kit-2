@@ -1730,6 +1730,62 @@ tbody tr:last-child td {
     box-shadow: 0 0 0 4px var(--teal-soft)
 }
 
+
+.auth-role-selector {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.auth-role-selector legend {
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    padding: 0;
+}
+
+.auth-role-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.auth-role-card {
+    min-height: 44px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--text);
+    border-radius: 13px;
+    padding: 9px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: left;
+    box-shadow: 0 6px 18px rgba(20,25,40,.04);
+}
+
+.auth-role-card svg {
+    color: var(--teal);
+    flex-shrink: 0;
+}
+
+.auth-role-card.active {
+    border-color: var(--teal);
+    background: var(--teal-soft);
+    color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(20,184,166,.12);
+}
+
+@media (max-width: 520px) {
+    .auth-role-grid { grid-template-columns: 1fr; }
+}
+
 .auth-primary-button {
     height: 48px;
     border: 0;
@@ -2035,7 +2091,7 @@ tbody tr:last-child td {
     }
 }
 
-/* ========================================================================== 
+/* ==========================================================================
    CONSOLIDATED APP SHELL, SIDEBAR, TOPBAR, AND SETUP CHECKLIST
    Replaces previous duplicate sidebar/topbar override blocks.
    Keep this as the final layout section at the bottom of styles.css.
@@ -4462,7 +4518,63 @@ input, select, textarea {
   .auth-form-panel { padding: 24px 18px 40px; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
   .auth-form-card { padding: 24px 20px; border-radius: 16px; box-shadow: none; border: 1px solid var(--line); width: 100%; max-width: 100%; }
   .auth-form-top h2 { font-size: 24px; }
-  .auth-primary-button { height: 52px; font-size: 15px; }
+
+.auth-role-selector {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.auth-role-selector legend {
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    padding: 0;
+}
+
+.auth-role-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.auth-role-card {
+    min-height: 44px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--text);
+    border-radius: 13px;
+    padding: 9px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: left;
+    box-shadow: 0 6px 18px rgba(20,25,40,.04);
+}
+
+.auth-role-card svg {
+    color: var(--teal);
+    flex-shrink: 0;
+}
+
+.auth-role-card.active {
+    border-color: var(--teal);
+    background: var(--teal-soft);
+    color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(20,184,166,.12);
+}
+
+@media (max-width: 520px) {
+    .auth-role-grid { grid-template-columns: 1fr; }
+}
+
+.auth-primary-button { height: 52px; font-size: 15px; }
 }
 
 @media (min-width: 601px) and (max-width: 900px) {

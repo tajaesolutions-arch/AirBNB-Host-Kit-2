@@ -1,5 +1,14 @@
 import React, { useState } from "react";
+import { Building2, Eye, EyeOff, Home, KeyRound, ShieldCheck, Sparkles, Wrench } from "lucide-react";
 import { useAuth } from "./AuthContext.jsx";
+
+const ROLE_OPTIONS = [
+  { value: "host", label: "Host", icon: Home },
+  { value: "property_manager", label: "Property Manager", icon: Building2 },
+  { value: "owner", label: "Property Owner", icon: ShieldCheck },
+  { value: "cleaner", label: "Cleaner", icon: Sparkles },
+  { value: "maintenance", label: "Maintenance Crew", icon: Wrench },
+];
 
 export default function AuthScreen() {
   const { signIn, signUp, sendPasswordReset } = useAuth();
@@ -149,7 +158,7 @@ export default function AuthScreen() {
         <section className="auth-form-panel">
           <div className="auth-form-card">
             <div className="auth-form-top">
-              <div className="auth-form-icon">→</div>
+              <div className="auth-form-icon"><KeyRound size={18} /></div>
               <div>
                 <h2>
                   {isSignup
@@ -210,14 +219,26 @@ export default function AuthScreen() {
               )}
 
 
-            <label>
-              <span>{isSignup ? "What best describes you?" : "Continue as"}</span>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8}}>
-                {[ ["host","Host"],["property_manager","Property Manager"],["cleaner","Cleaner"],["owner","Owner"]].map(([value,label]) => (
-                  <button key={value} type="button" className={requestedRole===value?"btn":"btn-secondary"} aria-pressed={requestedRole===value} onClick={()=>setRequestedRole(value)}>{label}</button>
-                ))}
-              </div>
-            </label>
+              <fieldset className="auth-role-selector">
+                <legend>{isSignup ? "Choose your workspace role" : "Request workspace"}</legend>
+                <div className="auth-role-grid">
+                  {ROLE_OPTIONS.map(({ value, label, icon: Icon }) => {
+                    const active = requestedRole === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        className={`auth-role-card ${active ? "active" : ""}`}
+                        aria-pressed={active}
+                        onClick={() => setRequestedRole(value)}
+                      >
+                        <Icon size={16} />
+                        <span>{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
 
               <label>
                 <span>Email</span>
@@ -281,7 +302,7 @@ export default function AuthScreen() {
                       justifyContent: "center",
                     }}
                   >
-                    {showPassword ? "🙈" : "👁️"}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
               </label>
