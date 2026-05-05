@@ -29,7 +29,7 @@ const currentMonth = () => new Date().toISOString().slice(0, 7);
 const PAGE_TITLES = {
   dashboard: "Dashboard",
   "property-manager": "Property Manager Portal",
-  "cleaner-portal": "Cleaner Portal",
+  "cleaner-portal": "Dashboard",
   "owner-portal": "Owner Portal",
   bookings: "Booking Calendar",
   guests: "Guest CRM",
@@ -177,7 +177,8 @@ function LocalModeBanner() {
 }
 
 function DashboardShell() {
-  const { isSupabaseConfigured, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, membershipsLoading, membershipsError, refetchMemberships, isHostLike } = useAuth();
+  const { isSupabaseConfigured, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, membershipsLoading, membershipsError, refetchMemberships, isHostLike, user, profile } = useAuth();
+  const { cleaning = [] } = useApp();
   const role = effectiveRole || "host";
   const roleDefaultPage = getDefaultPageForRole(role);
   const [page, setPage] = useState(() => (canAccessByPermissions("dashboard", permissions || { role }) ? "dashboard" : roleDefaultPage));
@@ -366,6 +367,9 @@ function DashboardShell() {
           role={role}
           permissions={permissions}
           assignedPropertyCount={assignedPropertyIds?.length || 0}
+          assignedTaskCount={Array.isArray(cleaning) ? cleaning.length : 0}
+          user={user}
+          profile={profile}
           setPage={goToPage}
           collapsed={sidebarCollapsed}
           onToggleCollapse={toggleSidebarCollapsed}
@@ -383,6 +387,9 @@ function DashboardShell() {
               role={role}
               permissions={permissions}
               assignedPropertyCount={assignedPropertyIds?.length || 0}
+              assignedTaskCount={Array.isArray(cleaning) ? cleaning.length : 0}
+              user={user}
+              profile={profile}
               setPage={goToPage}
               collapsed={false}
               mobile

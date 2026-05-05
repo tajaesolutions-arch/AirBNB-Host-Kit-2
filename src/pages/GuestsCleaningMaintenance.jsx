@@ -714,7 +714,7 @@ function CleaningForm({
   );
 }
 
-export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled }) {
+export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled, effectiveRole }) {
   const {
     cleaning: rawCleaning,
     setCleaning,
@@ -726,6 +726,8 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
   const properties = safeArray(rawProperties);
   const settings = safeSettings(rawSettings);
   const cleaners = safeArray(settings.cleaners);
+  const role = String(effectiveRole || "").toLowerCase();
+  const isCleanerView = role === "cleaner";
 
   const [editing, setEditing] = useState(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -740,6 +742,7 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
     ? cleaning
     : cleaning.filter((task) => task.property_id === selectedPropFilter)
   )
+    .filter((task) => !isCleanerView || Boolean(task.assigned_to_user_id))
     .filter((task) => statusFilter === "ALL" || task.cleaning_status === statusFilter)
     .sort((a, b) => new Date(a.checkout_date) - new Date(b.checkout_date));
 
@@ -815,11 +818,11 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
   return (
     <div className="page">
       <PageHeader
-        title="Cleaning Schedule"
+        title={isCleanerView ? "My Cleaning Schedule" : "Cleaning Schedule"}
         subtitle="Track every turnover — assign cleaners, verify linen, damage check, and restock."
         helper="Use this page after every checkout. A clean, inspected, restocked property means better reviews and fewer problems."
         actions={
-          <button
+          {!isCleanerView && <button
             className="btn-primary"
             onClick={startNewTask}
             disabled={!hasProperties}
@@ -831,7 +834,7 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
           >
             <Plus size={14} />
             Add Cleaning Task
-          </button>
+          </button>}
         }
       />
 
@@ -858,7 +861,7 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
               <div className="metric-card"><div className="metric-label">Scheduled Cleanings</div><div className="metric-value">{filtered.length}</div><div className="metric-sub">Visible cleaning tasks</div></div>
               <div className="metric-card"><div className="metric-label">Completed Cleanings</div><div className="metric-value">{completedCleaning}</div><div className="metric-sub">Marked completed</div></div>
               <div className="metric-card"><div className="metric-label">Issue Found / Attention</div><div className="metric-value">{issueAttention}</div><div className="metric-sub">Issues or pending checks</div></div>
-              <div className="metric-card"><div className="metric-label">Cleaning Cost</div><div className="metric-value">{fmtCurrency(cleaningCost, settings.default_currency || "JMD")}</div><div className="metric-sub">From visible tasks</div></div>
+              {!isCleanerView && <div className="metric-card"><div className="metric-label">Cleaning Cost</div><div className="metric-value">{fmtCurrency(cleaningCost, settings.default_currency || "JMD")}</div><div className="metric-sub">From visible tasks</div></div>}
             </div>
           )}
 
@@ -886,7 +889,7 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
                     <th>Property</th>
                     <th>Checkout</th>
                     <th>Next Check-in</th>
-                    <th>Cleaner</th>
+                    {!isCleanerView && <th>Cleaner</th>}
                     <th>Status</th>
                     <th>Linen</th>
                     <th>Damage</th>
@@ -929,7 +932,7 @@ export function Cleaning({ propFilter, setPage, pageAction, onPageActionHandled 
                         <td className="num">
                           {fmtDateShort(task.next_checkin_date)}
                         </td>
-                        <td>{task.cleaner_name || "Unassigned"}</td>
+                        {!isCleanerView && <td>{task.cleaner_name || "Unassigned"}</td>}
                         <td>
                           <Chip tone={toneMap[task.cleaning_status] || "gray"}>
                             {task.cleaning_status}
