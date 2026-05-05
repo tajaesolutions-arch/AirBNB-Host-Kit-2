@@ -13,7 +13,7 @@ const emptyProperty = { property_name:"", property_id:"", parish_town:"", countr
 
 export default function PropertySetup({ permissions }) {
   const role = permissions?.role || "host";
-  const canManage = ["admin", "host", "property_manager"].includes(role);
+  const canManage = ["admin", "host", "property_manager", "owner"].includes(role);
   const [properties, setProperties] = useState([]); const [memberships, setMemberships] = useState([]); const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true); const [error, setError] = useState("");
   const [q, setQ] = useState(""); const [status, setStatus] = useState("active");

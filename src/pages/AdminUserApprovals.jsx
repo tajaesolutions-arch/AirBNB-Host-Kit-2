@@ -12,7 +12,7 @@ export default function AdminUserApprovals() {
     setError("");
     const { data, error: queryError } = await supabase
       .from("profiles")
-      .select("id, email, role, account_status, created_at, approved_at, suspended_at, rejected_at")
+      .select("id, email, host_name, role, account_status, created_at, approved_at, suspended_at, rejected_at")
       .order("created_at", { ascending: false });
 
     if (queryError) {
@@ -59,14 +59,23 @@ export default function AdminUserApprovals() {
                 <td>{p.email || "—"}</td>
                 <td>
                   <select value={p.role || "host"} onChange={(e) => updateUser(p.id, { role: e.target.value })}>
-                    <option value="admin">admin</option><option value="host">host</option><option value="cleaner">cleaner</option><option value="owner">owner</option>
+                    <option value="admin">admin</option><option value="host">host</option><option value="property_manager">property_manager</option><option value="cleaner">cleaner</option><option value="maintenance">maintenance</option><option value="owner">owner</option>
                   </select>
                 </td>
                 <td>{p.account_status || "pending"}</td>
                 <td>{p.created_at ? new Date(p.created_at).toLocaleString() : "—"}</td>
                 <td>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button className="btn" onClick={() => updateUser(p.id, { account_status: "approved", approved_at: new Date().toISOString(), suspended_at: null, rejected_at: null })}>Approve</button>
+                    <button className="btn" onClick={async () => {
+                      setError("");
+                      const { error: approveError } = await supabase.rpc("admin_approve_user", { target_user_id: p.id, approved_role: p.role || "host" });
+                      if (approveError) { setError(approveError.message); return; }
+                      const emailResp = await supabase.functions.invoke("send-approval-email", { body: { email: p.email, fullName: p.host_name || p.email || "there" } });
+                      if (emailResp.error || emailResp.data?.sent === false) {
+                        setError("User approved, but approval email was not sent because email provider is not configured.");
+                      }
+                      await loadProfiles();
+                    }}>Approve</button>
                     <button className="btn-secondary" onClick={() => updateUser(p.id, { account_status: "suspended", suspended_at: new Date().toISOString(), rejected_at: null })}>Suspend</button>
                     <button className="btn-ghost" onClick={() => updateUser(p.id, { account_status: "approved", approved_at: new Date().toISOString(), suspended_at: null, rejected_at: null })}>Reactivate</button>
                   </div>
