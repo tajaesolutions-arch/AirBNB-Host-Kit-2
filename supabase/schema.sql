@@ -69,8 +69,10 @@ alter table public.profiles add column if not exists updated_at timestamptz defa
 alter table public.profiles drop constraint if exists profiles_account_status_check;
 alter table public.profiles add constraint profiles_account_status_check check (account_status in ('pending', 'approved', 'rejected', 'suspended'));
 
+update public.profiles set role = 'host' where role is null or role not in ('host', 'property_manager', 'owner', 'cleaner', 'maintenance');
+
 alter table public.profiles drop constraint if exists profiles_role_check;
-alter table public.profiles add constraint profiles_role_check check (role in ('admin', 'host', 'property_manager', 'cleaner', 'owner'));
+alter table public.profiles add constraint profiles_role_check check (role in ('host', 'property_manager', 'owner', 'cleaner', 'maintenance'));
 
 create or replace function public.is_approved_user()
 returns boolean
@@ -562,6 +564,7 @@ begin
     default_currency,
     default_tax_reserve_percentage,
     default_management_fee_percentage,
+    role,
     onboarding_completed
   )
   values (
@@ -572,12 +575,14 @@ begin
     'JMD',
     0.15,
     0.15,
+    coalesce(new.raw_user_meta_data ->> 'role', new.raw_user_meta_data ->> 'requested_role', 'host'),
     false
   )
   on conflict (id) do update
     set email = excluded.email,
         business_name = coalesce(excluded.business_name, public.profiles.business_name),
         host_name = coalesce(excluded.host_name, public.profiles.host_name),
+        role = coalesce(public.profiles.role, excluded.role, 'host'),
         updated_at = now();
 
   return new;

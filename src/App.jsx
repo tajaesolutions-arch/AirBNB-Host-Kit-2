@@ -19,6 +19,9 @@ import UsersAccess from "./pages/UsersAccess.jsx";
 import PropertyManagerPortal from "./pages/PropertyManagerPortal.jsx";
 import CleanerPortal from "./pages/CleanerPortal.jsx";
 import OwnerPortal from "./pages/OwnerPortal.jsx";
+import CleanerDashboard from "./pages/CleanerDashboard.jsx";
+import MaintenanceDashboard from "./pages/MaintenanceDashboard.jsx";
+import OwnerDashboard from "./pages/OwnerDashboard.jsx";
 
 import "./styles.css";
 import { canAccessPage as canAccessByPermissions, getDefaultPageForRole } from "./utils/permissions.js";
@@ -30,7 +33,10 @@ const PAGE_TITLES = {
   dashboard: "Dashboard",
   "property-manager": "Property Manager Portal",
   "cleaner-portal": "Cleaner Portal",
+  "cleaner-dashboard": "Cleaner Dashboard",
+  "maintenance-dashboard": "Maintenance Dashboard",
   "owner-portal": "Owner Portal",
+  "owner-dashboard": "Owner Dashboard",
   bookings: "Booking Calendar",
   guests: "Guest CRM",
   cleaning: "Cleaning Schedule",
@@ -180,7 +186,7 @@ function DashboardShell() {
   const { isSupabaseConfigured, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, membershipsLoading, membershipsError, refetchMemberships, isHostLike } = useAuth();
   const role = effectiveRole || "host";
   const roleDefaultPage = getDefaultPageForRole(role);
-  const [page, setPage] = useState(() => (canAccessByPermissions("dashboard", permissions || { role }) ? "dashboard" : roleDefaultPage));
+  const [page, setPage] = useState(roleDefaultPage);
   const [pageAction, setPageAction] = useState(null);
   const [monthFilter, setMonthFilter] = useState(currentMonth());
   const [propFilter, setPropFilter] = useState("ALL");
@@ -232,17 +238,35 @@ function DashboardShell() {
   };
 
   useEffect(() => {
+    setPage(roleDefaultPage);
+    setPageAction(null);
+  }, [roleDefaultPage]);
+
+  useEffect(() => {
     if (!canAccessByPermissions(page, permissions || { role })) {
       setPage(roleDefaultPage);
       setPageAction({ type: "access-denied", requestedPage: page });
     }
   }, [role, page, permissions, roleDefaultPage]);
 
+  const renderRoleHome = (sharedProps) => {
+    switch (roleDefaultPage) {
+      case "cleaner-dashboard":
+        return <CleanerDashboard {...sharedProps} />;
+      case "maintenance-dashboard":
+        return <MaintenanceDashboard {...sharedProps} />;
+      case "owner-dashboard":
+        return <OwnerDashboard {...sharedProps} />;
+      default:
+        return <Dashboard {...sharedProps} />;
+    }
+  };
+
   const renderPage = () => {
     const safeCurrentPage = page;
 
     if (!canAccessByPermissions(safeCurrentPage, permissions || { role })) {
-      return <Dashboard monthFilter={monthFilter} setMonthFilter={setMonthFilter} propFilter={propFilter} setPropFilter={setPropFilter} setPage={goToPage} pageAction={{ type: "access-denied", requestedPage: safeCurrentPage }} onPageActionHandled={clearPageAction} />;
+      return renderRoleHome({ monthFilter, setMonthFilter, propFilter, setPropFilter, setPage: goToPage, pageAction: { type: "access-denied", requestedPage: safeCurrentPage }, onPageActionHandled: clearPageAction, permissions, effectiveRole: role, assignedPropertyIds, assignedPropertyRecordIds, isHostLike });
     }
 
     const shared = {
@@ -266,6 +290,15 @@ function DashboardShell() {
 
       case "property-manager":
         return <PropertyManagerPortal {...shared} />;
+
+      case "cleaner-dashboard":
+        return <CleanerDashboard {...shared} />;
+
+      case "maintenance-dashboard":
+        return <MaintenanceDashboard {...shared} />;
+
+      case "owner-dashboard":
+        return <OwnerDashboard {...shared} />;
 
       case "cleaner-portal":
         return <CleanerPortal {...shared} />;

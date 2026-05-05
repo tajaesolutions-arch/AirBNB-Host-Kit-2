@@ -91,8 +91,10 @@ export function AuthProvider({ children }) {
     return message || "Your account profile could not be loaded. Please refresh or contact support.";
   };
 
-  const ensureProfile = async (authUser) => {
+  const ensureProfile = async (authUser, roleFallback = "host") => {
     if (!supabase || !authUser) return null;
+
+    const requestedProfileRole = normalizeRole(roleFallback || authUser.user_metadata?.role || authUser.user_metadata?.requested_role) || "host";
 
     const fetchOrCreateProfile = async () => {
       const { data: existingProfile, error: selectError } = await supabase
@@ -106,7 +108,7 @@ export function AuthProvider({ children }) {
       }
 
       if (existingProfile) {
-        const normalizedRole = existingProfile.role || "host";
+        const normalizedRole = normalizeRole(existingProfile.role) || requestedProfileRole;
         const normalizedStatus = existingProfile.account_status || "pending";
         if (existingProfile.role !== normalizedRole || existingProfile.account_status !== normalizedStatus) {
           const { data: patchedProfile, error: patchError } = await supabase
@@ -134,7 +136,7 @@ export function AuthProvider({ children }) {
         default_tax_reserve_percentage: 0.15,
         default_management_fee_percentage: 0.15,
         account_status: "pending",
-        role: "host",
+        role: requestedProfileRole,
         approved_at: null,
         approved_by: null,
         onboarding_completed: false,
@@ -300,7 +302,7 @@ export function AuthProvider({ children }) {
       void fetchMemberships(data.user);
       setProfileLoading(true);
       try {
-        setProfile(await ensureProfile(data.user));
+        setProfile(await ensureProfile(data.user, nextRequestedRole));
       } finally {
         setProfileLoading(false);
       }
@@ -322,6 +324,7 @@ export function AuthProvider({ children }) {
           business_name: businessName || "",
           host_name: hostName || "",
           requested_role: normalizeRole(signupRole) || "host",
+          role: normalizeRole(signupRole) || "host",
         },
       },
     });
@@ -332,7 +335,7 @@ export function AuthProvider({ children }) {
       void fetchMemberships(data.user);
       setProfileLoading(true);
       try {
-        setProfile(await ensureProfile(data.user));
+        setProfile(await ensureProfile(data.user, signupRole));
       } finally {
         setProfileLoading(false);
       }
@@ -439,15 +442,20 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!user) return;
-    if (requestedRole && availableRoles.length && !selectedPortalRole) {
-      if (availableRoles.includes(requestedRole)) setSelectedPortalRole(requestedRole);
-      else setAccessNotAssigned(true);
+    const profileRole = normalizeRole(profile?.role);
+    if (profileRole && selectedPortalRole !== profileRole) {
+      setSelectedPortalRole(profileRole);
+      setAccessNotAssigned(false);
       return;
     }
-    if (!selectedPortalRole && availableRoles.length === 1) setSelectedPortalRole(availableRoles[0]);
-  }, [requestedRole, availableRoles, selectedPortalRole, user]);
+    if (!selectedPortalRole && availableRoles.length) {
+      setSelectedPortalRole(availableRoles.includes(requestedRole) ? requestedRole : availableRoles[0]);
+      setAccessNotAssigned(false);
+    }
+  }, [requestedRole, availableRoles, selectedPortalRole, user, profile?.role]);
 
-  const effectiveRole = selectedPortalRole || availableRoles[0] || normalizeRole(profile?.role) || "host";
+  const authoritativeProfileRole = normalizeRole(profile?.role);
+  const effectiveRole = authoritativeProfileRole || selectedPortalRole || availableRoles[0] || "host";
   const scopedMemberships = useMemo(() => memberships.filter((m) => effectiveRole === "host" ? true : normalizeRole(m?.access_role) === effectiveRole), [memberships, effectiveRole]);
   const assignedPropertyIds = useMemo(() => getAssignedPropertyIds(scopedMemberships), [scopedMemberships]);
   const assignedPropertyRecordIds = useMemo(() => getAssignedPropertyRecordIds(scopedMemberships), [scopedMemberships]);
@@ -475,7 +483,7 @@ export function AuthProvider({ children }) {
       updateProfile,
       completeOnboarding,
     }),
-    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, membershipsLoading, membershipsError, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike]
+    [session, user, profile, profileLoading, loading, authError, isApproved, memberships, membershipsLoading, membershipsError, requestedRole, selectedPortalRole, availableRoles, effectiveRole, permissions, assignedPropertyIds, assignedPropertyRecordIds, isHostLike, accessNotAssigned]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
