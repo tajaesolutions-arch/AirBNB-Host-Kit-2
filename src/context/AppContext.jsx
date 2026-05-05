@@ -69,6 +69,14 @@ const normalizeImportedBackup = (payload) => {
   };
 };
 const isDatabaseSetupError = (message = "") => /schema cache|could not find|column|relation|violates row-level security|invalid input syntax/i.test(message);
+
+const getDemoMode = () => {
+  const envDemo = String(import.meta.env.VITE_DEMO_MODE || "").toLowerCase() === "true";
+  let localDemo = false;
+  try { localDemo = localStorage.getItem("demoMode") === "true"; } catch {}
+  return envDemo || localDemo;
+};
+
 const parseSchemaCacheError = (error) => {
   const message = error?.message || "";
   const code = error?.code || "";
@@ -106,6 +114,7 @@ export function AppProvider({ children }) {
   const [photoProofs, setPhotoProofsRaw] = useState([]); const [ownerPortalShares, setOwnerPortalSharesRaw] = useState([]); const [damageDeposits, setDamageDepositsRaw] = useState([]);
   const [pricingNotes, setPricingNotesRaw] = useState([]); const [repeatCampaigns, setRepeatCampaignsRaw] = useState([]); const [taxPrepPacks, setTaxPrepPacksRaw] = useState([]); const [maintenanceApprovals, setMaintenanceApprovalsRaw] = useState([]);
   const [dataLoading, setDataLoading] = useState(true); const [dataError, setDataError] = useState("");
+  const [isDemoMode, setIsDemoMode] = useState(getDemoMode());
 
   const persistCollection = async ({ table, idField, previousRows, nextRows }) => {
     if (!signedInUserId) return false;
@@ -209,7 +218,7 @@ export function AppProvider({ children }) {
     setImportedCalendarEvents([]); setPhotoProofs([]); setOwnerPortalShares([]); setDamageDeposits([]); setPricingNotes([]);
     setRepeatCampaigns([]); setTaxPrepPacks([]); setMaintenanceApprovals([]); setSettings(blank);
   };
-  const restoreSampleData = async () => { const sample = { properties:SAMPLE_PROPERTIES, bookings:SAMPLE_BOOKINGS, guests:SAMPLE_GUESTS, cleaning:SAMPLE_CLEANING, maintenance:SAMPLE_MAINTENANCE, supplies:SAMPLE_SUPPLIES, expenses:SAMPLE_EXPENSES, leads:SAMPLE_LEADS, settings:DEFAULT_SETTINGS }; await importBackupData({ data: sample }); };
+  const restoreSampleData = async () => { if (!getDemoMode()) throw new Error("Demo mode is disabled. Enable VITE_DEMO_MODE=true or localStorage demoMode=true."); const sample = { properties:SAMPLE_PROPERTIES, bookings:SAMPLE_BOOKINGS, guests:SAMPLE_GUESTS, cleaning:SAMPLE_CLEANING, maintenance:SAMPLE_MAINTENANCE, supplies:SAMPLE_SUPPLIES, expenses:SAMPLE_EXPENSES, leads:SAMPLE_LEADS, settings:DEFAULT_SETTINGS }; await importBackupData({ data: sample }); };
   const resetToSampleData = restoreSampleData;
   const updateCurrency = (nextCurrency) => setSettings((p) => ({ ...p, default_currency: normalizeCurrency(nextCurrency) }));
   const getBackupData = () => ({ app: "AirBNB Host Kit", backup_version: BACKUP_VERSION, exported_at: new Date().toISOString(), setup_progress: clone(JSON.parse(localStorage.getItem(SETUP_PROGRESS_STORAGE_KEY) || "{}")), backup_exported_at: localStorage.getItem(BACKUP_EXPORTED_AT_STORAGE_KEY) || "", data: { properties: clone(properties), bookings: clone(bookings), guests: clone(guests), cleaning: clone(cleaning), maintenance: clone(maintenance), supplies: clone(supplies), expenses: clone(expenses), leads: clone(leads), calendarEvents: clone(calendarEvents), quotes: clone(quotes), messageHistory: clone(messageHistory), reviewTasks: clone(reviewTasks), messageDrafts: clone(messageDrafts), calendarFeeds: clone(calendarFeeds), importedCalendarEvents: clone(importedCalendarEvents), photoProofs: clone(photoProofs), ownerPortalShares: clone(ownerPortalShares), damageDeposits: clone(damageDeposits), pricingNotes: clone(pricingNotes), repeatCampaigns: clone(repeatCampaigns), taxPrepPacks: clone(taxPrepPacks), maintenanceApprovals: clone(maintenanceApprovals), settings: clone(settings) } });
@@ -242,7 +251,7 @@ export function AppProvider({ children }) {
     }
   };
 
-  return <AppContext.Provider value={{ properties, setProperties, bookings, setBookings, guests, setGuests, cleaning, setCleaning, maintenance, setMaintenance, supplies, setSupplies, expenses, setExpenses, leads, setLeads, calendarEvents, setCalendarEvents, quotes, setQuotes, messageHistory, setMessageHistory, reviewTasks, setReviewTasks, messageDrafts, setMessageDrafts, calendarFeeds, setCalendarFeeds, importedCalendarEvents, setImportedCalendarEvents, photoProofs, setPhotoProofs, ownerPortalShares, setOwnerPortalShares, damageDeposits, setDamageDeposits, pricingNotes, setPricingNotes, repeatCampaigns, setRepeatCampaigns, taxPrepPacks, setTaxPrepPacks, maintenanceApprovals, setMaintenanceApprovals, settings, setSettings, updateCurrency, resetToBlankData, resetToSampleData, restoreSampleData, getBackupData, importBackupData, dataLoading: authLoading ? true : dataLoading, dataError: authLoading ? "" : dataError }}>{children}</AppContext.Provider>;
+  return <AppContext.Provider value={{ properties, setProperties, bookings, setBookings, guests, setGuests, cleaning, setCleaning, maintenance, setMaintenance, supplies, setSupplies, expenses, setExpenses, leads, setLeads, calendarEvents, setCalendarEvents, quotes, setQuotes, messageHistory, setMessageHistory, reviewTasks, setReviewTasks, messageDrafts, setMessageDrafts, calendarFeeds, setCalendarFeeds, importedCalendarEvents, setImportedCalendarEvents, photoProofs, setPhotoProofs, ownerPortalShares, setOwnerPortalShares, damageDeposits, setDamageDeposits, pricingNotes, setPricingNotes, repeatCampaigns, setRepeatCampaigns, taxPrepPacks, setTaxPrepPacks, maintenanceApprovals, setMaintenanceApprovals, settings, setSettings, updateCurrency, resetToBlankData, resetToSampleData, restoreSampleData, getBackupData, importBackupData, isDemoMode, dataLoading: authLoading ? true : dataLoading, dataError: authLoading ? "" : dataError }}>{children}</AppContext.Provider>;
 }
 
 export const useApp = () => { const ctx = useContext(AppContext); if (!ctx) throw new Error("useApp must be used within AppProvider"); return ctx; };

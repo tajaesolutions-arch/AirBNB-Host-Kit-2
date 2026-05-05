@@ -6,7 +6,7 @@ export const ROLE_KEYS = {
   HOST: "host",
   OWNER: "owner",
   CLEANER: "cleaner",
-  MAINTENANCE: "maintenance",
+  MAINTENANCE_CREW: "maintenance_crew",
 };
 
 export const ROLE_LABELS = {
@@ -15,7 +15,7 @@ export const ROLE_LABELS = {
   [ROLE_KEYS.PROPERTY_MANAGER]: "Property Manager",
   [ROLE_KEYS.OWNER]: "Owner",
   [ROLE_KEYS.CLEANER]: "Cleaner",
-  [ROLE_KEYS.MAINTENANCE]: "Maintenance",
+  [ROLE_KEYS.MAINTENANCE_CREW]: "Maintenance Crew",
 };
 
 const NAV = {
@@ -24,7 +24,7 @@ const NAV = {
   property_manager: ["dashboard","properties","bookings","cleaning","maintenance","booking-calendar","guest-crm","supplies","reports","revenue","leads","owner","settings"],
   owner: ["dashboard","properties","bookings","maintenance","owner","revenue","settings"],
   cleaner: ["cleaner-dashboard","properties","supplies","settings"],
-  maintenance: ["maintenance-dashboard","properties","settings"],
+  maintenance_crew: ["maintenance-dashboard","properties","settings"],
 };
 
 export const NAV_ITEMS = [
@@ -57,10 +57,10 @@ export const normalizeRole = (role) => {
   if (["property_manager", "property manager", "manager", "cohost", "co-host"].includes(r)) return "property_manager";
   if (["cleaner", "cleaning"].includes(r)) return "cleaner";
   if (["owner", "property_owner", "property owner"].includes(r)) return "owner";
-  if (["maintenance", "maintenance_crew", "maintenance crew", "vendor", "technician"].includes(r)) return "maintenance";
+  if (["maintenance", "maintenance_crew", "maintenance crew", "vendor", "technician"].includes(r)) return "maintenance_crew";
   return "host";
 };
 
-export const getDefaultPageForRole = (role) => ({ admin:"dashboard", host:"dashboard", property_manager:"dashboard", owner:"dashboard", cleaner:"cleaner-dashboard", maintenance:"maintenance-dashboard" }[normalizeRole(role)] || "dashboard");
+export const getDefaultPageForRole = (role) => ({ admin:"dashboard", host:"dashboard", property_manager:"dashboard", owner:"owner-dashboard", cleaner:"cleaner-dashboard", maintenance_crew:"maintenance-dashboard" }[normalizeRole(role)] || "dashboard");
 export const getNavigationForRole = (role) => NAV[normalizeRole(role)] || NAV.host;
 export const canAccessPage = (role, pageKey) => normalizeRole(role) === "admin" || getNavigationForRole(role).includes(pageKey) || ["account","smart-tools"].includes(pageKey);
