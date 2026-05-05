@@ -1,0 +1,10 @@
+import { Bell, ChevronDown, Menu, MoreHorizontal, Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
+
+export function StatusBadge({ children, tone='slate' }) { return <span className={`hk-badge ${tone}`}>{children}</span>; }
+export function MetricCard({ title, value, subtitle, icon:Icon, trend }) { return <article className='hk-card metric'><div><p>{title}</p><h3>{value}</h3><small>{subtitle}</small></div><div className='icon'>{Icon ? <Icon size={16}/> : null}</div><StatusBadge tone='blue'>{trend}</StatusBadge></article>; }
+export function DataTable({ columns, rows }) { return <div className='table-wrap'><table className='hk-table'><thead><tr>{columns.map(c=><th key={c.key} className={c.align==='right'?'ta-r':''}>{c.label}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={i}>{columns.map(c=><td key={c.key} className={c.align==='right'?'ta-r':''}>{r[c.key]}</td>)}</tr>)}</tbody></table></div>; }
+export function PropertySearchFilter({ properties, onSelect }) { const [q,setQ]=useState(''); const matches=useMemo(()=>q?properties.filter(p=>p.name.toLowerCase().includes(q.toLowerCase())):[],[q,properties]); return <div className='search-suggest'><Search size={14}/><input placeholder='Search properties...' value={q} onChange={e=>setQ(e.target.value)} />{matches.length>0 && <ul>{matches.slice(0,6).map(p=><li key={p.id}><button onClick={()=>{setQ(p.name);onSelect(p.id);}}>{p.name}</button></li>)}</ul>}</div>; }
+export function Header({ title, subtitle, user, controls=[] }) { return <header className='hk-header'><div><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div><div className='controls'>{controls}<button className='btn icon'><Bell size={15}/><span>3</span></button><button className='btn user'>{user}<ChevronDown size={14}/></button></div></header>; }
+export function DashboardLayout({ sidebar, children }) { return <div className='hk-layout'><aside className='hk-sidebar'>{sidebar}</aside><main className='hk-main'>{children}</main></div>; }
+export const DotMenu=()=><button className='btn icon'><MoreHorizontal size={14}/></button>;
