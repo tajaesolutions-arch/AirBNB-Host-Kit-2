@@ -5,6 +5,7 @@ export default function AdminUserApprovals() {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
 
   const loadProfiles = async () => {
     if (!supabase || !isSupabaseConfigured) return;
@@ -29,11 +30,55 @@ export default function AdminUserApprovals() {
     void loadProfiles();
   }, []);
 
-  const updateUser = async (id, updates) => {
+  const updateUserRole = async (id, nextRole) => {
     setError("");
-    const { error: updateError } = await supabase.from("profiles").update(updates).eq("id", id);
+    const { error: updateError } = await supabase.rpc("admin_set_user_role", { target_user_id: id, next_role: nextRole });
     if (updateError) {
-      setError(`${updateError.message}. If RLS blocks updates, run approvals via SQL or add admin policies.`);
+      setError(updateError.message || "Failed to update user role.");
+      return;
+    }
+    await loadProfiles();
+  };
+
+  const approveUser = async (profile) => {
+    setError("");
+    setWarning("");
+    const { error: approveError } = await supabase.rpc("admin_approve_user", {
+      target_user_id: profile.id,
+      approved_role: profile.role || "host",
+    });
+
+    if (approveError) {
+      setError(approveError.message || "Failed to approve user.");
+      return;
+    }
+
+    const emailResp = await supabase.functions.invoke("send-approval-email", {
+      body: { email: profile.email, fullName: profile.host_name || profile.email || "there" },
+    });
+
+    if (emailResp.error || emailResp.data?.sent === false) {
+      setWarning("User approved, but approval email was not sent because email provider environment variables are not configured.");
+    }
+
+    await loadProfiles();
+  };
+
+  const suspendUser = async (id) => {
+    setError("");
+    const { error: suspendError } = await supabase.rpc("admin_suspend_user", { target_user_id: id });
+    if (suspendError) {
+      setError(suspendError.message || "Failed to suspend user.");
+      return;
+    }
+    await loadProfiles();
+  };
+
+  const reactivateUser = async (id) => {
+    setError("");
+    const { error: reactivateError } = await supabase.rpc("admin_reactivate_user", { target_user_id: id });
+    if (reactivateError) {
+      setError(reactivateError.message || "Failed to reactivate user.");
       return;
     }
     await loadProfiles();
@@ -50,6 +95,7 @@ export default function AdminUserApprovals() {
         <p className="page-subtitle">Approve, suspend, reactivate, and assign roles for beta users.</p>
       </div>
       {error ? <div className="auth-setup-error"><p>{error}</p></div> : null}
+      {warning ? <div className="auth-message"><p>{warning}</p></div> : null}
       {loading ? <p>Loading profiles…</p> : (
         <table className="table" style={{ width: "100%" }}>
           <thead><tr><th>Email</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
@@ -58,7 +104,7 @@ export default function AdminUserApprovals() {
               <tr key={p.id}>
                 <td>{p.email || "—"}</td>
                 <td>
-                  <select value={p.role || "host"} onChange={(e) => updateUser(p.id, { role: e.target.value })}>
+                  <select value={p.role || "host"} onChange={(e) => updateUserRole(p.id, e.target.value)}>
                     <option value="admin">admin</option><option value="host">host</option><option value="property_manager">property_manager</option><option value="cleaner">cleaner</option><option value="maintenance">maintenance</option><option value="owner">owner</option>
                   </select>
                 </td>
@@ -66,18 +112,9 @@ export default function AdminUserApprovals() {
                 <td>{p.created_at ? new Date(p.created_at).toLocaleString() : "—"}</td>
                 <td>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button className="btn" onClick={async () => {
-                      setError("");
-                      const { error: approveError } = await supabase.rpc("admin_approve_user", { target_user_id: p.id, approved_role: p.role || "host" });
-                      if (approveError) { setError(approveError.message); return; }
-                      const emailResp = await supabase.functions.invoke("send-approval-email", { body: { email: p.email, fullName: p.host_name || p.email || "there" } });
-                      if (emailResp.error || emailResp.data?.sent === false) {
-                        setError("User approved, but approval email was not sent because email provider is not configured.");
-                      }
-                      await loadProfiles();
-                    }}>Approve</button>
-                    <button className="btn-secondary" onClick={() => updateUser(p.id, { account_status: "suspended", suspended_at: new Date().toISOString(), rejected_at: null })}>Suspend</button>
-                    <button className="btn-ghost" onClick={() => updateUser(p.id, { account_status: "approved", approved_at: new Date().toISOString(), suspended_at: null, rejected_at: null })}>Reactivate</button>
+                    <button className="btn" onClick={() => approveUser(p)}>Approve</button>
+                    <button className="btn-secondary" onClick={() => suspendUser(p.id)}>Suspend</button>
+                    <button className="btn-ghost" onClick={() => reactivateUser(p.id)}>Reactivate</button>
                   </div>
                 </td>
               </tr>
