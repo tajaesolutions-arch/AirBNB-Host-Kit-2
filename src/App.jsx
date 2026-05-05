@@ -549,7 +549,7 @@ function AppDataGate({ children }) {
 }
 
 function AuthGate() {
-  const { user, session, profile, profileLoading, loading, authError, signOut, memberships, effectiveRole, workspaceMembershipsEnabled, workspaceMembershipsError } = useAuth();
+  const { user, session, profile, profileLoading, loading, authError, signOut, memberships, effectiveRole, workspaceMembershipsEnabled, workspaceMembershipsError, approvedWorkspaceMemberships } = useAuth();
   const path = window.location.pathname;
 
   if (loading) {
@@ -573,6 +573,41 @@ function AuthGate() {
 
   if (path === "/workspace-setup") {
     return <WorkspaceSetupScreen />;
+  }
+
+  if (profile.account_status === "suspended") {
+    if (path !== "/suspended") window.history.replaceState({}, "", "/suspended");
+    return (
+      <AccountStatusScreen
+        status={profile.account_status}
+        email={user.email}
+        onSignOut={signOut}
+        requestedRole={profile?.requested_role || user?.user_metadata?.requested_role}
+        memberships={memberships}
+        workspaceMembershipsEnabled={workspaceMembershipsEnabled}
+        workspaceMembershipsError={workspaceMembershipsError}
+      />
+    );
+  }
+
+  if ((approvedWorkspaceMemberships || []).length === 0) {
+    const requested = normalizeRole(profile?.requested_role || profile?.role || user?.user_metadata?.requested_role);
+    if (["admin", "host", "property_manager"].includes(requested)) {
+      if (path !== "/workspace-setup") window.history.replaceState({}, "", "/workspace-setup");
+      return <WorkspaceSetupScreen />;
+    }
+    if (path !== "/pending-approval") window.history.replaceState({}, "", "/pending-approval");
+    return (
+      <AccountStatusScreen
+        status="pending"
+        email={user.email}
+        onSignOut={signOut}
+        requestedRole={profile?.requested_role || user?.user_metadata?.requested_role}
+        memberships={memberships}
+        workspaceMembershipsEnabled={workspaceMembershipsEnabled}
+        workspaceMembershipsError={workspaceMembershipsError}
+      />
+    );
   }
 
   if (profile.account_status !== "approved") {
@@ -599,7 +634,8 @@ function AuthGate() {
       userId: user?.id || null,
       email: user?.email || null,
       accountStatus: profile?.account_status || null,
-      assignedRoles: [...new Set((memberships || []).map((m) => normalizeRole(m?.access_role)).filter(Boolean))],
+      assignedRoles: [...new Set((approvedWorkspaceMemberships || []).map((m) => normalizeRole(m?.role)).filter(Boolean))],
+      workspaceMemberships: approvedWorkspaceMemberships,
       selectedRoute: finalRoute,
     });
   }

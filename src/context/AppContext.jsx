@@ -100,7 +100,8 @@ const COLLECTIONS = {
 };
 
 export function AppProvider({ children }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, activeWorkspaceMembership, effectiveRole } = useAuth();
+  const activeWorkspaceId = activeWorkspaceMembership?.workspace_id || null;
   const signedInUserId = isSupabaseConfigured && supabase && user?.id && user.id !== "local" ? user.id : "";
   const getStorageKey = (baseKey) => (user?.id ? `jak_${user.id}_${baseKey}` : `jak_anonymous_${baseKey}`);
   const loadScoped = (baseKey, fallback) => { try { const raw = localStorage.getItem(getStorageKey(baseKey)); return raw !== null ? JSON.parse(raw) : clone(fallback); } catch { return clone(fallback); } };
@@ -121,7 +122,7 @@ export function AppProvider({ children }) {
     const nextIds = new Set(nextRows.map((r) => r?.[idField]).filter(Boolean));
     const removedIds = previousRows.map((r) => r?.[idField]).filter((id) => id && !nextIds.has(id));
     const payload = nextRows.filter((r) => r?.[idField]);
-    await upsertUserRows(table, payload, signedInUserId, idField);
+    await upsertUserRows(table, payload, signedInUserId, idField, activeWorkspaceId);
     if (removedIds.length > 0) {
       await Promise.all(removedIds.map((id) => deleteUserRow(table, idField, id, signedInUserId)));
     }
@@ -155,7 +156,9 @@ export function AppProvider({ children }) {
       }
       try {
         const queries = Object.entries(COLLECTIONS).map(async ([key, cfg]) => {
-          const { data, error } = await supabase.from(cfg.table).select("*");
+          let query = supabase.from(cfg.table).select("*");
+          if (activeWorkspaceId) query = query.eq("workspace_id", activeWorkspaceId);
+          const { data, error } = await query;
           if (error) throw new Error(`${key}: ${error.message}`);
           return [key, cfg.normalize(data || [])];
         });
@@ -166,7 +169,10 @@ export function AppProvider({ children }) {
         if (settingsError) throw settingsError;
         const nextSettings = settingsRow?.data ? normalizeSettings(safeSettings(settingsRow.data)) : normalizeSettings(clone(BLANK_SETTINGS));
         if (!settingsRow) await supabase.from("settings").upsert({ user_id: signedInUserId, data: nextSettings }, { onConflict: "user_id" });
-        setPropertiesRaw(next.properties); setBookingsRaw(next.bookings); setGuestsRaw(next.guests); setCleaningRaw(next.cleaning); setMaintenanceRaw(next.maintenance);
+        const roleScopedProperties = effectiveRole === "owner" ? next.properties.filter((p) => p?.owner_user_id === signedInUserId) : next.properties;
+        const roleScopedCleaning = effectiveRole === "cleaner" ? next.cleaning.filter((t) => t?.assigned_to === signedInUserId) : next.cleaning;
+        const roleScopedMaintenance = effectiveRole === "maintenance_crew" ? next.maintenance.filter((t) => t?.assigned_to === signedInUserId) : next.maintenance;
+        setPropertiesRaw(roleScopedProperties); setBookingsRaw(next.bookings); setGuestsRaw(next.guests); setCleaningRaw(roleScopedCleaning); setMaintenanceRaw(roleScopedMaintenance);
         setSuppliesRaw(next.supplies); setExpensesRaw(next.expenses); setLeadsRaw(next.leads); setSettingsRaw(nextSettings);
         setCalendarEventsRaw(safeArray(loadScoped("calendarEvents", []))); setQuotesRaw(safeArray(loadScoped("quotes", []))); setMessageHistoryRaw(safeArray(loadScoped("messageHistory", [])));
         setReviewTasksRaw(safeArray(loadScoped("reviewTasks", []))); setMessageDraftsRaw(safeArray(loadScoped("messageDrafts", []))); setCalendarFeedsRaw(safeArray(loadScoped("calendarFeeds", [])));
@@ -177,7 +183,7 @@ export function AppProvider({ children }) {
       finally { setDataLoading(false); }
     };
     void loadData();
-  }, [authLoading, signedInUserId]);
+  }, [authLoading, signedInUserId, activeWorkspaceId, effectiveRole]);
 
   const makeSetter = (setRaw, baseKey, normalizer, remote) => (valueOrUpdater) => {
     setRaw((prev) => {
@@ -210,7 +216,11 @@ export function AppProvider({ children }) {
   const resetToBlankData = async () => {
     const blank = normalizeSettings(clone(BLANK_SETTINGS));
     if (signedInUserId) {
-      await Promise.all(Object.values(COLLECTIONS).map((cfg) => supabase.from(cfg.table).delete().eq("user_id", signedInUserId)));
+      await Promise.all(Object.values(COLLECTIONS).map((cfg) => {
+        let query = supabase.from(cfg.table).delete().eq("user_id", signedInUserId);
+        if (activeWorkspaceId) query = query.eq("workspace_id", activeWorkspaceId);
+        return query;
+      }));
       await upsertUserSettings(signedInUserId, blank);
     }
     setProperties([]); setBookings([]); setGuests([]); setCleaning([]); setMaintenance([]); setSupplies([]); setExpenses([]); setLeads([]);
@@ -228,14 +238,14 @@ export function AppProvider({ children }) {
     try {
       if (signedInUserId) {
         const syncTasks = [
-          ["properties", () => upsertUserRows("properties", next.properties, signedInUserId, "property_id")],
-          ["bookings", () => upsertUserRows("bookings", next.bookings, signedInUserId, "booking_id")],
-          ["guests", () => upsertUserRows("guests", next.guests, signedInUserId, "guest_id")],
-          ["cleaning_tasks", () => upsertUserRows("cleaning_tasks", next.cleaning, signedInUserId, "cleaning_id")],
-          ["maintenance_issues", () => upsertUserRows("maintenance_issues", next.maintenance, signedInUserId, "issue_id")],
-          ["supplies", () => upsertUserRows("supplies", next.supplies, signedInUserId, "supply_id")],
-          ["expenses", () => upsertUserRows("expenses", next.expenses, signedInUserId, "expense_id")],
-          ["direct_booking_leads", () => upsertUserRows("direct_booking_leads", next.leads, signedInUserId, "lead_id")],
+          ["properties", () => upsertUserRows("properties", next.properties, signedInUserId, "property_id", activeWorkspaceId)],
+          ["bookings", () => upsertUserRows("bookings", next.bookings, signedInUserId, "booking_id", activeWorkspaceId)],
+          ["guests", () => upsertUserRows("guests", next.guests, signedInUserId, "guest_id", activeWorkspaceId)],
+          ["cleaning_tasks", () => upsertUserRows("cleaning_tasks", next.cleaning, signedInUserId, "cleaning_id", activeWorkspaceId)],
+          ["maintenance_issues", () => upsertUserRows("maintenance_issues", next.maintenance, signedInUserId, "issue_id", activeWorkspaceId)],
+          ["supplies", () => upsertUserRows("supplies", next.supplies, signedInUserId, "supply_id", activeWorkspaceId)],
+          ["expenses", () => upsertUserRows("expenses", next.expenses, signedInUserId, "expense_id", activeWorkspaceId)],
+          ["direct_booking_leads", () => upsertUserRows("direct_booking_leads", next.leads, signedInUserId, "lead_id", activeWorkspaceId)],
           ["settings", () => upsertUserSettings(signedInUserId, next.settings)],
         ];
         for (const [tableName, task] of syncTasks) {
