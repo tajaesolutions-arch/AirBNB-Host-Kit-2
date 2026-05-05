@@ -19,8 +19,8 @@ import UsersAccess from "./pages/UsersAccess.jsx";
 import PropertyManagerPortal from "./pages/PropertyManagerPortal.jsx";
 import CleanerPortal from "./pages/CleanerPortal.jsx";
 import OwnerPortal from "./pages/OwnerPortal.jsx";
-import CleanerDashboard from "./pages/CleanerDashboard.jsx";
-import MaintenanceDashboard from "./pages/MaintenanceDashboard.jsx";
+import CleanerDashboard from "./pages/roleDashboards/CleanerDashboard.jsx";
+import MaintenanceDashboard from "./pages/roleDashboards/MaintenanceDashboard.jsx";
 import OwnerDashboard from "./pages/OwnerDashboard.jsx";
 
 import "./styles.css";
